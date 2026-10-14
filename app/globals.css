@@ -1,5 +1,6 @@
 /* HOT SOCIETY · base global
    Preto e dourado. Tokens usados por todas as páginas. */
+@import "tailwindcss";
 
 :root {
   color-scheme: dark;
@@ -93,25 +94,4 @@ textarea {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* Se o projeto injetar o reset do Tailwind (preflight), estas regras
-   devolvem marcadores de lista e títulos ao normal. Regras com classe
-   continuam valendo por cima. */
-ul,
-ol {
-  list-style: revert;
 }

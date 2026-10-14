@@ -3,15 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Icon from "../../../_components/membros/Icon";
 import { MODULOS } from "../../../_lib/demo";
-import "../../../_components/membros/ui.css";
-import ui from "../../../_components/membros/ui.styles";
-import "../aulas.css";
-import s from "../aulas.styles";
+import ui from "../../../_components/membros/ui.module.css";
+import s from "../aulas.module.css";
 
-export default function ModuloPage() {
+function ModuloContent() {
   const { modulo } = useParams<{ modulo: string }>();
   const m = MODULOS.find((x) => x.slug === modulo);
 
@@ -30,6 +28,14 @@ export default function ModuloPage() {
   }
 
   return <Player key={m.slug} slug={m.slug} />;
+}
+
+export default function ModuloPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-white">A carregar módulo...</div>}>
+      <ModuloContent />
+    </Suspense>
+  );
 }
 
 function Player({ slug }: { slug: string }) {
@@ -81,11 +87,6 @@ function Player({ slug }: { slug: string }) {
               <Icon name="spark" size={18} /> Perguntar à CappuIA
             </Link>
           </div>
-
-          <p className={ui.note}>
-            O vídeo entra aqui. Coloque a URL de cada aula (Vimeo, Panda, YouTube não listado) no campo da aula quando a
-            tabela de aulas existir no Supabase.
-          </p>
         </div>
 
         <aside className={ui.card} aria-label="Aulas do módulo">

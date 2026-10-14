@@ -1,7 +1,7 @@
+import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { Archivo, Inter, JetBrains_Mono } from "next/font/google";
 import { SITE } from "./_lib/site";
-import "./globals.css";
 
 const archivo = Archivo({
   subsets: ["latin"],
@@ -45,7 +45,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${archivo.variable} ${inter.variable} ${mono.variable}`}>
       <body>{children}</body>
