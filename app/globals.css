@@ -1,5 +1,8 @@
 /* HOT SOCIETY · base global
    Preto e dourado. Tokens usados por todas as páginas. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   color-scheme: dark;
