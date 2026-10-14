@@ -7,8 +7,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// Toda página dentro de /dashboard ganha o menu, a proteção de login
-// e o usuário via useMembro().
+// Esta linha diz à Vercel para não tentar compilar o dashboard estaticamente
+export const dynamic = "force-dynamic";
+
 export default function MembrosLayout({ children }: any) {
   return (
     <Suspense fallback={<div className="p-8 text-center text-white">A carregar o painel...</div>}>
