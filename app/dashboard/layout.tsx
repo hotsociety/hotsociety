@@ -7,8 +7,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export const dynamic = "force-dynamic";
-
 export default function MembrosLayout({ children }: { children: React.ReactNode }) {
   return (
     <Suspense fallback={<div className="p-8 text-center text-white">A carregar painel...</div>}>
