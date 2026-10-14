@@ -1,9 +1,10 @@
-.page {
+/* Gerado a partir de login.module.css: classes com prefixo hs-login- para não colidirem. */
+.hs-login-page {
   min-height: 100dvh;
   display: grid;
   grid-template-columns: 1fr;
 }
-.loading {
+.hs-login-loading {
   min-height: 100dvh;
   display: grid;
   place-items: center;
@@ -11,26 +12,26 @@
 }
 
 /* lado da foto: só aparece do tablet em diante */
-.visual {
+.hs-login-visual {
   display: none;
   position: relative;
   overflow: hidden;
   isolation: isolate;
 }
-.visualImg {
+.hs-login-visualImg {
   object-fit: cover;
   object-position: 60% 30%;
   filter: grayscale(1) contrast(1.12) brightness(0.55);
   z-index: -2;
 }
-.visual::after {
+.hs-login-visual::after {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
   background: linear-gradient(0deg, rgba(10, 10, 11, 0.95), rgba(10, 10, 11, 0.1) 60%);
 }
-.goldLine {
+.hs-login-goldLine {
   position: absolute;
   left: 0;
   right: 0;
@@ -39,7 +40,7 @@
   background: var(--gold-line);
   z-index: -1;
 }
-.visualText {
+.hs-login-visualText {
   position: absolute;
   left: clamp(24px, 5vw, 56px);
   right: 24px;
@@ -52,10 +53,10 @@
   text-transform: uppercase;
   line-height: 0.9;
 }
-.visualText span {
+.hs-login-visualText span {
   font-size: clamp(20px, 2.4vw, 30px);
 }
-.visualText strong {
+.hs-login-visualText strong {
   font-size: clamp(34px, 4.4vw, 58px);
   background: var(--gold-text);
   -webkit-background-clip: text;
@@ -64,27 +65,27 @@
 }
 
 /* formulário */
-.panel {
+.hs-login-panel {
   display: grid;
   place-items: center;
   padding: calc(28px + env(safe-area-inset-top, 0px)) var(--gutter) calc(28px + env(safe-area-inset-bottom, 0px));
   background: radial-gradient(80% 50% at 50% 0%, rgba(201, 162, 78, 0.12), transparent 70%), var(--breu);
 }
-.box {
+.hs-login-box {
   width: 100%;
   max-width: 420px;
   display: grid;
   gap: 18px;
 }
-.logo {
+.hs-login-logo {
   display: block;
   width: 160px;
 }
-.logo img {
+.hs-login-logo img {
   width: 100%;
   height: auto;
 }
-.plan {
+.hs-login-plan {
   margin: 0;
   justify-self: start;
   font-size: 13px;
@@ -94,28 +95,28 @@
   border-radius: 99px;
   padding: 8px 12px;
 }
-.plan b {
+.hs-login-plan b {
   color: var(--gold-hi);
 }
-.title {
+.hs-login-title {
   margin: 0;
   display: grid;
   font: 900 clamp(32px, 8vw, 44px) / 0.92 var(--f-d);
   font-stretch: 125%;
   text-transform: uppercase;
 }
-.title span:first-child {
+.hs-login-title span:first-child {
   font-size: 0.55em;
   letter-spacing: 0.02em;
   margin-bottom: 0.15em;
 }
-.gold {
+.hs-login-gold {
   background: var(--gold-text);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-.tabs {
+.hs-login-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px;
@@ -124,7 +125,7 @@
   background: var(--s1);
   border: 1px solid var(--line);
 }
-.tabs button {
+.hs-login-tabs button {
   min-height: 42px;
   border: 0;
   border-radius: 9px;
@@ -134,23 +135,23 @@
   font-size: 14.5px;
   cursor: pointer;
 }
-.tabs button[aria-selected="true"] {
+.hs-login-tabs button[aria-selected="true"] {
   background: var(--s3);
   color: var(--neve);
 }
-.form {
+.hs-login-form {
   display: grid;
   gap: 14px;
 }
-.field {
+.hs-login-field {
   display: grid;
   gap: 7px;
 }
-.field > span {
+.hs-login-field > span {
   font: 600 13px/1 var(--f-t);
   color: #d4d1c9;
 }
-.field input {
+.hs-login-field input {
   width: 100%;
   min-height: 52px;
   border-radius: 12px;
@@ -160,17 +161,17 @@
   font-size: 16px;
   outline: none;
 }
-.field input:focus {
+.hs-login-field input:focus {
   border-color: var(--gold-t);
   box-shadow: 0 0 0 3px rgba(201, 162, 78, 0.2);
 }
-.pass {
+.hs-login-pass {
   position: relative;
 }
-.pass input {
+.hs-login-pass input {
   padding-right: 92px;
 }
-.pass button {
+.hs-login-pass button {
   position: absolute;
   right: 6px;
   top: 6px;
@@ -184,7 +185,7 @@
   font-weight: 700;
   cursor: pointer;
 }
-.primary {
+.hs-login-primary {
   min-height: 54px;
   border: 0;
   border-radius: 12px;
@@ -193,11 +194,11 @@
   font: 800 16px/1 var(--f-t);
   cursor: pointer;
 }
-.primary:disabled {
+.hs-login-primary:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
-.textBtn {
+.hs-login-textBtn {
   justify-self: center;
   border: 0;
   background: none;
@@ -207,38 +208,38 @@
   padding: 8px;
   cursor: pointer;
 }
-.err,
-.ok {
+.hs-login-err,
+.hs-login-ok {
   margin: 0;
   padding: 12px 14px;
   border-radius: 10px;
   font-size: 14px;
 }
-.err {
+.hs-login-err {
   background: #2a1414;
   border: 1px solid #5a2a2a;
   color: #ffb3b3;
 }
-.ok {
+.hs-login-ok {
   background: #11281e;
   border: 1px solid #1e7a4c;
   color: #a6f0c7;
 }
-.divider {
+.hs-login-divider {
   display: flex;
   align-items: center;
   gap: 12px;
   color: var(--muted2);
   font-size: 13px;
 }
-.divider::before,
-.divider::after {
+.hs-login-divider::before,
+.hs-login-divider::after {
   content: "";
   flex: 1;
   height: 1px;
   background: var(--line);
 }
-.google {
+.hs-login-google {
   min-height: 50px;
   border-radius: 12px;
   border: 1px solid var(--line2);
@@ -250,29 +251,29 @@
   font-weight: 700;
   cursor: pointer;
 }
-.google svg {
+.hs-login-google svg {
   width: 18px;
   height: 18px;
 }
-.google:disabled {
+.hs-login-google:disabled {
   opacity: 0.5;
 }
-.legal {
+.hs-login-legal {
   margin: 4px 0 0;
   font-size: 12px;
   color: var(--muted2);
   text-align: center;
   line-height: 1.5;
 }
-.legal a {
+.hs-login-legal a {
   color: var(--muted);
 }
 
 @media (min-width: 900px) {
-  .page {
+  .hs-login-page {
     grid-template-columns: 1.1fr 1fr;
   }
-  .visual {
+  .hs-login-visual {
     display: block;
   }
 }

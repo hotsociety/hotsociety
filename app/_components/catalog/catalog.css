@@ -1,19 +1,20 @@
-.grid {
+/* Gerado a partir de catalog.module.css: classes com prefixo hs-cat- para não colidirem. */
+.hs-cat-grid {
   display: grid;
   gap: 14px;
   grid-template-columns: 1fr;
 }
 @media (min-width: 641px) {
-  .grid {
+  .hs-cat-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 @media (min-width: 1025px) {
-  .grid {
+  .hs-cat-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
-.card {
+.hs-cat-card {
   background: var(--s1);
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -23,11 +24,11 @@
   transition: border-color 0.2s, transform 0.2s;
   min-height: 220px;
 }
-.card:hover {
+.hs-cat-card:hover {
   border-color: var(--gold-lo);
   transform: translateY(-2px);
 }
-.cover {
+.hs-cat-cover {
   position: relative;
   aspect-ratio: 16 / 7;
   background: radial-gradient(90% 90% at 20% 10%, #2e2618, #0b0b0c 70%);
@@ -35,7 +36,7 @@
   place-items: center;
   overflow: hidden;
 }
-.cover::after {
+.hs-cat-cover::after {
   content: "";
   position: absolute;
   left: 0;
@@ -45,7 +46,7 @@
   background: var(--gold-line);
   opacity: 0.6;
 }
-.cover span {
+.hs-cat-cover span {
   font: 900 44px/1 var(--f-d);
   font-stretch: 125%;
   background: var(--gold-text);
@@ -53,19 +54,19 @@
   background-clip: text;
   color: transparent;
 }
-.body {
+.hs-cat-body {
   padding: 18px;
   display: grid;
   gap: 10px;
   align-content: start;
 }
-.body h3 {
+.hs-cat-body h3 {
   margin: 0;
   font: 900 20px/1.05 var(--f-d);
   font-stretch: 118%;
   text-transform: uppercase;
 }
-.body p {
+.hs-cat-body p {
   margin: 0;
   color: var(--muted);
   font-size: 14.5px;
@@ -74,7 +75,7 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.foot {
+.hs-cat-foot {
   margin-top: 6px;
   padding-top: 12px;
   border-top: 1px solid var(--line);
@@ -84,12 +85,12 @@
   gap: 10px;
   flex-wrap: wrap;
 }
-.foot strong {
+.hs-cat-foot strong {
   font: 800 19px/1 var(--f-d);
   font-variant-numeric: tabular-nums;
   color: var(--gold-hi);
 }
-.link {
+.hs-cat-link {
   display: inline-flex;
   align-items: center;
   min-height: 42px;
@@ -100,29 +101,29 @@
   font: 700 14px/1 var(--f-t);
   text-decoration: none;
 }
-.empty {
+.hs-cat-empty {
   border: 1.5px dashed var(--line2);
   border-radius: 14px;
   padding: 32px 20px;
   text-align: center;
   color: var(--muted);
 }
-.empty p {
+.hs-cat-empty p {
   margin: 0 0 6px;
   color: var(--neve);
   font-weight: 700;
 }
-.empty code {
+.hs-cat-empty code {
   font-family: var(--f-m);
   color: var(--gold-hi);
 }
-.skeleton {
+.hs-cat-skeleton {
   min-height: 260px;
   background: linear-gradient(90deg, var(--s1), var(--s2), var(--s1));
   background-size: 200% 100%;
-  animation: shimmer 1.4s linear infinite;
+  animation: hs-cat-shimmer 1.4s linear infinite;
 }
-@keyframes shimmer {
+@keyframes hs-cat-shimmer {
   to {
     background-position: -200% 0;
   }

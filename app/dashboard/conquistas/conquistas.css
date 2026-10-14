@@ -1,9 +1,10 @@
-.profile {
+/* Gerado a partir de conquistas.module.css: classes com prefixo hs-conq- para não colidirem. */
+.hs-conq-profile {
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 16px;
 }
-.avatar {
+.hs-conq-avatar {
   width: 72px;
   height: 72px;
   border-radius: 50%;
@@ -15,27 +16,27 @@
   color: var(--gold-hi);
   box-shadow: 0 0 0 5px rgba(201, 162, 78, 0.15);
 }
-.pInfo {
+.hs-conq-pInfo {
   display: grid;
   gap: 6px;
   min-width: 0;
 }
-.pInfo small {
+.hs-conq-pInfo small {
   color: var(--muted);
   font-size: 13px;
 }
-.pName {
+.hs-conq-pName {
   font: 900 24px/1 var(--f-d);
   font-stretch: 115%;
   text-transform: uppercase;
   overflow-wrap: anywhere;
 }
-.xp {
+.hs-conq-xp {
   font: 700 12.5px/1 var(--f-m);
   color: var(--gold-hi) !important;
 }
 
-.medals {
+.hs-conq-medals {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -43,7 +44,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
-.medal {
+.hs-conq-medal {
   display: grid;
   justify-items: center;
   text-align: center;
@@ -54,14 +55,14 @@
   border: 1px solid var(--line);
   min-width: 0;
 }
-.medal b {
+.hs-conq-medal b {
   font-size: 14px;
 }
-.medal small {
+.hs-conq-medal small {
   color: var(--muted);
   font-size: 12px;
 }
-.coin {
+.hs-conq-coin {
   width: 62px;
   height: 62px;
   border-radius: 50%;
@@ -73,31 +74,31 @@
   color: var(--muted2);
   background: var(--s3);
 }
-.ok .coin {
+.hs-conq-ok .hs-conq-coin {
   border-color: var(--gold-hi);
   background: var(--gold-grad);
   color: #141416;
   box-shadow: 0 6px 22px rgba(201, 162, 78, 0.3);
 }
-.perto .coin {
+.hs-conq-perto .hs-conq-coin {
   border-color: var(--gold-t);
   color: var(--gold-hi);
   border-style: dashed;
 }
-.futuro {
+.hs-conq-futuro {
   opacity: 0.6;
 }
 
-.tableWrap {
+.hs-conq-tableWrap {
   overflow-x: auto;
   margin-inline: -4px;
 }
-.table {
+.hs-conq-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
 }
-.table th {
+.hs-conq-table th {
   text-align: left;
   font: 700 11px/1 var(--f-m);
   letter-spacing: 0.08em;
@@ -106,36 +107,36 @@
   padding: 8px;
   border-bottom: 1px solid var(--line);
 }
-.table td {
+.hs-conq-table td {
   padding: 11px 8px;
   border-bottom: 1px solid var(--line);
   white-space: nowrap;
 }
-.right {
+.hs-conq-right {
   text-align: right !important;
   font-family: var(--f-m);
   font-weight: 700;
 }
-.pos {
+.hs-conq-pos {
   font: 700 12px/1 var(--f-m);
   color: var(--muted2);
 }
-.meRow td {
+.hs-conq-meRow td {
   background: #1d1a12;
   color: var(--gold-hi);
 }
-.hideSm {
+.hs-conq-hideSm {
   display: none;
 }
 
 @media (min-width: 641px) {
-  .medals {
+  .hs-conq-medals {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
-  .hideSm {
+  .hs-conq-hideSm {
     display: table-cell;
   }
-  .avatar {
+  .hs-conq-avatar {
     width: 88px;
     height: 88px;
     font-size: 26px;

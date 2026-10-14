@@ -5,8 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import Icon from "../../_components/membros/Icon";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { IA_MODOS, IA_RESPOSTA, IA_SUGESTOES } from "../../_lib/demo";
-import ui from "../../_components/membros/ui.module.css";
-import s from "./cappuia.module.css";
+import "../../_components/membros/ui.css";
+import ui from "../../_components/membros/ui.styles";
+import "./cappuia.css";
+import s from "./cappuia.styles";
 
 type Modo = (typeof IA_MODOS)[number]["id"];
 type Fala = { id: number; de: "eu" | "ia"; t: string };

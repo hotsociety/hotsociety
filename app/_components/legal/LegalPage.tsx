@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import s from "./legal.module.css";
+import "./legal.css";
+import s from "./legal.styles";
 
 export default function LegalPage({
   title,

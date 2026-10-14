@@ -3,8 +3,10 @@
 import { useState } from "react";
 import Icon from "../../_components/membros/Icon";
 import { FERRAMENTAS } from "../../_lib/demo";
-import ui from "../../_components/membros/ui.module.css";
-import s from "./ferramentas.module.css";
+import "../../_components/membros/ui.css";
+import ui from "../../_components/membros/ui.styles";
+import "./ferramentas.css";
+import s from "./ferramentas.styles";
 
 export default function Ferramentas() {
   const [cat, setCat] = useState(FERRAMENTAS[0].id);

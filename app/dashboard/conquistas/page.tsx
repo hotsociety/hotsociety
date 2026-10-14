@@ -4,8 +4,10 @@ import { useState } from "react";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { ROUTE } from "../../_lib/site";
 import { MEDALHAS, PERFIL_DEMO, RANKING } from "../../_lib/demo";
-import ui from "../../_components/membros/ui.module.css";
-import s from "./conquistas.module.css";
+import "../../_components/membros/ui.css";
+import ui from "../../_components/membros/ui.styles";
+import "./conquistas.css";
+import s from "./conquistas.styles";
 
 const NUM = new Intl.NumberFormat("pt-BR");
 const STATUS = { ok: "Conquistada", perto: "Falta pouco", futuro: "Bloqueada" } as const;

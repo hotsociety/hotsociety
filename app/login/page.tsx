@@ -7,7 +7,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../_lib/supabase";
 import { CHECKOUT } from "../_lib/site";
 import { caminhoSeguro } from "../_lib/cursos";
-import s from "./login.module.css";
+import "./login.css";
+import s from "./login.styles";
 
 type Modo = "entrar" | "criar" | "esqueci";
 type Aviso = { tipo: "erro" | "ok"; texto: string } | null;

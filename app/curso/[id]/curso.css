@@ -1,7 +1,8 @@
-.shell {
+/* Gerado a partir de curso.module.css: classes com prefixo hs-curso- para não colidirem. */
+.hs-curso-shell {
   min-height: 100dvh;
 }
-.top {
+.hs-curso-top {
   position: sticky;
   top: 0;
   z-index: 20;
@@ -11,7 +12,7 @@
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
-.topIn {
+.hs-curso-topIn {
   max-width: var(--max);
   margin-inline: auto;
   padding-inline: var(--gutter);
@@ -21,34 +22,34 @@
   justify-content: space-between;
   gap: 12px;
 }
-.back {
+.hs-curso-back {
   font-weight: 700;
   font-size: 14px;
   color: var(--muted);
   text-decoration: none;
   white-space: nowrap;
 }
-.back:hover {
+.hs-curso-back:hover {
   color: var(--gold-hi);
 }
-.logo {
+.hs-curso-logo {
   width: clamp(110px, 26vw, 150px);
   flex: none;
 }
-.logo img {
+.hs-curso-logo img {
   width: 100%;
   height: auto;
 }
-.main {
+.hs-curso-main {
   max-width: var(--max);
   margin-inline: auto;
   padding: clamp(20px, 4vw, 48px) var(--gutter) calc(56px + env(safe-area-inset-bottom, 0px));
 }
-.hero {
+.hs-curso-hero {
   display: grid;
   gap: 20px;
 }
-.cover {
+.hs-curso-cover {
   aspect-ratio: 16 / 9;
   border-radius: 18px;
   border: 1px solid var(--line);
@@ -58,7 +59,7 @@
   position: relative;
   overflow: hidden;
 }
-.cover::after {
+.hs-curso-cover::after {
   content: "";
   position: absolute;
   left: 0;
@@ -67,7 +68,7 @@
   height: 4px;
   background: var(--gold-line);
 }
-.cover span {
+.hs-curso-cover span {
   font: 900 clamp(56px, 14vw, 120px) / 1 var(--f-d);
   font-stretch: 125%;
   background: var(--gold-text);
@@ -75,13 +76,13 @@
   background-clip: text;
   color: transparent;
 }
-.info {
+.hs-curso-info {
   display: grid;
   gap: 12px;
   align-content: start;
   min-width: 0;
 }
-.eyebrow {
+.hs-curso-eyebrow {
   margin: 0;
   font: 700 11px/1.3 var(--f-d);
   font-stretch: 125%;
@@ -89,14 +90,14 @@
   text-transform: uppercase;
   color: var(--gold-t);
 }
-.h1 {
+.hs-curso-h1 {
   margin: 0;
   font: 900 clamp(30px, 6vw, 56px) / 0.95 var(--f-d);
   font-stretch: 118%;
   text-transform: uppercase;
   overflow-wrap: anywhere;
 }
-.desc {
+.hs-curso-desc {
   margin: 0;
   color: #d4d1c9;
   font-size: clamp(15px, 1.6vw, 17px);
@@ -104,7 +105,7 @@
   max-width: 62ch;
   white-space: pre-line;
 }
-.buy {
+.hs-curso-buy {
   background: var(--s1);
   border: 1px solid var(--gold-lo);
   border-radius: 18px;
@@ -113,18 +114,18 @@
   gap: 12px;
   align-content: start;
 }
-.priceLabel {
+.hs-curso-priceLabel {
   font: 700 11px/1 var(--f-m);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted);
 }
-.price {
+.hs-curso-price {
   font: 900 clamp(34px, 5vw, 44px) / 1 var(--f-d);
   font-stretch: 112%;
 }
-.btnGold,
-.btnGhost {
+.hs-curso-btnGold,
+.hs-curso-btnGhost {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -134,14 +135,14 @@
   font-weight: 800;
   text-decoration: none;
 }
-.btnGold {
+.hs-curso-btnGold {
   background: var(--gold-grad);
   color: #141416;
 }
-.btnGhost {
+.hs-curso-btnGhost {
   border: 1px solid var(--line2);
 }
-.perks {
+.hs-curso-perks {
   list-style: none;
   margin: 4px 0 0;
   padding: 0;
@@ -150,21 +151,21 @@
   font-size: 14px;
   color: var(--muted);
 }
-.perks li::before {
+.hs-curso-perks li::before {
   content: "✓ ";
   color: var(--gold-t);
   font-weight: 800;
 }
-.member {
+.hs-curso-member {
   margin: 4px 0 0;
   font-size: 13.5px;
   color: var(--muted2);
 }
-.member a {
+.hs-curso-member a {
   color: var(--gold-t);
   font-weight: 700;
 }
-.notFound {
+.hs-curso-notFound {
   min-height: 50dvh;
   display: grid;
   place-content: center;
@@ -172,55 +173,55 @@
   gap: 12px;
   text-align: center;
 }
-.notFound h1 {
+.hs-curso-notFound h1 {
   margin: 6px 0 0;
   font: 900 clamp(26px, 5vw, 40px) / 1 var(--f-d);
   font-stretch: 118%;
   text-transform: uppercase;
 }
-.notFound p {
+.hs-curso-notFound p {
   margin: 0 0 8px;
   color: var(--muted);
 }
-.sk {
+.hs-curso-sk {
   border-radius: 10px;
   background: linear-gradient(90deg, var(--s1), var(--s2), var(--s1));
   background-size: 200% 100%;
-  animation: shimmer 1.4s linear infinite;
+  animation: hs-curso-shimmer 1.4s linear infinite;
 }
-.sk::after {
+.hs-curso-sk::after {
   display: none;
 }
-@keyframes shimmer {
+@keyframes hs-curso-shimmer {
   to {
     background-position: -200% 0;
   }
 }
 
 @media (min-width: 641px) {
-  .hero {
+  .hs-curso-hero {
     grid-template-columns: 1fr 1fr;
   }
-  .cover {
+  .hs-curso-cover {
     grid-column: 1 / -1;
     aspect-ratio: 21 / 8;
   }
 }
 @media (min-width: 1025px) {
-  .hero {
+  .hs-curso-hero {
     grid-template-columns: 1fr 360px;
     gap: 28px 36px;
   }
-  .cover {
+  .hs-curso-cover {
     aspect-ratio: 16 / 5;
   }
-  .buy {
+  .hs-curso-buy {
     position: sticky;
     top: 88px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sk {
+  .hs-curso-sk {
     animation: none;
   }
 }

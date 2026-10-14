@@ -1,11 +1,12 @@
-.pass {
+/* Gerado a partir de perfil.module.css: classes com prefixo hs-perfil- para não colidirem. */
+.hs-perfil-pass {
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 16px;
   background: radial-gradient(120% 140% at 0% 0%, #2a2214, var(--s1) 60%);
   border-color: var(--gold-lo);
 }
-.avatar {
+.hs-perfil-avatar {
   width: 72px;
   height: 72px;
   border-radius: 50%;
@@ -16,29 +17,29 @@
   color: var(--gold-hi);
   background: #0b0b0c;
 }
-.passInfo {
+.hs-perfil-passInfo {
   display: grid;
   gap: 4px;
   min-width: 0;
 }
-.passInfo small {
+.hs-perfil-passInfo small {
   font: 700 11px/1 var(--f-m);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--gold-t);
 }
-.passInfo b {
+.hs-perfil-passInfo b {
   font: 900 26px/1 var(--f-d);
   font-stretch: 118%;
   text-transform: uppercase;
   overflow-wrap: anywhere;
 }
-.passInfo span {
+.hs-perfil-passInfo span {
   color: var(--muted);
   font-size: 14px;
   overflow-wrap: anywhere;
 }
-.err {
+.hs-perfil-err {
   margin: 0;
   padding: 12px 14px;
   border-radius: 12px;
@@ -47,7 +48,7 @@
   color: #ffb3b3;
   font-size: 14px;
 }
-.plan {
+.hs-perfil-plan {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -58,23 +59,23 @@
   background: var(--s2);
   border: 1px solid var(--line);
 }
-.plan div:first-child {
+.hs-perfil-plan div:first-child {
   display: grid;
   gap: 2px;
 }
-.plan small {
+.hs-perfil-plan small {
   color: var(--muted);
   font-size: 13px;
 }
-.planActions {
+.hs-perfil-planActions {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
-.out {
+.hs-perfil-out {
   justify-self: start;
 }
-.out:hover {
+.hs-perfil-out:hover {
   border-color: #c25050;
   color: #ffb3b3;
 }

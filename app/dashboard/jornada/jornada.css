@@ -1,17 +1,18 @@
-.timeline {
+/* Gerado a partir de jornada.module.css: classes com prefixo hs-jorn- para não colidirem. */
+.hs-jorn-timeline {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
 }
-.timeline li {
+.hs-jorn-timeline li {
   position: relative;
   display: grid;
   grid-template-columns: 28px minmax(0, 1fr);
   gap: 14px;
   padding-bottom: 22px;
 }
-.timeline li:not(:last-child)::before {
+.hs-jorn-timeline li:not(:last-child)::before {
   content: "";
   position: absolute;
   left: 13px;
@@ -20,11 +21,11 @@
   width: 2px;
   background: var(--line2);
 }
-.ok::before,
-.aqui::before {
+.hs-jorn-ok::before,
+.hs-jorn-aqui::before {
   background: var(--gold) !important;
 }
-.dot {
+.hs-jorn-dot {
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -34,59 +35,59 @@
   place-items: center;
   color: #141416;
 }
-.ok .dot {
+.hs-jorn-ok .hs-jorn-dot {
   background: var(--gold);
   border-color: var(--gold);
 }
-.aqui .dot {
+.hs-jorn-aqui .hs-jorn-dot {
   background: var(--gold-grad);
   border-color: var(--gold-hi);
   box-shadow: 0 0 0 5px rgba(201, 162, 78, 0.2);
 }
-.stopBody {
+.hs-jorn-stopBody {
   display: grid;
   gap: 6px;
   min-width: 0;
 }
-.stopBody small {
+.hs-jorn-stopBody small {
   color: var(--muted);
   font-size: 13px;
 }
-.code {
+.hs-jorn-code {
   font: 900 22px/1 var(--f-d);
   font-stretch: 118%;
 }
-.code span {
+.hs-jorn-code span {
   font: 600 14px/1 var(--f-t);
   color: var(--muted);
   margin-left: 6px;
 }
-.futuro .code {
+.hs-jorn-futuro .hs-jorn-code {
   color: var(--muted);
 }
-.big {
+.hs-jorn-big {
   font: 900 clamp(32px, 5vw, 44px) / 1 var(--f-d);
   font-stretch: 112%;
 }
-.plaque {
+.hs-jorn-plaque {
   position: relative;
   aspect-ratio: 4 / 3;
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid var(--line);
 }
-.plaque img {
+.hs-jorn-plaque img {
   object-fit: cover;
 }
-.form {
+.hs-jorn-form {
   display: grid;
   gap: 16px;
 }
-.choice {
+.hs-jorn-choice {
   display: grid;
   gap: 8px;
 }
-.opt {
+.hs-jorn-opt {
   display: grid;
   gap: 6px;
   justify-items: start;
@@ -97,26 +98,26 @@
   text-align: left;
   cursor: pointer;
 }
-.opt b {
+.hs-jorn-opt b {
   font: 900 26px/1 var(--f-d);
   font-stretch: 118%;
 }
-.opt small {
+.hs-jorn-opt small {
   color: var(--muted);
   font-size: 13px;
 }
-.opt[aria-checked="true"] {
+.hs-jorn-opt[aria-checked="true"] {
   border-color: var(--gold);
   background: #1d1a12;
 }
-.check {
+.hs-jorn-check {
   display: flex;
   gap: 10px;
   align-items: flex-start;
   font-size: 14px;
   color: #d4d1c9;
 }
-.check input {
+.hs-jorn-check input {
   width: 20px;
   height: 20px;
   margin-top: 1px;
@@ -125,7 +126,7 @@
 }
 
 @media (min-width: 641px) {
-  .choice {
+  .hs-jorn-choice {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

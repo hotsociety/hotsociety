@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { supabase } from "../../_lib/supabase";
 import { formatPreco, type Curso } from "../../_lib/cursos";
-import s from "./curso.module.css";
+import "./curso.css";
+import s from "./curso.styles";
 
 type Params = Promise<{ id: string }>;
 

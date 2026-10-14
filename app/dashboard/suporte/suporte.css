@@ -1,4 +1,5 @@
-.topic {
+/* Gerado a partir de suporte.module.css: classes com prefixo hs-sup- para não colidirem. */
+.hs-sup-topic {
   display: grid;
   gap: 4px;
   justify-items: start;
@@ -10,31 +11,31 @@
   cursor: pointer;
   min-width: 0;
 }
-.topic b {
+.hs-sup-topic b {
   font-size: 15px;
 }
-.topic small {
+.hs-sup-topic small {
   color: var(--muted);
   font-size: 13px;
 }
-.topic[aria-pressed="true"] {
+.hs-sup-topic[aria-pressed="true"] {
   border-color: var(--gold);
   background: #1d1a12;
 }
-.n {
+.hs-sup-n {
   font: 700 12px/1 var(--f-m);
   color: var(--gold-t);
 }
-.faq {
+.hs-sup-faq {
   display: grid;
   gap: 8px;
 }
-.item {
+.hs-sup-item {
   border-radius: 12px;
   background: var(--s2);
   border: 1px solid var(--line);
 }
-.item summary {
+.hs-sup-item summary {
   list-style: none;
   cursor: pointer;
   padding: 14px 44px 14px 14px;
@@ -42,10 +43,10 @@
   font-size: 14.5px;
   position: relative;
 }
-.item summary::-webkit-details-marker {
+.hs-sup-item summary::-webkit-details-marker {
   display: none;
 }
-.item summary::after {
+.hs-sup-item summary::after {
   content: "+";
   position: absolute;
   right: 16px;
@@ -54,17 +55,17 @@
   font: 700 20px/1 var(--f-m);
   color: var(--gold-t);
 }
-.item[open] summary::after {
+.hs-sup-item[open] summary::after {
   content: "–";
 }
-.item p {
+.hs-sup-item p {
   margin: 0;
   padding: 0 14px 14px;
   color: var(--muted);
   font-size: 14px;
   line-height: 1.6;
 }
-.form {
+.hs-sup-form {
   display: grid;
   gap: 14px;
 }

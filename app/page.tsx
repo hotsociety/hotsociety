@@ -5,7 +5,8 @@ import SiteHeader from "./_components/home/SiteHeader";
 import CourseGrid, { CourseGridSkeleton } from "./_components/catalog/CourseGrid";
 import PassportPreview from "./_components/home/PassportPreview";
 import { FAQ, FEATURES, MODULES, PLANS, ROUTE, SITE } from "./_lib/site";
-import s from "./page.module.css";
+import "./home.css";
+import s from "./home.styles";
 
 export default function Home() {
   return (

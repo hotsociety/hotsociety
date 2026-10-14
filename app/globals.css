@@ -1,4 +1,5 @@
-@import "tailwindcss";
+/* HOT SOCIETY · base global
+   Preto e dourado. Tokens usados por todas as páginas. */
 
 :root {
   color-scheme: dark;
@@ -105,4 +106,12 @@ textarea {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Se o projeto injetar o reset do Tailwind (preflight), estas regras
+   devolvem marcadores de lista e títulos ao normal. Regras com classe
+   continuam valendo por cima. */
+ul,
+ol {
+  list-style: revert;
 }

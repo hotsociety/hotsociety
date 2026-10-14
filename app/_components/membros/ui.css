@@ -1,16 +1,17 @@
+/* Gerado a partir de ui.module.css: classes com prefixo hs-ui- para não colidirem. */
 /* Peças visuais comuns às telas da área de membros. */
 
-.page {
+.hs-ui-page {
   display: grid;
   gap: 16px;
   min-width: 0;
 }
-.head {
+.hs-ui-head {
   display: grid;
   gap: 6px;
   margin-bottom: 4px;
 }
-.eyebrow {
+.hs-ui-eyebrow {
   margin: 0;
   font: 700 11px/1.3 var(--f-d);
   font-stretch: 125%;
@@ -18,26 +19,26 @@
   text-transform: uppercase;
   color: var(--gold-t);
 }
-.h1 {
+.hs-ui-h1 {
   margin: 0;
   font: 900 clamp(28px, 5vw, 44px) / 0.95 var(--f-d);
   font-stretch: 122%;
   text-transform: uppercase;
   overflow-wrap: anywhere;
 }
-.gold {
+.hs-ui-gold {
   background: var(--gold-text);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-.sub {
+.hs-ui-sub {
   margin: 0;
   color: var(--muted);
   font-size: clamp(14.5px, 1.5vw, 16px);
   max-width: 60ch;
 }
-.card {
+.hs-ui-card {
   background: var(--s1);
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -47,11 +48,11 @@
   align-content: start;
   min-width: 0;
 }
-.cardGold {
+.hs-ui-cardGold {
   border-color: var(--gold-lo);
   background: linear-gradient(160deg, #1d1a12, var(--s1) 55%);
 }
-.h2 {
+.hs-ui-h2 {
   margin: 0;
   font: 800 12.5px/1.2 var(--f-d);
   font-stretch: 125%;
@@ -59,38 +60,38 @@
   text-transform: uppercase;
   color: var(--muted);
 }
-.rowBetween {
+.hs-ui-rowBetween {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
 }
-.muted {
+.hs-ui-muted {
   margin: 0;
   color: var(--muted);
   font-size: 14px;
 }
-.small {
+.hs-ui-small {
   font-size: 12.5px;
   color: var(--muted2);
   margin: 0;
 }
 
 /* grades responsivas */
-.grid2,
-.grid3,
-.grid4,
-.gridMain {
+.hs-ui-grid2,
+.hs-ui-grid3,
+.hs-ui-grid4,
+.hs-ui-gridMain {
   display: grid;
   gap: 16px;
   min-width: 0;
 }
 
 /* botões */
-.btnGold,
-.btnGhost,
-.btnSm {
+.hs-ui-btnGold,
+.hs-ui-btnGhost,
+.hs-ui-btnSm {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -105,23 +106,23 @@
   border: 0;
   white-space: nowrap;
 }
-.btnGold {
+.hs-ui-btnGold {
   background: var(--gold-grad);
   color: #141416;
 }
-.btnGold:disabled {
+.hs-ui-btnGold:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
-.btnGhost {
+.hs-ui-btnGhost {
   background: transparent;
   border: 1px solid var(--line2);
   color: var(--neve);
 }
-.btnGhost:hover {
+.hs-ui-btnGhost:hover {
   border-color: var(--gold-t);
 }
-.btnSm {
+.hs-ui-btnSm {
   min-height: 36px;
   padding: 0 12px;
   font-size: 13px;
@@ -131,17 +132,17 @@
 }
 
 /* abas / filtros */
-.tabs {
+.hs-ui-tabs {
   display: flex;
   gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
   padding-bottom: 2px;
 }
-.tabs::-webkit-scrollbar {
+.hs-ui-tabs::-webkit-scrollbar {
   display: none;
 }
-.tab {
+.hs-ui-tab {
   flex: none;
   min-height: 38px;
   padding: 0 14px;
@@ -153,15 +154,15 @@
   font-size: 13.5px;
   cursor: pointer;
 }
-.tab[aria-pressed="true"],
-.tab[aria-selected="true"] {
+.hs-ui-tab[aria-pressed="true"],
+.hs-ui-tab[aria-selected="true"] {
   background: var(--neve);
   border-color: var(--neve);
   color: #141416;
 }
 
 /* selos */
-.badge {
+.hs-ui-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -174,30 +175,30 @@
   color: var(--muted);
   white-space: nowrap;
 }
-.badgeGold {
+.hs-ui-badgeGold {
   border-color: var(--gold-lo);
   color: var(--gold-hi);
   background: #1d1a12;
 }
-.badgeOk {
+.hs-ui-badgeOk {
   border-color: #1e7a4c;
   color: #a6f0c7;
   background: #11281e;
 }
-.badgeRed {
+.hs-ui-badgeRed {
   border-color: #6b2525;
   color: #ffb3b3;
   background: #2a1414;
 }
 
 /* barra de progresso */
-.bar {
+.hs-ui-bar {
   height: 6px;
   border-radius: 99px;
   background: var(--s3);
   overflow: hidden;
 }
-.bar > i {
+.hs-ui-bar > i {
   display: block;
   height: 100%;
   border-radius: inherit;
@@ -205,14 +206,14 @@
 }
 
 /* lista em linhas */
-.list {
+.hs-ui-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
   gap: 8px;
 }
-.row {
+.hs-ui-row {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -222,21 +223,21 @@
   border: 1px solid var(--line);
   min-width: 0;
 }
-.rowMain {
+.hs-ui-rowMain {
   flex: 1;
   min-width: 0;
   display: grid;
   gap: 2px;
 }
-.rowMain b {
+.hs-ui-rowMain b {
   font-size: 14.5px;
   overflow-wrap: anywhere;
 }
-.rowMain small {
+.hs-ui-rowMain small {
   color: var(--muted);
   font-size: 12.5px;
 }
-.ini {
+.hs-ui-ini {
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -250,17 +251,17 @@
 }
 
 /* formulário */
-.field {
+.hs-ui-field {
   display: grid;
   gap: 7px;
   min-width: 0;
 }
-.field > span {
+.hs-ui-field > span {
   font-size: 13px;
   font-weight: 600;
   color: #d4d1c9;
 }
-.input {
+.hs-ui-input {
   width: 100%;
   min-height: 48px;
   border-radius: 11px;
@@ -270,17 +271,17 @@
   font-size: 16px;
   outline: none;
 }
-textarea.input {
+textarea.hs-ui-input {
   padding: 12px 14px;
   min-height: 96px;
   resize: vertical;
 }
-.input:focus {
+.hs-ui-input:focus {
   border-color: var(--gold-t);
   box-shadow: 0 0 0 3px rgba(201, 162, 78, 0.2);
 }
 
-.note {
+.hs-ui-note {
   margin: 0;
   padding: 12px 14px;
   border-radius: 12px;
@@ -289,7 +290,7 @@ textarea.input {
   font-size: 12.5px;
   line-height: 1.5;
 }
-.okBox {
+.hs-ui-okBox {
   margin: 0;
   padding: 12px 14px;
   border-radius: 12px;
@@ -300,24 +301,24 @@ textarea.input {
 }
 
 @media (min-width: 641px) {
-  .grid2 {
+  .hs-ui-grid2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .grid3 {
+  .hs-ui-grid3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .grid4 {
+  .hs-ui-grid4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (min-width: 1025px) {
-  .grid3 {
+  .hs-ui-grid3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .grid4 {
+  .hs-ui-grid4 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
-  .gridMain {
+  .hs-ui-gridMain {
     grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
     align-items: start;
   }

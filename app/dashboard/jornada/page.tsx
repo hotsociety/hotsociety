@@ -6,8 +6,10 @@ import Icon from "../../_components/membros/Icon";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { ROUTE } from "../../_lib/site";
 import { PERFIL_DEMO, PLACAS } from "../../_lib/demo";
-import ui from "../../_components/membros/ui.module.css";
-import s from "./jornada.module.css";
+import "../../_components/membros/ui.css";
+import ui from "../../_components/membros/ui.styles";
+import "./jornada.css";
+import s from "./jornada.styles";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const METAS = [0, 10000, 50000, 100000];

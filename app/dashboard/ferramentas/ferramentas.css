@@ -1,4 +1,5 @@
-.cats {
+/* Gerado a partir de ferramentas.module.css: classes com prefixo hs-ferr- para não colidirem. */
+.hs-ferr-cats {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(200px, 72%);
@@ -8,10 +9,10 @@
   scrollbar-width: none;
   padding-bottom: 2px;
 }
-.cats::-webkit-scrollbar {
+.hs-ferr-cats::-webkit-scrollbar {
   display: none;
 }
-.cat {
+.hs-ferr-cat {
   scroll-snap-align: start;
   display: grid;
   gap: 6px;
@@ -24,19 +25,19 @@
   cursor: pointer;
   min-width: 0;
 }
-.cat b {
+.hs-ferr-cat b {
   font: 800 16px/1.2 var(--f-d);
   font-stretch: 108%;
 }
-.cat small {
+.hs-ferr-cat small {
   color: var(--muted);
   font-size: 13px;
 }
-.cat[aria-pressed="true"] {
+.hs-ferr-cat[aria-pressed="true"] {
   border-color: var(--gold);
   background: linear-gradient(160deg, #1d1a12, var(--s1) 70%);
 }
-.n {
+.hs-ferr-n {
   font: 900 28px/1 var(--f-d);
   font-stretch: 125%;
   background: var(--gold-text);
@@ -44,7 +45,7 @@
   background-clip: text;
   color: transparent;
 }
-.search {
+.hs-ferr-search {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -57,7 +58,7 @@
   flex: 1 1 180px;
   max-width: 280px;
 }
-.search input {
+.hs-ferr-search input {
   border: 0;
   background: none;
   outline: none;
@@ -65,14 +66,14 @@
   min-width: 0;
   font-size: 16px;
 }
-.items {
+.hs-ferr-items {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
   gap: 10px;
 }
-.item {
+.hs-ferr-item {
   display: grid;
   gap: 10px;
   padding: 14px;
@@ -81,10 +82,10 @@
   border: 1px solid var(--line);
   min-width: 0;
 }
-.item b {
+.hs-ferr-item b {
   font-size: 15px;
 }
-.text {
+.hs-ferr-text {
   margin: 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -97,17 +98,17 @@
 }
 
 @media (min-width: 641px) {
-  .cats {
+  .hs-ferr-cats {
     grid-auto-columns: minmax(220px, 40%);
   }
 }
 @media (min-width: 1025px) {
-  .cats {
+  .hs-ferr-cats {
     grid-auto-flow: row;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     overflow: visible;
   }
-  .items {
+  .hs-ferr-items {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { useId, useState, useSyncExternalStore } from "react";
-import s from "../../page.module.css";
+import "../../home.css";
+import s from "../../home.styles";
 
 const MESES = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
 

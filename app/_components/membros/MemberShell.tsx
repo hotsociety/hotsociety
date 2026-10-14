@@ -10,7 +10,8 @@ import { PERFIL_DEMO } from "../../_lib/demo";
 import { ROUTE } from "../../_lib/site";
 import Icon, { type IconName } from "./Icon";
 import { MemberContext, nomeDoUsuario, type Membro } from "./MemberContext";
-import s from "./shell.module.css";
+import "./shell.css";
+import s from "./shell.styles";
 
 type Item = { href: string; t: string; icon: IconName };
 

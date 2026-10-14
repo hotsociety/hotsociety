@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { SITE } from "../../_lib/site";
 import { AJUDA_FAQ, AJUDA_TEMAS, CHAMADOS } from "../../_lib/demo";
-import ui from "../../_components/membros/ui.module.css";
-import s from "./suporte.module.css";
+import "../../_components/membros/ui.css";
+import ui from "../../_components/membros/ui.styles";
+import "./suporte.css";
+import s from "./suporte.styles";
 
 export default function Suporte() {
   const [tema, setTema] = useState(AJUDA_TEMAS[0].t);

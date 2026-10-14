@@ -6,8 +6,10 @@ import Icon from "../../_components/membros/Icon";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { supabase } from "../../_lib/supabase";
 import { PERFIL_DEMO } from "../../_lib/demo";
-import ui from "../../_components/membros/ui.module.css";
-import s from "./perfil.module.css";
+import "../../_components/membros/ui.css";
+import ui from "../../_components/membros/ui.styles";
+import "./perfil.css";
+import s from "./perfil.styles";
 
 type Aviso = { tipo: "ok" | "erro"; t: string } | null;
 

@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import Icon from "../../_components/membros/Icon";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { CANAIS, REGRAS, type Msg } from "../../_lib/demo";
-import ui from "../../_components/membros/ui.module.css";
-import s from "./comunidade.module.css";
+import "../../_components/membros/ui.css";
+import ui from "../../_components/membros/ui.styles";
+import "./comunidade.css";
+import s from "./comunidade.styles";
 
 const ONLINE = ["VP", "GS", "RT", "JB", "AM", "LC"];
 

@@ -9,8 +9,10 @@ import { supabase } from "../_lib/supabase";
 import { formatPreco, type Curso } from "../_lib/cursos";
 import { ROUTE } from "../_lib/site";
 import { LIVE, MISSOES, MODULOS, PERFIL_DEMO, RANKING, VITORIAS } from "../_lib/demo";
-import ui from "../_components/membros/ui.module.css";
-import s from "./inicio.module.css";
+import "../_components/membros/ui.css";
+import ui from "../_components/membros/ui.styles";
+import "./inicio.css";
+import s from "./inicio.styles";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const NUM = new Intl.NumberFormat("pt-BR");

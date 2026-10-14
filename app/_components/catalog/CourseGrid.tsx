@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { supabase } from "../../_lib/supabase";
 import { formatPreco, type Curso } from "../../_lib/cursos";
-import s from "./catalog.module.css";
+import "./catalog.css";
+import s from "./catalog.styles";
 
 // Server Component: busca os cursos no Supabase. Use dentro de <Suspense>.
 export default async function CourseGrid() {

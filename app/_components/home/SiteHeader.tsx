@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import s from "../../page.module.css";
+import "../../home.css";
+import s from "../../home.styles";
 
 const LINKS = [
   { href: "#rota", label: "Rota" },

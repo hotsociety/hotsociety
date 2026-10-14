@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useState } from "react";
 import Icon from "../../_components/membros/Icon";
 import { MODULOS, type Modulo } from "../../_lib/demo";
-import ui from "../../_components/membros/ui.module.css";
-import s from "./aulas.module.css";
+import "../../_components/membros/ui.css";
+import ui from "../../_components/membros/ui.styles";
+import "./aulas.css";
+import s from "./aulas.styles";
 
 type Filtro = "todos" | "meus" | "travados";
 

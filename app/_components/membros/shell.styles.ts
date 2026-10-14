@@ -1,0 +1,30 @@
+// Nomes das classes de shell.css (CSS global com prefixo, sem CSS Modules).
+const s: Record<string, string> = {
+  app: "hs-shell-app",
+  avatar: "hs-shell-avatar",
+  avatarSm: "hs-shell-avatarSm",
+  bottom: "hs-shell-bottom",
+  brand: "hs-shell-brand",
+  brandFull: "hs-shell-brandFull",
+  brandIcon: "hs-shell-brandIcon",
+  loading: "hs-shell-loading",
+  main: "hs-shell-main",
+  me: "hs-shell-me",
+  meTxt: "hs-shell-meTxt",
+  nav: "hs-shell-nav",
+  navItem: "hs-shell-navItem",
+  pulse: "hs-shell-pulse",
+  scrim: "hs-shell-scrim",
+  season: "hs-shell-season",
+  sheet: "hs-shell-sheet",
+  sheetGrid: "hs-shell-sheetGrid",
+  sheetHead: "hs-shell-sheetHead",
+  sheetWrap: "hs-shell-sheetWrap",
+  side: "hs-shell-side",
+  top: "hs-shell-top",
+  topLogo: "hs-shell-topLogo",
+  topRight: "hs-shell-topRight",
+  xp: "hs-shell-xp",
+};
+
+export default s;

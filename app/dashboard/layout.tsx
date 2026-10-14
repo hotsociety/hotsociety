@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import MemberShell from "../_components/membros/MemberShell";
 
 export const metadata: Metadata = {
@@ -7,10 +6,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function MembrosLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <Suspense fallback={<div className="p-8 text-center text-white">A carregar painel...</div>}>
-      <MemberShell>{children}</MemberShell>
-    </Suspense>
-  );
+// Toda página dentro de /dashboard ganha o menu, a proteção de login
+// e o usuário via useMembro().
+export default function MembrosLayout({ children }: LayoutProps<"/dashboard">) {
+  return <MemberShell>{children}</MemberShell>;
 }
