@@ -3,13 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Icon from "../../../_components/membros/Icon";
 import { MODULOS } from "../../../_lib/demo";
 import ui from "../../../_components/membros/ui.module.css";
 import s from "../aulas.module.css";
 
-export default function ModuloPage() {
+// 1. Criamos um sub-componente que usa o useParams
+function ModuloContent() {
   const { modulo } = useParams<{ modulo: string }>();
   const m = MODULOS.find((x) => x.slug === modulo);
 
@@ -30,6 +31,16 @@ export default function ModuloPage() {
   return <Player key={m.slug} slug={m.slug} />;
 }
 
+// 2. A página principal apenas devolve o sub-componente envolvido em Suspense
+export default function ModuloPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-white">A carregar módulo...</div>}>
+      <ModuloContent />
+    </Suspense>
+  );
+}
+
+// 3. O componente Player mantém-se exatamente igual
 function Player({ slug }: { slug: string }) {
   const m = MODULOS.find((x) => x.slug === slug)!;
   const [atual, setAtual] = useState(Math.min(m.feitas, m.aulas.length - 1));
