@@ -6,6 +6,7 @@ import Icon from "../../_components/membros/Icon";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { supabase } from "../../_lib/supabase";
 import { PERFIL_DEMO } from "../../_lib/demo";
+import { PRICE } from "../../_lib/site";
 import "../../_components/membros/ui.css";
 import ui from "../../_components/membros/ui.styles";
 import "./perfil.css";
@@ -108,7 +109,7 @@ export default function Perfil() {
         </div>
         <div className={s.plan}>
           <div>
-            <b>Plano anual · R$ 999</b>
+            <b>Plano anual · R$ {PRICE.anual}</b>
             <small>Renova em 14/10/2027</small>
           </div>
           <div className={s.planActions}>
