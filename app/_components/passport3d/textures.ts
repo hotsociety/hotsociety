@@ -444,9 +444,10 @@ export function drawVisaPage(c: TexCtx): Draw {
       g.font = `700 19px ${F.mono}`;
       g.fillText(r.country, x, y + (top ? 28 : 44));
       if (top) {
-        g.font = `800 17px ${F.display}`;
-        g.fillText('MENTORIA', x, y + 56);
-        g.fillText('HIGH TICKET', x, y + 78);
+        g.font = `800 19px ${F.display}`;
+        g.fillText(r.goal.toUpperCase(), x, y + 56);
+        g.font = `700 13px ${F.mono}`;
+        g.fillText('+ MENTORIA HIGH TICKET', x, y + 78);
       } else g.fillText(r.goal, x, y + 68);
     });
     g.fillStyle = '#B8963F';
