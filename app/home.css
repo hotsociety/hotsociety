@@ -599,6 +599,7 @@
   padding: 0 0 26px 40px;
   display: grid;
   gap: 4px;
+  align-content: start;
 }
 .hs-home-routeDot {
   position: absolute;
