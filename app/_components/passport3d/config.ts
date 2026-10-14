@@ -31,6 +31,8 @@ export const ROUTE: RouteStop[] = [
   { code: "GRU", country: "BRASIL", lat: -23.43, lon: -46.47, goal: "início" },
   { code: "SCL", country: "CHILE", lat: -33.39, lon: -70.79, goal: "R$ 10 mil" },
   { code: "LIS", country: "PORTUGAL", lat: 38.77, lon: -9.13, goal: "R$ 50 mil" },
+  { code: "JFK", country: "NOVA YORK", lat: 40.64, lon: -73.78, goal: "R$ 500 mil" },
+  { code: "MCM", country: "MÔNACO", lat: 43.73, lon: 7.42, goal: "R$ 1 milhão" },
   { code: "DXB", country: "DUBAI", lat: 25.25, lon: 55.36, goal: "Mentoria High Ticket" },
 ];
 
