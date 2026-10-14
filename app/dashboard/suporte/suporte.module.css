@@ -1,0 +1,70 @@
+.topic {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  text-align: left;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--s1);
+  cursor: pointer;
+  min-width: 0;
+}
+.topic b {
+  font-size: 15px;
+}
+.topic small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.topic[aria-pressed="true"] {
+  border-color: var(--gold);
+  background: #1d1a12;
+}
+.n {
+  font: 700 12px/1 var(--f-m);
+  color: var(--gold-t);
+}
+.faq {
+  display: grid;
+  gap: 8px;
+}
+.item {
+  border-radius: 12px;
+  background: var(--s2);
+  border: 1px solid var(--line);
+}
+.item summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 44px 14px 14px;
+  font-weight: 700;
+  font-size: 14.5px;
+  position: relative;
+}
+.item summary::-webkit-details-marker {
+  display: none;
+}
+.item summary::after {
+  content: "+";
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font: 700 20px/1 var(--f-m);
+  color: var(--gold-t);
+}
+.item[open] summary::after {
+  content: "–";
+}
+.item p {
+  margin: 0;
+  padding: 0 14px 14px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.form {
+  display: grid;
+  gap: 14px;
+}

@@ -1,0 +1,113 @@
+.cats {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(200px, 72%);
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.cats::-webkit-scrollbar {
+  display: none;
+}
+.cat {
+  scroll-snap-align: start;
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  text-align: left;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1.5px solid var(--line);
+  background: var(--s1);
+  cursor: pointer;
+  min-width: 0;
+}
+.cat b {
+  font: 800 16px/1.2 var(--f-d);
+  font-stretch: 108%;
+}
+.cat small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.cat[aria-pressed="true"] {
+  border-color: var(--gold);
+  background: linear-gradient(160deg, #1d1a12, var(--s1) 70%);
+}
+.n {
+  font: 900 28px/1 var(--f-d);
+  font-stretch: 125%;
+  background: var(--gold-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line2);
+  background: var(--s2);
+  color: var(--muted);
+  flex: 1 1 180px;
+  max-width: 280px;
+}
+.search input {
+  border: 0;
+  background: none;
+  outline: none;
+  width: 100%;
+  min-width: 0;
+  font-size: 16px;
+}
+.items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.item {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--s2);
+  border: 1px solid var(--line);
+  min-width: 0;
+}
+.item b {
+  font-size: 15px;
+}
+.text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: 500 13.5px/1.6 var(--f-m);
+  color: #d4d1c9;
+  background: #0d0d0f;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+@media (min-width: 641px) {
+  .cats {
+    grid-auto-columns: minmax(220px, 40%);
+  }
+}
+@media (min-width: 1025px) {
+  .cats {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    overflow: visible;
+  }
+  .items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

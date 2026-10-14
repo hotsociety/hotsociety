@@ -1,0 +1,131 @@
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.timeline li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 14px;
+  padding-bottom: 22px;
+}
+.timeline li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 30px;
+  bottom: 2px;
+  width: 2px;
+  background: var(--line2);
+}
+.ok::before,
+.aqui::before {
+  background: var(--gold) !important;
+}
+.dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--line2);
+  background: var(--breu);
+  display: grid;
+  place-items: center;
+  color: #141416;
+}
+.ok .dot {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.aqui .dot {
+  background: var(--gold-grad);
+  border-color: var(--gold-hi);
+  box-shadow: 0 0 0 5px rgba(201, 162, 78, 0.2);
+}
+.stopBody {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.stopBody small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.code {
+  font: 900 22px/1 var(--f-d);
+  font-stretch: 118%;
+}
+.code span {
+  font: 600 14px/1 var(--f-t);
+  color: var(--muted);
+  margin-left: 6px;
+}
+.futuro .code {
+  color: var(--muted);
+}
+.big {
+  font: 900 clamp(32px, 5vw, 44px) / 1 var(--f-d);
+  font-stretch: 112%;
+}
+.plaque {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.plaque img {
+  object-fit: cover;
+}
+.form {
+  display: grid;
+  gap: 16px;
+}
+.choice {
+  display: grid;
+  gap: 8px;
+}
+.opt {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--s2);
+  text-align: left;
+  cursor: pointer;
+}
+.opt b {
+  font: 900 26px/1 var(--f-d);
+  font-stretch: 118%;
+}
+.opt small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.opt[aria-checked="true"] {
+  border-color: var(--gold);
+  background: #1d1a12;
+}
+.check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14px;
+  color: #d4d1c9;
+}
+.check input {
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  accent-color: var(--gold);
+  flex: none;
+}
+
+@media (min-width: 641px) {
+  .choice {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

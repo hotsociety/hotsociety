@@ -1,0 +1,143 @@
+.profile {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+}
+.avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 3px solid var(--gold);
+  background: radial-gradient(circle at 30% 20%, #2e2618, #0b0b0c);
+  display: grid;
+  place-items: center;
+  font: 900 22px/1 var(--f-d);
+  color: var(--gold-hi);
+  box-shadow: 0 0 0 5px rgba(201, 162, 78, 0.15);
+}
+.pInfo {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.pInfo small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.pName {
+  font: 900 24px/1 var(--f-d);
+  font-stretch: 115%;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.xp {
+  font: 700 12.5px/1 var(--f-m);
+  color: var(--gold-hi) !important;
+}
+
+.medals {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.medal {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 16px 10px;
+  border-radius: 14px;
+  background: var(--s2);
+  border: 1px solid var(--line);
+  min-width: 0;
+}
+.medal b {
+  font-size: 14px;
+}
+.medal small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.coin {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font: 900 17px/1 var(--f-d);
+  font-stretch: 110%;
+  border: 2px solid var(--line2);
+  color: var(--muted2);
+  background: var(--s3);
+}
+.ok .coin {
+  border-color: var(--gold-hi);
+  background: var(--gold-grad);
+  color: #141416;
+  box-shadow: 0 6px 22px rgba(201, 162, 78, 0.3);
+}
+.perto .coin {
+  border-color: var(--gold-t);
+  color: var(--gold-hi);
+  border-style: dashed;
+}
+.futuro {
+  opacity: 0.6;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  margin-inline: -4px;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.table th {
+  text-align: left;
+  font: 700 11px/1 var(--f-m);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.table td {
+  padding: 11px 8px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.right {
+  text-align: right !important;
+  font-family: var(--f-m);
+  font-weight: 700;
+}
+.pos {
+  font: 700 12px/1 var(--f-m);
+  color: var(--muted2);
+}
+.meRow td {
+  background: #1d1a12;
+  color: var(--gold-hi);
+}
+.hideSm {
+  display: none;
+}
+
+@media (min-width: 641px) {
+  .medals {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .hideSm {
+    display: table-cell;
+  }
+  .avatar {
+    width: 88px;
+    height: 88px;
+    font-size: 26px;
+  }
+}
