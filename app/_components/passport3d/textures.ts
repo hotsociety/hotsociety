@@ -405,35 +405,56 @@ export function drawVisaPage(c: TexCtx): Draw {
     g.font = `600 24px ${F.mono}`;
     g.fillStyle = BRAND.inkMuted;
     g.fillText('ROTA HOT SOCIETY', 70, 184);
+    // grade 2 colunas; com 4 destinos fica 2×2. O último (Dubai) é o topo da rota.
+    const rows = Math.ceil(ROUTE.length / 2);
+    const rowY = (row: number) => h * (rows <= 2 ? 0.31 + row * 0.33 : 0.27 + row * 0.235);
     ROUTE.forEach((r, i) => {
       const x = w * (i % 2 ? 0.72 : 0.3);
-      const y = h * (0.27 + Math.floor(i / 2) * 0.235);
+      const y = rowY(Math.floor(i / 2));
+      const top = i === ROUTE.length - 1;
       if (i === 0 && s.stamped) {
         stampDraw(g, x, y, 125, 0.12, r.code, r.country, F);
         return;
       }
       g.save();
-      g.setLineDash([12, 10]);
-      g.strokeStyle = 'rgba(20,23,28,.35)';
-      g.lineWidth = 4;
-      g.beginPath();
-      g.arc(x, y, 118, 0, Math.PI * 2);
-      g.stroke();
+      if (top) {
+        // destino final: aro dourado duplo, sem tracejado
+        g.strokeStyle = '#B8963F';
+        g.lineWidth = 6;
+        g.beginPath();
+        g.arc(x, y, 124, 0, Math.PI * 2);
+        g.stroke();
+        g.lineWidth = 2;
+        g.beginPath();
+        g.arc(x, y, 110, 0, Math.PI * 2);
+        g.stroke();
+      } else {
+        g.setLineDash([12, 10]);
+        g.strokeStyle = 'rgba(20,23,28,.35)';
+        g.lineWidth = 4;
+        g.beginPath();
+        g.arc(x, y, 118, 0, Math.PI * 2);
+        g.stroke();
+      }
       g.restore();
       g.textAlign = 'center';
-      g.fillStyle = 'rgba(20,23,28,.55)';
+      g.fillStyle = top ? '#8E6F2B' : 'rgba(20,23,28,.55)';
       g.font = `900 54px ${F.display}`;
-      g.fillText(r.code, x, y + 8);
+      g.fillText(r.code, x, y - (top ? 6 : -8));
       g.font = `700 19px ${F.mono}`;
-      g.fillText(r.country, x, y + 44);
-      g.fillText(r.goal, x, y + 68);
+      g.fillText(r.country, x, y + (top ? 28 : 44));
+      if (top) {
+        g.font = `800 17px ${F.display}`;
+        g.fillText('MENTORIA', x, y + 56);
+        g.fillText('HIGH TICKET', x, y + 78);
+      } else g.fillText(r.goal, x, y + 68);
     });
     g.fillStyle = '#B8963F';
-    g.fillRect(0, h * 0.385 - 4, w, 8);
+    g.fillRect(0, (rowY(0) + rowY(1)) / 2 - 4, w, 8);
     g.fillStyle = BRAND.inkMuted;
     g.font = `600 20px ${F.text}`;
     g.textAlign = 'center';
-    g.fillText('O país se conquista. Ninguém compra Mônaco.', w / 2, h - 70);
+    g.fillText('O país se conquista. Ninguém compra Dubai.', w / 2, h - 70);
   };
 }
 
