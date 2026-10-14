@@ -20,13 +20,20 @@ export const CHECKOUT = {
   anual: process.env.NEXT_PUBLIC_CHECKOUT_ANUAL || "/login?plano=anual",
 };
 
+// Preços em R$ (fonte única: planos da home e checkout do passaporte 3D).
+export const PRICE = { mensal: 97, anual: 997 } as const;
+
+const brl = (n: number) => `R$ ${n.toLocaleString("pt-BR", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
+const ANUAL_MES = Math.round((PRICE.anual / 12) * 100) / 100; // 83,08
+const ECONOMIA = PRICE.mensal * 12 - PRICE.anual; // 167
+
 export const PLANS = [
   {
     id: "anual",
     name: "Anual",
-    price: "R$ 999",
+    price: brl(PRICE.anual),
     period: "/ano",
-    note: "R$ 83,25 por mês · 2 meses grátis",
+    note: `${brl(ANUAL_MES)} por mês · economize ${brl(ECONOMIA)}`,
     badge: "Melhor valor",
     href: CHECKOUT.anual,
     featured: true,
@@ -42,7 +49,7 @@ export const PLANS = [
   {
     id: "mensal",
     name: "Mensal",
-    price: "R$ 99",
+    price: brl(PRICE.mensal),
     period: "/mês",
     note: "Renova todo mês · sem fidelidade",
     badge: null,
@@ -107,6 +114,6 @@ export const FAQ = [
   },
   {
     q: "Qual a diferença entre o mensal e o anual?",
-    a: "O conteúdo é o mesmo. No anual você paga R$ 999 por ano, o equivalente a R$ 83,25 por mês, ganha 2 meses e bônus exclusivos.",
+    a: `O conteúdo é o mesmo. No anual você paga ${brl(PRICE.anual)} por ano, o equivalente a ${brl(ANUAL_MES)} por mês, economiza ${brl(ECONOMIA)} e ganha bônus exclusivos.`,
   },
 ] as const;

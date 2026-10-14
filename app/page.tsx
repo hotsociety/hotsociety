@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import SiteHeader from "./_components/home/SiteHeader";
 import CourseGrid, { CourseGridSkeleton } from "./_components/catalog/CourseGrid";
-import PassportPreview from "./_components/home/PassportPreview";
+import { Passport3D } from "./_components/passport3d";
 import { FAQ, FEATURES, MODULES, PLANS, ROUTE, SITE } from "./_lib/site";
 import "./home.css";
 import s from "./home.styles";
@@ -14,42 +14,8 @@ export default function Home() {
       <SiteHeader />
 
       <main id="conteudo">
-        {/* HERO */}
-        <section className={s.hero} aria-labelledby="hero-title">
-          <div className={s.heroBg} aria-hidden="true">
-            <Image src="/img/hero-neve.jpg" alt="" fill preload sizes="100vw" className={s.heroImg} />
-          </div>
-          <span className={s.goldLine} aria-hidden="true" />
-          <div className={`${s.wrap} ${s.heroIn}`}>
-            <div className={s.heroText}>
-              <p className={s.eyebrow}>Plataforma de assinatura · +18</p>
-              <h1 id="hero-title" className={s.stack}>
-                <span className={s.stackS}>Embarque no</span>
-                <span>zero.</span>
-                <span className={s.stackS}>Desembarque no</span>
-                <span className={s.goldText}>topo.</span>
-              </h1>
-              <p className={s.lead}>
-                Aprenda a faturar no digital com modelo IA ou modelo real. Aulas, ferramentas, comunidade e a CappuIA
-                numa rota que começa no Brasil e termina em Dubai.
-              </p>
-              <div className={s.ctaRow}>
-                <a href="#planos" className={`${s.btn} ${s.btnGold} ${s.btnLg}`}>
-                  Emitir meu passaporte
-                </a>
-                <a href="#por-dentro" className={`${s.btn} ${s.btnGhost} ${s.btnLg}`}>
-                  Ver por dentro
-                </a>
-              </div>
-              <ul className={s.trust}>
-                <li>7 dias de garantia</li>
-                <li>Cancele em 2 cliques</li>
-                <li>A partir de R$ 83,25/mês</li>
-              </ul>
-            </div>
-            <PassportPreview />
-          </div>
-        </section>
+        {/* HERO · Passaporte 3D: o lead escreve o nome, abre, carimba e ativa */}
+        <Passport3D />
 
         {/* JOGO */}
         <section className={s.section} aria-labelledby="jogo-title">

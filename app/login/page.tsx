@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../_lib/supabase";
-import { CHECKOUT } from "../_lib/site";
+import { CHECKOUT, PRICE } from "../_lib/site";
 import { caminhoSeguro } from "../_lib/cursos";
 import "./login.css";
 import s from "./login.styles";
@@ -112,7 +112,7 @@ function Login() {
 
           {planoValido && (
             <p className={s.plan}>
-              Plano escolhido: <b>{planoValido === "anual" ? "Anual · R$ 999" : "Mensal · R$ 99"}</b>
+              Plano escolhido: <b>{planoValido === "anual" ? `Anual · R$ ${PRICE.anual}` : `Mensal · R$ ${PRICE.mensal}`}</b>
             </p>
           )}
 
