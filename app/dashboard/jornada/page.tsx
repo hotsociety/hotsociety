@@ -12,7 +12,6 @@ import "./jornada.css";
 import s from "./jornada.styles";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
-const METAS = [0, 10000, 50000, 100000];
 
 export default function Jornada() {
   const { nome, user } = useMembro();
@@ -42,7 +41,7 @@ export default function Jornada() {
           <ol className={s.timeline}>
             {ROUTE.map((r, i) => {
               const status = i < PERFIL_DEMO.stopAtual ? "ok" : i === PERFIL_DEMO.stopAtual ? "aqui" : "futuro";
-              const falta = Math.max(0, METAS[i] - fat);
+              const falta = Math.max(0, (r.meta ?? 0) - fat);
               return (
                 <li key={r.code} className={s[status]}>
                   <span className={s.dot} aria-hidden="true">
@@ -55,6 +54,8 @@ export default function Jornada() {
                       </b>
                       {status === "aqui" ? (
                         <span className={`${ui.badge} ${ui.badgeGold}`}>Você está aqui</span>
+                      ) : status === "futuro" && r.meta === null ? (
+                        <span className={`${ui.badge} ${ui.badgeGold}`}>Mentoria</span>
                       ) : status === "futuro" ? (
                         <span className={ui.badge}>Faltam {BRL.format(falta)}</span>
                       ) : (
