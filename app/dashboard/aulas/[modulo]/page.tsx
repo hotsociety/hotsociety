@@ -4,9 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState, Suspense } from "react";
-import Icon from "@/app/_components/membros/Icon";
-import { MODULOS } from "@/app/_lib/demo";
-import ui from "@/app/_components/membros/ui.module.css";
+import Icon from "../../../_components/membros/Icon";
+import { MODULOS } from "../../../_lib/demo";
+import ui from "../../../_components/membros/ui.module.css";
 import s from "../aulas.module.css";
 
 function ModuloContent() {
