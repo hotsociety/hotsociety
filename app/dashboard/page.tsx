@@ -40,7 +40,7 @@ export default function Inicio() {
   const p = PERFIL_DEMO;
   const atual = ROUTE[p.stopAtual];
   const prox = ROUTE[p.stopAtual + 1];
-  const metaProx = 10000;
+  const metaProx = prox?.meta || 10000;
   const pctProx = Math.min(100, Math.round((p.faturado / metaProx) * 100));
   const continuar = MODULOS.find((m) => m.status === "andamento") ?? MODULOS[0];
   const aula = continuar.aulas[continuar.feitas] ?? continuar.aulas[0];

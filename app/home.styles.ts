@@ -86,6 +86,7 @@ const s: Record<string, string> = {
   routeCode: "hs-home-routeCode",
   routeDot: "hs-home-routeDot",
   routeStart: "hs-home-routeStart",
+  routeTop: "hs-home-routeTop",
   routeStop: "hs-home-routeStop",
   secHead: "hs-home-secHead",
   secHeadRow: "hs-home-secHeadRow",
