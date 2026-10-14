@@ -415,7 +415,7 @@ export default function Passport3D({ onActivate, onFirstClass, onLeadName }: Pas
           <li>Hot Academy completa: modelo IA e modelo white</li>
           <li>Ferramentas: prompts, abordagens, tráfego e funil</li>
           <li>Assistente CappuIA para tirar dúvidas</li>
-          <li>Feed, missões, ranking e placas 10K · 50K · 100K · 500K · 1M</li>
+          <li>Feed, missões, ranking e placas físicas a cada meta da rota</li>
         </ul>
 
         <div className={s.sum}>
