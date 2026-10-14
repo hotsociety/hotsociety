@@ -15,4 +15,4 @@ export default function MembrosLayout({ children }: any) {
       <MemberShell>{children}</MemberShell>
     </Suspense>
   );
-}git add .
+}
