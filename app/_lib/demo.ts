@@ -25,7 +25,7 @@ export const PERFIL_DEMO = {
   streak: 12,
   coins: 340,
   passaporte: "HS-26-30039",
-  stopAtual: 0, // 0 = GRU, 1 = SCL, 2 = LIS, 3 = DXB
+  stopAtual: 0, // 0 = GRU, 1 = SCL, 2 = LIS, 3 = JFK, 4 = MCM, 5 = DXB
   faturado: 6240, // em reais, verificado pelo gateway
   temporadaFim: "18 dias",
 };

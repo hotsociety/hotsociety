@@ -65,12 +65,16 @@ export const PLANS = [
   },
 ] as const;
 
-export const ROUTE = [
-  { code: "GRU", country: "Brasil", goal: "Ativou o passaporte", reward: "Medalha Embarque e +500 XP" },
-  { code: "SCL", country: "Chile", goal: "R$ 10 mil verificados", reward: "Placa física 10K" },
-  { code: "LIS", country: "Lisboa", goal: "R$ 50 mil verificados", reward: "Placa física 50K" },
-  { code: "DXB", country: "Dubai", goal: "R$ 100 mil verificados", reward: "Placa física 100K" },
-] as const;
+// Rota de níveis (mesma ordem do passaporte 3D). meta = faturamento verificado em R$.
+// Dubai (1M) é o topo e dá acesso à Mentoria High Ticket.
+export const ROUTE: readonly { code: string; country: string; goal: string; reward: string; meta: number | null }[] = [
+  { code: "GRU", country: "Brasil", goal: "Ativou o passaporte", reward: "Medalha Embarque e +500 XP", meta: 0 },
+  { code: "SCL", country: "Chile", goal: "R$ 10 mil verificados", reward: "Placa física 10K", meta: 10_000 },
+  { code: "LIS", country: "Lisboa", goal: "R$ 50 mil verificados", reward: "Placa física 50K", meta: 50_000 },
+  { code: "JFK", country: "Nova York", goal: "R$ 100 mil verificados", reward: "Placa física 100K", meta: 100_000 },
+  { code: "MCM", country: "Mônaco", goal: "R$ 500 mil verificados", reward: "Placa física 500K", meta: 500_000 },
+  { code: "DXB", country: "Dubai", goal: "R$ 1 milhão verificado", reward: "Mentoria High Ticket", meta: 1_000_000 },
+];
 
 export const FEATURES = [
   { t: "Hot Academy", d: "5 módulos, do primeiro passo à escala, com aulas curtas e missões." },

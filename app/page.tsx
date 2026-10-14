@@ -76,6 +76,7 @@ export default function Home() {
                   <p>{r.goal}</p>
                   <small>{r.reward}</small>
                   {i === 0 && <span className={s.routeStart}>Início</span>}
+                  {i === ROUTE.length - 1 && <span className={s.routeTop}>Topo</span>}
                 </li>
               ))}
             </ol>
