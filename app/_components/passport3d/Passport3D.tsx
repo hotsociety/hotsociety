@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { ASSETS, NAME_MAX, PLANS, ROUTE, SLOGAN, STORAGE_KEY, type PlanId } from './config';
 import type { PassportEngine } from './engine';
 import type { PassportAssets, PassportFonts, PassportState, Phase } from './types';
+import { SITE } from '../../_lib/site';
 import { brDate, brl, cleanName, passportDate, passportNumber } from './utils';
 import './passport3d.css';
 import s from './passport3d.styles';
@@ -75,8 +76,8 @@ export default function Passport3D({ onActivate, onFirstClass, onLeadName }: Pas
     typed: false,
     focus: false,
     caret: false,
-    num: passportNumber('SEU NOME'),
-    date: passportDate(),
+    num: passportNumber('SEU NOME', SITE.year),
+    date: '', // preenchida no navegador (ver efeito do nome)
     stamped: false,
   });
   const assetsRef = useRef<PassportAssets>({ comandante: null, wordmark: null });
@@ -102,7 +103,7 @@ export default function Passport3D({ onActivate, onFirstClass, onLeadName }: Pas
 
   const name = cleanName(raw);
   const typed = !!name;
-  const num = passportNumber(name || 'SEU NOME');
+  const num = passportNumber(name || 'SEU NOME', today?.getFullYear() ?? SITE.year);
 
   /* ── ações ── */
   const focusName = useCallback(() => inputRef.current?.focus({ preventScroll: true }), []);
@@ -204,6 +205,7 @@ export default function Passport3D({ onActivate, onFirstClass, onLeadName }: Pas
     st.typed = typed;
     st.name = name || 'SEU NOME';
     st.num = num;
+    if (today) st.date = passportDate(today);
     st.caret = st.focus;
     engineRef.current?.refreshCover();
     const t = setTimeout(() => {
@@ -214,7 +216,7 @@ export default function Passport3D({ onActivate, onFirstClass, onLeadName }: Pas
       if (typed) leadRef.current?.(name, num);
     }, 150);
     return () => clearTimeout(t);
-  }, [raw, name, typed, num]);
+  }, [raw, name, typed, num, today]);
 
   useEffect(() => {
     if (!coOpen) return;

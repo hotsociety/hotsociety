@@ -18,11 +18,12 @@ function hash5(s: string): string {
 }
 
 /** Número "visual" do passaporte (o número oficial deve vir do Supabase após a compra). */
-export function passportNumber(name: string, d = new Date()): string {
-  return `HS-${String(d.getFullYear()).slice(-2)}-${hash5(name)}`;
+/** Funções puras: nunca leem o relógio (o Next 16 com cacheComponents bloqueia isso no prerender). */
+export function passportNumber(name: string, year: number): string {
+  return `HS-${String(year).slice(-2)}-${hash5(name)}`;
 }
 
-export function passportDate(d = new Date()): string {
+export function passportDate(d: Date): string {
   return `${String(d.getDate()).padStart(2, '0')} ${M3[d.getMonth()]} ${d.getFullYear()}`;
 }
 
