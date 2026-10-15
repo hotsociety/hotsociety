@@ -518,3 +518,59 @@ export const RANKING_GAMES: [string, number][] = [
   ["rafa.souza", 410],
   ["pedro.h", 350],
 ];
+
+/* ===================== Afiliados ===================== */
+
+export const NIVEIS_AFILIADO = [
+  { n: "Tripulante", min: 0, p1: 30, pr: 15, b: "T" },
+  { n: "Comissário", min: 5, p1: 35, pr: 15, b: "C" },
+  { n: "Piloto", min: 20, p1: 40, pr: 20, b: "P" },
+  { n: "Comandante", min: 50, p1: 45, pr: 20, b: "★" },
+];
+
+// Comissão por mês (R$), do mais antigo ao mais recente.
+export const COMISSAO_MES = [180, 420, 610, 890, 760, 1240, 1580, 1310, 2050, 2380, 2710, 3120];
+
+export type VendaAfiliado = { data: string; cliente: string; plano: "Mensal" | "Anual"; tipo: "1ª venda" | "Renovação"; status: "pago" | "garantia" | "reemb" };
+export const VENDAS_AFILIADO: VendaAfiliado[] = [
+  { data: "12/10", cliente: "Rafael S.", plano: "Anual", tipo: "1ª venda", status: "garantia" },
+  { data: "11/10", cliente: "Gui M.", plano: "Mensal", tipo: "Renovação", status: "pago" },
+  { data: "09/10", cliente: "Vini A.", plano: "Mensal", tipo: "1ª venda", status: "pago" },
+  { data: "08/10", cliente: "Pedro H.", plano: "Anual", tipo: "1ª venda", status: "pago" },
+  { data: "05/10", cliente: "Caio L.", plano: "Mensal", tipo: "1ª venda", status: "reemb" },
+  { data: "03/10", cliente: "Davi R.", plano: "Mensal", tipo: "Renovação", status: "pago" },
+  { data: "01/10", cliente: "Bruno C.", plano: "Mensal", tipo: "Renovação", status: "pago" },
+  { data: "28/09", cliente: "Enzo R.", plano: "Anual", tipo: "1ª venda", status: "pago" },
+];
+
+export const CLIQUES_ORIGEM: [string, number][] = [
+  ["Instagram", 642],
+  ["WhatsApp", 318],
+  ["TikTok", 204],
+  ["YouTube", 96],
+  ["Link direto", 71],
+];
+
+export const AFILIADO_DEMO = { disponivel: 1186.35, proximo: "15/10", cliques: 1331, cadastros: 212, vendas: 23, ativos: 19, recorrente: 282.15, nivel: 2 };
+
+/* ===================== Levantar Caixa ===================== */
+
+export type Jogada = { t: string; prazo: "24h" | "48h" | "7 dias"; d: string; passos: string[]; roteiro: string; afiliados?: boolean };
+export const JOGADAS: Jogada[] = [
+  { t: "Pré-venda de pacote", prazo: "48h", d: "Venda antecipada de um pacote de conteúdo para quem já acompanha a persona.", passos: ["Defina o pacote e a data real de entrega.", "Anuncie nos stories com 3 dias de pré-venda.", "Mande no direct para quem mais interage.", "Entregue no prazo prometido."], roteiro: "Vou liberar um pacote novo no dia [DATA]. Quem garantir na pré-venda até [DATA] paga [PREÇO] em vez de [PREÇO CHEIO]. Quer que eu te mande o link?" },
+  { t: "Reativar quem sumiu", prazo: "24h", d: "Mensagem pessoal para quem já comprou e parou. É a venda mais barata que existe.", passos: ["Liste quem comprou nos últimos 90 dias e não renovou.", "Mande mensagem individual, sem copiar e colar em massa.", "Ofereça algo novo, não só desconto."], roteiro: "Oi [NOME], faz tempo! Saiu conteúdo novo essa semana que tem a sua cara. Se quiser voltar, consigo liberar pra você hoje com [CONDIÇÃO]. Bora?" },
+  { t: "Oferta de 48 horas", prazo: "48h", d: "Condição especial com prazo real. Abre, divulga e fecha quando disse que ia fechar.", passos: ["Escolha a condição (bônus ou preço) e o horário de fim.", "Avise 3 vezes: abertura, meio e últimas horas.", "Feche no horário. Prazo falso queima sua marca."], roteiro: "Só até [DIA] às [HORA]: quem assinar leva [BÔNUS]. Depois disso volta ao normal, sem prorrogar." },
+  { t: "Upgrade para anual", prazo: "7 dias", d: "Quem já paga mensal e gosta do conteúdo costuma topar o anual com vantagem clara.", passos: ["Filtre assinantes mensais há 2 meses ou mais.", "Mostre a conta: quanto economiza no ano.", "Ofereça um bônus exclusivo do anual."], roteiro: "Você já tá comigo há [X] meses. No anual você economiza [VALOR] e ainda leva [BÔNUS]. Quer que eu mude seu plano?" },
+  { t: "Afiliação HOT SOCIETY", prazo: "7 dias", d: "Indique a Society para quem quer começar no digital e ganhe na primeira venda e nas renovações.", passos: ["Pegue seu link na aba Afiliados.", "Conte sua experiência real, sem prometer ganho.", "Use o kit de divulgação pronto."], roteiro: "Eu uso a HOT SOCIETY pra organizar minha operação. Se fizer sentido pra você, entra pelo meu link: [LINK]", afiliados: true },
+  { t: "Vender um serviço", prazo: "7 dias", d: "Ofereça o que você já sabe fazer: criar persona, montar funil ou editar conteúdo para outros operadores.", passos: ["Escolha 1 serviço que você domina.", "Monte 3 exemplos do seu trabalho.", "Ofereça para 10 pessoas da comunidade com preço fechado."], roteiro: "Tô montando [SERVIÇO] para outros operadores. Entrego em [PRAZO] por [PREÇO]. Te mando exemplos?" },
+];
+
+export const PLANO_7_DIAS: [string, string, string, string][] = [
+  ["Dia 1", "Definir a meta e o prazo", "Escolher 2 jogadas", "Listar 30 contatos quentes"],
+  ["Dia 2", "Montar a oferta", "Gravar 3 stories", "Mandar 10 mensagens"],
+  ["Dia 3", "Abrir pré-venda ou oferta", "Mandar mais 10 mensagens", "Registrar entradas"],
+  ["Dia 4", "Postar prova real (print seu)", "Responder todo direct", "Pedir indicação a quem comprou"],
+  ["Dia 5", "Reativar quem sumiu", "Oferecer upgrade anual", "Registrar entradas"],
+  ["Dia 6", "Últimas horas da oferta", "Live ou caixinha de perguntas", "Mandar link de afiliado"],
+  ["Dia 7", "Fechar a oferta no horário", "Entregar o que vendeu", "Separar % para tráfego"],
+];
