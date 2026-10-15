@@ -91,6 +91,7 @@
   padding: 10px 0;
   align-content: start;
   overflow-y: auto;
+  overflow-x: hidden;
   flex: 1;
 }
 .hs-shell-navItem {
@@ -144,6 +145,7 @@
 }
 .hs-shell-navItem {
   position: relative;
+  min-width: 0;
 }
 .hs-shell-badge,
 .hs-shell-soonTag {
@@ -167,6 +169,12 @@
 .hs-shell-navSoon {
   cursor: default;
   opacity: 0.55;
+}
+.hs-shell-navSoon span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 .hs-shell-navSoon:hover {
   background: none;
