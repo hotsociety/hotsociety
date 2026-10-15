@@ -15,7 +15,7 @@ function ModuloContent() {
     return (
       <div className="p-6 max-w-4xl mx-auto">
         <Link href="/dashboard/aulas" className="inline-flex items-center gap-2 text-zinc-400 hover:text-white mb-6 transition-colors">
-          <Icon name="back" size={16} /> Voltar às aulas
+          <Icon name="back" size={16} /> Voltar aos módulos
         </Link>
         <div className="bg-[#141416] border border-[#2e2e33] rounded-2xl p-8 text-center">
           <h1 className="text-2xl font-bold text-white mb-2">{m ? "Módulo bloqueado" : "Módulo não encontrado"}</h1>
@@ -52,7 +52,7 @@ function Player({ slug }: { slug: string }) {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
       <Link href="/dashboard/aulas" className="inline-flex items-center gap-2 text-zinc-400 hover:text-white mb-6 transition-colors">
-        <Icon name="back" size={16} /> Voltar às aulas
+        <Icon name="back" size={16} /> Voltar aos módulos
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

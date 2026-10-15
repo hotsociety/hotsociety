@@ -22,6 +22,18 @@ const PATHS = {
   live: "M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14",
   back: "M15 5l-7 7 7 7",
   arrow: "M5 12h14M13 6l6 6-6 6",
+  feed: "M4 5h16v11H8l-4 4z",
+  target: "M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
+  grid: "M3 4h7v7H3zM14 4h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z",
+  modules: "M3 5h18v14H3zM10 9l5 3-5 3z",
+  bot: "M4 7h16v10H4zM9 12h.01M15 12h.01",
+  trophy: "M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0z",
+  plaque: "M5 3h14v18H5zM8 8h8M8 12h5",
+  bag: "M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8zM9 8V6a3 3 0 0 1 6 0v2",
+  pad: "M3 7h18v11H3zM8 11v3M6.5 12.5h3M15 12h.01M17.5 13.5h.01",
+  wallet: "M3 6h18v13H3zM3 10h18M7 15h3",
+  affiliate: "M9 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM3 20c.8-3.5 3-5.5 6-5.5s5.2 2 6 5.5M17 8v6M14 11h6",
+  mentor: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c1-4 4-6 8-6s7 2 8 6",
 } as const;
 
 export type IconName = keyof typeof PATHS;

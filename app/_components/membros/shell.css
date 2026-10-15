@@ -123,6 +123,72 @@
   color: var(--gold-hi);
   box-shadow: inset 2px 0 0 var(--gold);
 }
+/* grupos do menu (Comunidade, Conteúdo…) */
+.hs-shell-grp {
+  display: grid;
+  gap: 2px;
+}
+.hs-shell-grp + .hs-shell-grp {
+  border-top: 1px solid var(--line);
+  margin-top: 6px;
+  padding-top: 6px;
+}
+.hs-shell-grpT {
+  display: none;
+  font: 600 10px/1 var(--f-d);
+  font-stretch: 125%;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  padding: 10px 22px 6px;
+}
+.hs-shell-navItem {
+  position: relative;
+}
+.hs-shell-badge,
+.hs-shell-soonTag {
+  margin-left: auto;
+  font: 700 10px/1 var(--f-m);
+  font-style: normal;
+  border-radius: 99px;
+  padding: 4px 6px;
+}
+.hs-shell-badge {
+  background: var(--gold);
+  color: #141416;
+}
+.hs-shell-soonTag {
+  border: 1px solid var(--line);
+  color: var(--muted2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 9px;
+}
+.hs-shell-navSoon {
+  cursor: default;
+  opacity: 0.55;
+}
+.hs-shell-navSoon:hover {
+  background: none;
+  color: var(--muted);
+}
+/* no trilho de ícones (tablet) o selo vira um ponto e "em breve" some */
+@media (max-width: 1024px) {
+  .hs-shell-badge {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    margin: 0;
+    padding: 0;
+    width: 8px;
+    height: 8px;
+    font-size: 0;
+  }
+  .hs-shell-navSoon {
+    display: none;
+  }
+}
+
 .hs-shell-season {
   display: none;
   margin: 8px 16px;
@@ -374,6 +440,14 @@
   }
   .hs-shell-navItem span {
     display: inline;
+  }
+  .hs-shell-grpT {
+    display: block;
+  }
+  .hs-shell-grp + .hs-shell-grp {
+    border-top: 0;
+    margin-top: 0;
+    padding-top: 0;
   }
   .hs-shell-season {
     display: block;
