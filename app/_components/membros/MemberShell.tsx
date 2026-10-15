@@ -11,6 +11,7 @@ import { ROUTE } from "../../_lib/site";
 import Icon, { type IconName } from "./Icon";
 import { MemberContext, nomeDoUsuario, type Membro } from "./MemberContext";
 import Toaster from "./Toast";
+import HotPhone from "./hotphone/HotPhone";
 import "./shell.css";
 import "./proto.css";
 import s from "./shell.styles";
@@ -214,6 +215,7 @@ export default function MemberShell({ children }: { children: ReactNode }) {
           {children}
         </main>
         <Toaster />
+        <HotPhone />
 
         {/* Barra inferior: só celular */}
         <nav className={s.bottom} aria-label="Navegação principal">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { toast } from "../../_components/membros/Toast";
+import { abrirHotphone } from "../../_components/membros/hotphone/HotPhone";
 import { m } from "../../_components/membros/proto";
 import { IMG, MODULOS } from "../../_lib/demo";
 
@@ -75,8 +75,7 @@ const LINHAS: { t: string; s: string; largo?: boolean; cards: Card[] }[] = [
 
 export default function AreaDeMembros() {
   const router = useRouter();
-  const ir = (destino: string) =>
-    destino === "hotphone" ? toast("O HOTPHONE chega na próxima atualização") : router.push(destino);
+  const ir = (destino: string) => (destino === "hotphone" ? abrirHotphone() : router.push(destino));
 
   return (
     <section className={m("view")} aria-label="Área de Membros">
