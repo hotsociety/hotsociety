@@ -10,25 +10,67 @@ import { PERFIL_DEMO } from "../../_lib/demo";
 import { ROUTE } from "../../_lib/site";
 import Icon, { type IconName } from "./Icon";
 import { MemberContext, nomeDoUsuario, type Membro } from "./MemberContext";
+import Toaster from "./Toast";
 import "./shell.css";
+import "./proto.css";
 import s from "./shell.styles";
 
-type Item = { href: string; t: string; icon: IconName };
+type Item = { href: string; t: string; icon: IconName; badge?: string; soon?: boolean };
+type Grupo = { g?: string; itens: Item[] };
 
-export const NAV: Item[] = [
-  { href: "/dashboard", t: "Início", icon: "home" },
-  { href: "/dashboard/aulas", t: "Aulas", icon: "play" },
-  { href: "/dashboard/jornada", t: "Jornada", icon: "plane" },
-  { href: "/dashboard/comunidade", t: "Comunidade", icon: "chat" },
-  { href: "/dashboard/cappuia", t: "CappuIA", icon: "spark" },
-  { href: "/dashboard/ferramentas", t: "Ferramentas", icon: "tool" },
-  { href: "/dashboard/conquistas", t: "Conquistas", icon: "medal" },
-  { href: "/dashboard/suporte", t: "Suporte", icon: "help" },
-  { href: "/dashboard/perfil", t: "Perfil", icon: "user" },
+// Menu no padrão do protótipo da área de membros. soon = aba que ainda vai ser construída.
+export const GRUPOS: Grupo[] = [
+  { itens: [{ href: "/dashboard", t: "Início", icon: "home" }] },
+  {
+    g: "Comunidade",
+    itens: [
+      { href: "/dashboard/feed", t: "Feed", icon: "feed", badge: "12" },
+      { href: "/dashboard/missoes", t: "Missões", icon: "target", badge: "3" },
+    ],
+  },
+  {
+    g: "Conteúdo",
+    itens: [
+      { href: "/dashboard/area", t: "Área de Membros", icon: "grid", soon: true },
+      { href: "/dashboard/aulas", t: "Módulos", icon: "modules" },
+      { href: "/dashboard/ferramentas", t: "Ferramentas", icon: "tool" },
+      { href: "/dashboard/cappuia", t: "Assistente CappuIA", icon: "bot" },
+    ],
+  },
+  {
+    g: "Conquistas",
+    itens: [
+      { href: "/dashboard/conquistas", t: "Gamificação", icon: "trophy" },
+      { href: "/dashboard/jornada", t: "Prêmios", icon: "plaque" },
+    ],
+  },
+  {
+    g: "Extras",
+    itens: [
+      { href: "/dashboard/store", t: "Hot Store", icon: "bag", soon: true },
+      { href: "/dashboard/games", t: "Games", icon: "pad", soon: true },
+    ],
+  },
+  {
+    g: "Grana",
+    itens: [
+      { href: "/dashboard/caixa", t: "Levantar Caixa", icon: "wallet", soon: true },
+      { href: "/dashboard/afiliados", t: "Afiliados", icon: "affiliate", soon: true },
+    ],
+  },
+  { g: "Acesso", itens: [{ href: "/dashboard/mentoria", t: "Minha Mentoria", icon: "mentor", soon: true }] },
+  {
+    g: "Conta",
+    itens: [
+      { href: "/dashboard/suporte", t: "Suporte", icon: "help" },
+      { href: "/dashboard/perfil", t: "Perfil", icon: "user" },
+    ],
+  },
 ];
+export const NAV: Item[] = GRUPOS.flatMap((g) => g.itens).filter((i) => !i.soon);
 
 // No celular, 4 atalhos fixos + "Mais".
-const BOTTOM = ["/dashboard", "/dashboard/aulas", "/dashboard/comunidade", "/dashboard/cappuia"];
+const BOTTOM = ["/dashboard", "/dashboard/feed", "/dashboard/missoes", "/dashboard/aulas"];
 
 function ativo(pathname: string, href: string) {
   return href === "/dashboard" ? pathname === href : pathname === href || pathname.startsWith(href + "/");
@@ -111,17 +153,31 @@ export default function MemberShell({ children }: { children: ReactNode }) {
           </Link>
 
           <nav className={s.nav}>
-            {NAV.map((i) => (
-              <Link
-                key={i.href}
-                href={i.href}
-                className={s.navItem}
-                aria-current={ativo(pathname, i.href) ? "page" : undefined}
-                title={i.t}
-              >
-                <Icon name={i.icon} />
-                <span>{i.t}</span>
-              </Link>
+            {GRUPOS.map((g, gi) => (
+              <div key={g.g ?? gi} className={s.grp}>
+                {g.g && <span className={s.grpT}>{g.g}</span>}
+                {g.itens.map((i) =>
+                  i.soon ? (
+                    <span key={i.href} className={`${s.navItem} ${s.navSoon}`} title={`${i.t} · em breve`}>
+                      <Icon name={i.icon} />
+                      <span>{i.t}</span>
+                      <em className={s.soonTag}>em breve</em>
+                    </span>
+                  ) : (
+                    <Link
+                      key={i.href}
+                      href={i.href}
+                      className={s.navItem}
+                      aria-current={ativo(pathname, i.href) ? "page" : undefined}
+                      title={i.t}
+                    >
+                      <Icon name={i.icon} />
+                      <span>{i.t}</span>
+                      {i.badge && <em className={s.badge}>{i.badge}</em>}
+                    </Link>
+                  ),
+                )}
+              </div>
             ))}
           </nav>
 
@@ -157,6 +213,7 @@ export default function MemberShell({ children }: { children: ReactNode }) {
         <main className={s.main} id="conteudo">
           {children}
         </main>
+        <Toaster />
 
         {/* Barra inferior: só celular */}
         <nav className={s.bottom} aria-label="Navegação principal">

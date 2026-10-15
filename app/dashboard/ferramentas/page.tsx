@@ -1,92 +1,126 @@
 "use client";
 
 import { useState } from "react";
-import Icon from "../../_components/membros/Icon";
-import { FERRAMENTAS } from "../../_lib/demo";
-import "../../_components/membros/ui.css";
-import ui from "../../_components/membros/ui.styles";
-import "./ferramentas.css";
-import s from "./ferramentas.styles";
+import { m } from "../../_components/membros/proto";
+import { FERRAMENTAS, FERRAMENTA_TAG } from "../../_lib/demo";
+
+const FUNIL = [
+  ["Perfil", "Orgânico e pago atraem"],
+  ["Prévia", "Desperta curiosidade"],
+  ["Conversa", "Script e relacionamento"],
+  ["Assinatura", "Página e preço"],
+  ["Retenção", "Conteúdo e renovação"],
+];
 
 export default function Ferramentas() {
-  const [cat, setCat] = useState(FERRAMENTAS[0].id);
+  const [atual, setAtual] = useState(FERRAMENTAS[0].id);
   const [busca, setBusca] = useState("");
   const [copiado, setCopiado] = useState<string | null>(null);
-  const atual = FERRAMENTAS.find((f) => f.id === cat)!;
-  const termo = busca.trim().toLowerCase();
-  const itens = termo
-    ? FERRAMENTAS.flatMap((f) => f.itens).filter((i) => (i.t + " " + i.texto).toLowerCase().includes(termo))
-    : atual.itens;
+  const f = FERRAMENTAS.find((x) => x.id === atual)!;
+  const q = busca.trim().toLowerCase();
+  const itens = f.itens.filter((x) => !q || (x.t + x.texto).toLowerCase().includes(q));
 
-  async function copiar(id: string, texto: string) {
+  async function copiar(id: string, texto: string, pre: HTMLElement | null) {
     try {
       await navigator.clipboard.writeText(texto);
       setCopiado(id);
-      setTimeout(() => setCopiado((c) => (c === id ? null : c)), 1800);
+      setTimeout(() => setCopiado((c) => (c === id ? null : c)), 1400);
     } catch {
-      setCopiado(null);
+      // sem permissão de área de transferência: seleciona o texto para o usuário copiar
+      if (pre) {
+        const r = document.createRange();
+        r.selectNodeContents(pre);
+        const sel = getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(r);
+      }
     }
   }
 
   return (
-    <div className={ui.page}>
-      <header className={ui.head}>
-        <p className={ui.eyebrow}>Ferramentas</p>
-        <h1 className={ui.h1}>
-          Pronto para <span className={ui.gold}>copiar.</span>
-        </h1>
-        <p className={ui.sub}>Prompts, scripts e playbooks testados. Troque o que está entre colchetes e use hoje.</p>
-      </header>
+    <section className={m("view")} aria-label="Ferramentas">
+      <div className={m("top")}>
+        <div>
+          <h1>Ferramentas</h1>
+          <p className={m("sub")}>Material pronto para copiar e usar hoje.</p>
+        </div>
+      </div>
 
-      <div className={s.cats}>
-        {FERRAMENTAS.map((f) => (
+      <div className={m("tools")}>
+        {FERRAMENTAS.map((x) => (
           <button
-            key={f.id}
+            key={x.id}
             type="button"
-            className={s.cat}
-            aria-pressed={!termo && cat === f.id}
+            className={m("tool")}
+            aria-pressed={atual === x.id}
             onClick={() => {
-              setCat(f.id);
+              setAtual(x.id);
               setBusca("");
             }}
           >
-            <span className={s.n}>{f.n}</span>
-            <b>{f.t}</b>
-            <small>{f.d}</small>
-            <span className={ui.badge}>{f.qtd}</span>
+            <span className={m("ic")}>{x.n}</span>
+            <b>{x.t}</b>
+            <small>{x.d}</small>
+            <span className={m("ct")}>{x.qtd.toUpperCase()}</span>
           </button>
         ))}
       </div>
 
-      <section className={ui.card} aria-label={termo ? "Resultado da busca" : atual.t}>
-        <div className={ui.rowBetween}>
-          <h2 className={ui.h2}>{termo ? `Busca: “${busca}”` : atual.t}</h2>
-          <label className={s.search}>
-            <Icon name="search" size={18} />
-            <span className="sr-only">Buscar ferramenta</span>
-            <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar" />
+      <div className={m("card")} style={{ display: "grid", gap: 14 }}>
+        <div className={m("split")}>
+          <h2 style={{ margin: 0 }}>{f.t}</h2>
+          <label htmlFor="tsearch" style={{ position: "absolute", left: -9999 }}>
+            Buscar
           </label>
+          <input
+            id="tsearch"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar nesta ferramenta"
+            style={{
+              minHeight: 40,
+              borderRadius: 6,
+              border: "1px solid var(--line2)",
+              background: "var(--s2)",
+              color: "var(--neve)",
+              padding: "0 12px",
+              minWidth: 0,
+              flex: "0 1 260px",
+            }}
+          />
         </div>
-
-        {itens.length === 0 ? (
-          <p className={ui.muted}>Nada encontrado com esse termo.</p>
-        ) : (
-          <ul className={s.items}>
-            {itens.map((i) => (
-              <li key={i.id} className={s.item}>
-                <div className={ui.rowBetween}>
-                  <b>{i.t}</b>
-                  <button type="button" className={ui.btnSm} onClick={() => copiar(i.id, i.texto)}>
-                    <Icon name={copiado === i.id ? "check" : "copy"} size={16} />
-                    {copiado === i.id ? "Copiado" : "Copiar"}
+        <div className={m("items")}>
+          {f.id === "funil" && (
+            <div className={m("flow")}>
+              {FUNIL.map(([b, t]) => (
+                <div key={b}>
+                  <b>{b}</b>
+                  {t}
+                </div>
+              ))}
+            </div>
+          )}
+          {itens.map((x) => (
+            <div key={x.id} className={m("it")}>
+              <div className={m("split")}>
+                <b>{x.t}</b>
+                <div className={m("row")}>
+                  {FERRAMENTA_TAG[x.id] && <span className={m("tag")}>{FERRAMENTA_TAG[x.id]}</span>}
+                  <button
+                    className={m("copy")}
+                    type="button"
+                    onClick={(e) => copiar(x.id, x.texto, e.currentTarget.closest(`.${m("it")}`)?.querySelector("pre") ?? null)}
+                  >
+                    {copiado === x.id ? "Copiado ✓" : "Copiar"}
                   </button>
                 </div>
-                <pre className={s.text}>{i.texto}</pre>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </div>
+              </div>
+              <pre>{x.texto}</pre>
+            </div>
+          ))}
+          {!itens.length && <p className={m("sub")}>Nada encontrado nesta ferramenta.</p>}
+        </div>
+      </div>
+    </section>
   );
 }

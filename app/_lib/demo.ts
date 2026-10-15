@@ -304,3 +304,151 @@ export const CHAMADOS = [
   { id: "#2481", t: "Comprovação de venda", status: "Em análise", quando: "aberto ontem" },
   { id: "#2310", t: "Acesso ao módulo 02", status: "Resolvido", quando: "03/10" },
 ];
+
+/* ===================== Feed estilo rede social ===================== */
+
+export const IMG = {
+  cappu: "/img/comandante.jpg",
+  cappuia: "/img/feed/cappuia.jpg",
+  hero: "/img/hero-neve.jpg",
+  placas: "/img/placas.jpg",
+  resultado: "/img/feed/resultado.jpg",
+  chile: "/img/feed/chile.jpg",
+  teleferico: "/img/feed/teleferico.jpg",
+  m2: "/img/modulo-02.jpg",
+  m4: "/img/modulo-04.jpg",
+} as const;
+
+export type StorySlide = { img?: string; h: string; dest?: string; p: string; acao?: [string, string] };
+export type Story = { k: string; nome: string; img?: string; simbolo?: boolean; aoVivo?: boolean; autor: string; quando: string; slides: StorySlide[] };
+
+// h = título; o trecho em dest aparece em dourado. acao = [rótulo, destino] (rota ou ação interna).
+export const STORIES: Story[] = [
+  {
+    k: "cappu", nome: "capputin0", img: IMG.cappu, aoVivo: true, autor: "capputin0", quando: "2 h",
+    slides: [
+      { img: IMG.cappu, h: "Fala,", dest: "passageiro.", p: "Live hoje à noite. Traz suas dúvidas de tráfego." },
+      { h: "Live", dest: "quinta 21h", p: "Tráfego pago no nicho sem perder conta.", acao: ["Lembrar da live", "lembrar"] },
+      { img: IMG.hero, h: "Não existe", dest: "nobreza na pobreza.", p: "Bora pra cima." },
+    ],
+  },
+  {
+    k: "ia", nome: "cappuia", img: IMG.cappuia, autor: "cappuia", quando: "agora",
+    slides: [{ img: IMG.cappuia, h: "Travou?", dest: "me chama.", p: "Eu respondo dúvida das aulas 24 horas.", acao: ["Abrir a CappuIA", "/dashboard/cappuia"] }],
+  },
+  {
+    k: "missao", nome: "Missão do dia", simbolo: true, autor: "hotsociety", quando: "hoje",
+    slides: [{ h: "Missão do dia:", dest: "+150 XP", p: "Assista à aula 3 do Módulo 02 e comente o que vai aplicar.", acao: ["Aceitar missão", "missao"] }],
+  },
+  {
+    k: "aula", nome: "Aula nova", img: IMG.m2, autor: "hotsociety", quando: "1 h",
+    slides: [{ img: IMG.m2, h: "Aula nova no", dest: "Módulo 02", p: "Como criar o rosto da sua modelo do zero.", acao: ["Assistir aula", "/dashboard/aulas/modelo-ia"] }],
+  },
+  {
+    k: "res", nome: "Resultados", img: IMG.resultado, autor: "hotsociety", quando: "5 h",
+    slides: [
+      { img: IMG.resultado, h: "Print", dest: "verificado", p: "Resultado de aluno, conferido pelo time." },
+      { img: IMG.chile, h: "Mais um no", dest: "Chile.", p: "Rota GRU → SCL concluída." },
+    ],
+  },
+  {
+    k: "placas", nome: "Placas", img: IMG.placas, autor: "hotsociety", quando: "ontem",
+    slides: [{ img: IMG.placas, h: "Cada meta,", dest: "uma placa.", p: "Faturamento verificado, placa na sua casa.", acao: ["Ver Prêmios", "/dashboard/jornada"] }],
+  },
+];
+
+export type Post = {
+  id: string;
+  u: string; // @ do autor
+  verificado?: boolean;
+  sub: string;
+  tipo: "aula" | "img" | "carrossel" | "missao" | "enquete" | "frase" | "texto";
+  img?: string;
+  quadrado?: boolean;
+  tag?: string;
+  dur?: string;
+  likes: number;
+  com: number;
+  legenda?: string;
+  texto?: string;
+  quando: string;
+  seguir?: boolean;
+  abrir?: string; // rota ao tocar na mídia
+  cta?: [string, string];
+};
+
+export const POSTS: Post[] = [
+  { id: "p1", u: "hotsociety", verificado: true, sub: "Aula nova · Módulo 02", tipo: "aula", img: IMG.m2, tag: "Aula 3 · Módulo 02", dur: "12:40", likes: 1284, com: 86, legenda: "O rosto da sua modelo do zero: persona, estilo e os primeiros prompts. Sem rosto real, sem deepfake.", quando: "há 1 hora", abrir: "/dashboard/aulas/modelo-ia" },
+  { id: "p2", u: "hotsociety", verificado: true, sub: "Missão do dia", tipo: "missao", likes: 980, com: 44, quando: "há 2 horas" },
+  { id: "p3", u: "gui.moraes", sub: "Conquista · Chile · SCL", tipo: "img", img: IMG.resultado, quadrado: true, tag: "Carimbo do Chile", likes: 642, com: 41, legenda: "Bati os 10K verificados. Placa a caminho, próxima escala Lisboa. Valeu pela call de quinta, Cappu.", quando: "há 3 horas", seguir: true },
+  { id: "p4", u: "hotsociety", verificado: true, sub: "Carrossel · Ferramentas", tipo: "carrossel", likes: 2310, com: 120, legenda: "Salva esse pra quando for criar a persona. Completo em Ferramentas › Prompts de modelo IA.", quando: "há 5 horas" },
+  { id: "p5", u: "capputin0", verificado: true, sub: "Enquete", tipo: "enquete", likes: 512, com: 73, quando: "há 6 horas" },
+  { id: "p6", u: "hotsociety", verificado: true, sub: "Prêmios", tipo: "img", img: IMG.placas, tag: "Prêmios", likes: 3402, com: 210, legenda: "Cada meta da rota vira placa física na sua casa: 10K, 50K, 100K e 500K. Dubai é a Mentoria High Ticket. Valores são metas, não promessa de ganho.", quando: "ontem", cta: ["Ver Prêmios", "/dashboard/jornada"] },
+  { id: "p7", u: "capputin0", verificado: true, sub: "Recado", tipo: "frase", likes: 4120, com: 301, quando: "ontem" },
+  { id: "p8", u: "vini.alves", sub: "# resultados", tipo: "img", img: IMG.chile, quadrado: true, tag: "Rota GRU → SCL", likes: 388, com: 22, legenda: "Primeira semana postando 3 por dia no orgânico. Segui o roteiro do módulo 4 e já veio a primeira venda.", quando: "há 2 dias", seguir: true },
+  { id: "p9", u: "hotsociety", verificado: true, sub: "Mentoria High Ticket", tipo: "img", img: IMG.hero, tag: "Exclusivo", likes: 1890, com: 95, legenda: "Acompanhamento direto com o Cappu, por aplicação. Turma pequena. É o destino final da rota: Dubai.", quando: "há 2 dias" },
+];
+
+export const CARROSSEL = [
+  { n: "3", h: "Prompts pra criar o rosto da sua modelo", p: "Arrasta pro lado e salva." },
+  { n: "1", h: "Persona antes do rosto", code: "Mulher adulta, 25 anos, estilo minimalista, luz natural, retrato de estúdio, fundo neutro" },
+  { n: "2", h: "Consistência", code: "Mesma persona, mesmos traços, 3 ângulos: frente, 3/4 e perfil" },
+  { n: "3", h: "Identifique como IA", p: "Todo conteúdo gerado leva o aviso de IA. Regra da Society e das plataformas." },
+];
+
+export const ENQUETE = {
+  pergunta: "Qual live vocês querem na quinta?",
+  opcoes: [
+    { id: "a", t: "Tráfego pago sem bloqueio", pct: 46 },
+    { id: "b", t: "Funil de recorrência", pct: 31 },
+    { id: "c", t: "Bastidores da operação", pct: 23 },
+  ],
+};
+
+export const COMENTARIOS: [string, string, string][] = [
+  ["gui.moraes", "Essa aula mudou minha persona, salvei tudo", "2 h"],
+  ["vini.alves", "Alguém testou o prompt 2 com luz de fim de tarde?", "1 h"],
+  ["capputin0", "Testa e posta no # resultados que eu comento na live", "45 min"],
+  ["pedro.h", "Missão de hoje feita", "20 min"],
+];
+
+export const SUGESTOES: [string, string][] = [
+  ["prompts.ia", "Prompts e personas"],
+  ["trafego.pago", "Anúncios no nicho"],
+  ["funil.hs", "Funis e ofertas"],
+  ["rafa.souza", "Carimbou o Chile"],
+  ["pedro.h", "Segue você"],
+];
+
+/* ===================== Missões (com progresso) ===================== */
+
+export type MissaoPlano = { id: string; t: string; meta: string; feito: number; total: number; xp: number; porque?: string };
+
+export const MISSOES_PLANO: Record<"d" | "s" | "m", MissaoPlano[]> = {
+  d: [
+    { id: "01", t: "Responder 10 conversas com o script novo", meta: "20 min · Ferramentas › Abordagens", feito: 0, total: 1, xp: 80, porque: "Seu gargalo hoje é conversa → venda." },
+    { id: "02", t: "Publicar 3 prévias no funil", meta: "15 min · Módulo 04 › aula 05", feito: 2, total: 3, xp: 120 },
+    { id: "03", t: "Assistir à próxima aula", meta: "12 min · Módulo 02 › aula 04", feito: 1, total: 1, xp: 40 },
+    { id: "04", t: "Responder uma dúvida no # dúvidas", meta: "5 min · Feed › Canais", feito: 0, total: 1, xp: 30, porque: "Ajudar também dá XP." },
+  ],
+  s: [
+    { id: "S1", t: "Postar 5 Reels de 7 segundos", meta: "Ferramentas › Tráfego orgânico", feito: 3, total: 5, xp: 400 },
+    { id: "S2", t: "Fazer 50 abordagens no total", meta: "Ferramentas › Abordagens", feito: 22, total: 50, xp: 500 },
+    { id: "S3", t: "Concluir o Módulo 04 até a aula 04", meta: "Tráfego e funil", feito: 1, total: 4, xp: 300 },
+  ],
+  m: [
+    { id: "M", t: "Desafio do mês: primeira venda em 30 dias", meta: "Carimbo exclusivo do mês + 1.000 XP", feito: 0, total: 1, xp: 1000, porque: "Só existe neste mês. Não volta." },
+  ],
+};
+
+// Etiqueta mostrada em cada item das Ferramentas (por id do item).
+export const FERRAMENTA_TAG: Record<string, string> = {
+  p1: "PERSONA",
+  p2: "VISUAL",
+  p3: "ROTINA",
+  a1: "DIRECT",
+  a2: "OBJEÇÃO",
+  t1: "PLAYBOOK",
+  o1: "ROTINA",
+  f1: "MAPA",
+};
