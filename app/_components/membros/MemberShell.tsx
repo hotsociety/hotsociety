@@ -54,11 +54,11 @@ export const GRUPOS: Grupo[] = [
   {
     g: "Grana",
     itens: [
-      { href: "/dashboard/caixa", t: "Levantar Caixa", icon: "wallet", soon: true },
-      { href: "/dashboard/afiliados", t: "Afiliados", icon: "affiliate", soon: true },
+      { href: "/dashboard/caixa", t: "Levantar Caixa", icon: "wallet" },
+      { href: "/dashboard/afiliados", t: "Afiliados", icon: "affiliate" },
     ],
   },
-  { g: "Acesso", itens: [{ href: "/dashboard/mentoria", t: "Minha Mentoria", icon: "mentor", soon: true }] },
+  { g: "Acesso", itens: [{ href: "/dashboard/mentoria", t: "Minha Mentoria", icon: "mentor" }] },
   {
     g: "Conta",
     itens: [
