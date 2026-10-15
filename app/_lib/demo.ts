@@ -23,7 +23,7 @@ export const PERFIL_DEMO = {
   xp: 2140,
   xpProx: 2500,
   streak: 12,
-  coins: 340,
+  coins: 4200, // Cappu Coins (pontos de fidelidade, sem valor em dinheiro)
   passaporte: "HS-26-30039",
   stopAtual: 0, // 0 = GRU, 1 = SCL, 2 = LIS, 3 = JFK, 4 = MCM, 5 = DXB
   faturado: 6240, // em reais, verificado pelo gateway
@@ -452,3 +452,69 @@ export const FERRAMENTA_TAG: Record<string, string> = {
   o1: "ROTINA",
   f1: "MAPA",
 };
+
+/* ===================== Hot Store ===================== */
+
+export type Produto = {
+  id: string;
+  cat: "Digitais" | "Ferramentas" | "Mentoria" | "Merch";
+  t: string;
+  d: string;
+  rs: number | null; // preço em reais (null = sem preço em reais)
+  coins?: number; // preço alternativo (ou único) em Cappu Coins
+  soCoins?: boolean;
+  aplicacao?: boolean; // entra por aplicação, sem carrinho
+  img?: string;
+  gfx?: string; // grafismo dourado no lugar da foto
+  tag?: string;
+};
+
+export const PRODUTOS: Produto[] = [
+  { id: "pk", cat: "Digitais", t: "Pack 100 prompts de persona", d: "Personas, cenários e consistência de rosto, prontos para colar.", rs: 47, gfx: "100", tag: "Mais vendido" },
+  { id: "fn", cat: "Digitais", t: "Templates de funil", d: "Páginas, sequências e roteiros de recorrência editáveis.", rs: 67, img: IMG.m4 },
+  { id: "pl", cat: "Ferramentas", t: "Planilha de operação", d: "Metas, custos, ROI por canal e controle de modelos.", rs: 37, gfx: "R$" },
+  { id: "ct", cat: "Ferramentas", t: "Kit contrato e consentimento", d: "Modelos revisáveis por advogado para operar com modelo real.", rs: 57, gfx: "§" },
+  { id: "cs", cat: "Mentoria", t: "Consultoria 1:1", d: "Uma call de 60 minutos com o time para destravar sua operação.", rs: 497, gfx: "1:1" },
+  { id: "ht", cat: "Mentoria", t: "Mentoria High Ticket", d: "Acompanhamento direto com o Cappu, turma pequena. Por aplicação.", rs: null, img: IMG.hero, aplicacao: true },
+  { id: "mo", cat: "Merch", t: "Moletom HOT SOCIETY", d: "Preto, bordado dourado, edição da temporada.", rs: 249, coins: 6000, img: IMG.teleferico },
+  { id: "bn", cat: "Merch", t: "Boné HOT SOCIETY", d: "Aba curva, H bordado em dourado.", rs: 129, coins: 3000, gfx: "H" },
+  { id: "hp", cat: "Digitais", t: "HOTPHONE Edição Dubai", d: "Cor exclusiva do seu HOTPHONE. Só com Cappu Coins.", rs: null, coins: 2500, soCoins: true, gfx: "DXB" },
+];
+
+/* ===================== Games ===================== */
+
+export const JOGOS = [
+  { k: "quiz", t: "Quiz relâmpago", d: "6 perguntas sobre as aulas, 15 segundos cada.", xp: "até 60 XP", ic: "?" },
+  { k: "hook", t: "Gancho ou mico", d: "Esse gancho segura o scroll ou é mico? Você decide.", xp: "até 60 XP", ic: "!" },
+  { k: "funil", t: "Monte o funil", d: "Coloque as etapas na ordem certa, o mais rápido possível.", xp: "até 50 XP", ic: "→" },
+  { k: "soon", t: "Desafio da persona", d: "Em breve: monte a persona perfeita para cada nicho.", xp: "em breve", ic: "★", soon: true },
+] as const;
+
+// [pergunta, opções, índice certo, explicação]
+export const QUIZ: [string, string[], number, string][] = [
+  ["Qual é o primeiro passo para criar uma modelo IA?", ["Gerar o rosto direto", "Definir a persona", "Comprar tráfego"], 1, "Persona primeiro: nome, idade aparente sempre adulta, estilo e história. O rosto vem depois."],
+  ["O que é obrigatório antes de fotografar uma modelo real?", ["Só um combinado no WhatsApp", "Contrato, prova de 18+ e consentimento por escrito", "Nada, se ela topar"], 1, "Contrato assinado, documento que comprove 18+ e consentimento escrito do que pode ser publicado."],
+  ["Para quem está começando, qual tráfego vem primeiro?", ["Orgânico", "Pago", "Os dois juntos"], 0, "Orgânico valida a persona sem queimar dinheiro e sem risco de bloqueio."],
+  ["Conteúdo feito com IA deve…", ["Fingir ser pessoa real", "Ser identificado como IA", "Usar rosto de famosa"], 1, "Sempre identificado como IA. Nada de rosto real nem deepfake."],
+  ["Quanto faturamento verificado carimba o Chile?", ["R$ 1 mil", "R$ 10 mil", "R$ 100 mil"], 1, "R$ 10 mil verificados carimbam o Chile e liberam a placa 10K."],
+  ["Qual métrica mostra se a assinatura está saudável?", ["Seguidores", "Cancelamento mensal (churn)", "Curtidas"], 1, "Recorrência vive de retenção: acompanhe quantos cancelam por mês."],
+];
+
+// [gancho, 1 = gancho / 0 = mico, explicação]
+export const GANCHOS: [string, 0 | 1, string][] = [
+  ["“Ninguém te conta isso sobre a primeira semana…”", 1, "Curiosidade + promessa de bastidor. Segura o scroll."],
+  ["“Oi gente, tudo bem? Hoje vou falar um pouquinho sobre…”", 0, "Começo lento. Os primeiros 2 segundos precisam de tensão, não de saudação."],
+  ["“3 erros que fazem sua persona parecer falsa”", 1, "Número + dor específica. Clássico que funciona."],
+  ["“Compra aí que é bom”", 0, "Sem contexto, sem desejo, sem prova. Mico."],
+  ["“O print que eu não queria mostrar”", 1, "Quebra de expectativa e bastidor. Gancho forte (só com print real)."],
+  ["“Post de hoje é sobre motivação”", 0, "Genérico. Não diz por que a pessoa deveria parar."],
+];
+
+export const FUNIL_ETAPAS = ["Conteúdo gratuito no perfil", "Link na bio", "Página da persona", "Assinatura na plataforma", "Upsell de pacote"];
+
+export const RANKING_GAMES: [string, number][] = [
+  ["gui.moraes", 540],
+  ["vini.alves", 480],
+  ["rafa.souza", 410],
+  ["pedro.h", 350],
+];
