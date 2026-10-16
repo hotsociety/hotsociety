@@ -90,6 +90,12 @@ function Login() {
   async function entrarComGoogle() {
     setAviso(null);
     setCarregandoGoogle(true);
+    // Confere antes se o Google está ligado no Supabase (evita a página de erro em inglês).
+    if (!(await googleLigado())) {
+      setAviso({ tipo: "erro", texto: "O login com Google ainda não está disponível. Use e-mail e senha." });
+      setCarregandoGoogle(false);
+      return;
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}${destino}` },
@@ -236,6 +242,20 @@ function Login() {
       </section>
     </main>
   );
+}
+
+async function googleLigado() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const chave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !chave) return true;
+  try {
+    const r = await fetch(`${url}/auth/v1/settings`, { headers: { apikey: chave } });
+    if (!r.ok) return true;
+    const j = (await r.json()) as { external?: { google?: boolean } };
+    return j.external?.google !== false;
+  } catch {
+    return true;
+  }
 }
 
 function traduzir(msg: string) {
