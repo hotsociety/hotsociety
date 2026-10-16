@@ -16,8 +16,8 @@ export const SITE = {
 // NEXT_PUBLIC_CHECKOUT_MENSAL=https://...
 // NEXT_PUBLIC_CHECKOUT_ANUAL=https://...
 export const CHECKOUT = {
-  mensal: process.env.NEXT_PUBLIC_CHECKOUT_MENSAL || "/login?plano=mensal",
-  anual: process.env.NEXT_PUBLIC_CHECKOUT_ANUAL || "/login?plano=anual",
+  mensal: process.env.NEXT_PUBLIC_CHECKOUT_MENSAL || "/assinar?plano=mensal",
+  anual: process.env.NEXT_PUBLIC_CHECKOUT_ANUAL || "/assinar?plano=anual",
 };
 
 // Preços em R$ (fonte única: planos da home e checkout do passaporte 3D).
