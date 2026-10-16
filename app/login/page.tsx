@@ -135,7 +135,7 @@ function Login() {
             <Image src="/brand/hs-logo.svg" alt="HOT SOCIETY" width={1253} height={170} />
           </Link>
 
-          {planoValido && (
+          {planoValido && modo !== "esqueci" && (
             <p className={s.plan}>
               Plano escolhido: <b>{planoValido === "anual" ? `Anual · R$ ${PRICE.anual}` : `Mensal · R$ ${PRICE.mensal}`}</b>
             </p>
@@ -274,6 +274,8 @@ function traduzir(msg: string) {
   if (m.includes("password should be")) return "A senha precisa ter pelo menos 8 caracteres, com letras e números.";
   if (m.includes("weak") || m.includes("pwned") || m.includes("easy to guess"))
     return "Essa senha já apareceu em vazamentos na internet. Escolha outra.";
+  if (m.includes("sending") && m.includes("email"))
+    return "Não conseguimos enviar o e-mail agora. Tente de novo em alguns minutos ou fale com o suporte.";
   if (m.includes("captcha")) return "Não deu para confirmar que você não é um robô. Marque a caixa de verificação e tente de novo.";
   if (m.includes("rate limit")) return "Muitas tentativas. Espere um pouco e tente de novo.";
   return msg;
