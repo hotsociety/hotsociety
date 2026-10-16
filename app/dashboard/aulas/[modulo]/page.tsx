@@ -5,11 +5,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import Icon from "@/app/_components/membros/Icon";
-import { MODULOS } from "@/app/_lib/demo";
+import { useProgresso } from "@/app/_components/membros/Progresso";
+import { toast } from "@/app/_components/membros/Toast";
+import { proximaAula } from "@/app/_lib/progresso";
 
 function ModuloContent() {
   const { modulo } = useParams<{ modulo: string }>();
-  const m = MODULOS.find((x) => x.slug === modulo);
+  const { modulos } = useProgresso();
+  const m = modulos.find((x) => x.slug === modulo);
 
   if (!m || m.status === "bloqueado") {
     return (
@@ -37,15 +40,23 @@ export default function ModuloPage() {
 }
 
 function Player({ slug }: { slug: string }) {
-  const m = MODULOS.find((x) => x.slug === slug)!;
-  const [atual, setAtual] = useState(Math.min(m.feitas, m.aulas.length - 1));
-  const [feitas, setFeitas] = useState<string[]>(() => m.aulas.slice(0, m.feitas).map((a) => a.id));
+  const { modulos, feitas, concluirAula } = useProgresso();
+  const m = modulos.find((x) => x.slug === slug)!;
+  const [atual, setAtual] = useState(() => proximaAula(m, feitas));
   const aula = m.aulas[atual];
-  const concluida = feitas.includes(aula.id);
-  const pct = Math.round((feitas.length / m.aulas.length) * 100);
+  const concluida = feitas.has(aula.id);
+  const pct = Math.round((m.aulas.filter((a) => feitas.has(a.id)).length / m.aulas.length) * 100);
 
-  function concluir() {
-    setFeitas((f) => (f.includes(aula.id) ? f : [...f, aula.id]));
+  async function concluir() {
+    if (!concluida) {
+      try {
+        await concluirAula(aula.id);
+        toast("+40 XP · aula concluída", true);
+      } catch {
+        toast("Não deu para salvar agora. Tente de novo.");
+        return;
+      }
+    }
     if (atual < m.aulas.length - 1) setAtual(atual + 1);
   }
 
@@ -101,7 +112,7 @@ function Player({ slug }: { slug: string }) {
           </div>
           <ol className="space-y-2">
             {m.aulas.map((a, i) => {
-              const ok = feitas.includes(a.id);
+              const ok = feitas.has(a.id);
               const isActive = i === atual;
               return (
                 <li key={a.id}>

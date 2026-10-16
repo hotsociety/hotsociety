@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { abrirHotphone } from "../../_components/membros/hotphone/HotPhone";
 import { m } from "../../_components/membros/proto";
-import { IMG, MODULOS } from "../../_lib/demo";
+import { IMG, MODULOS, type Modulo } from "../../_lib/demo";
+import { moduloAtual, proximaAula } from "../../_lib/progresso";
+import { useProgresso } from "../../_components/membros/Progresso";
 
 type Card = {
   t: string;
@@ -17,13 +19,13 @@ type Card = {
   lock?: boolean;
 };
 
-const andamento = MODULOS.find((x) => x.status === "andamento") ?? MODULOS[0];
-const proxima = andamento.aulas[Math.min(andamento.feitas, andamento.aulas.length - 1)];
-const pctAcademy = Math.round(
-  (MODULOS.reduce((a, x) => a + x.feitas, 0) / MODULOS.reduce((a, x) => a + x.aulas.length, 0)) * 100,
-);
+type Linha = { t: string; s: string; largo?: boolean; cards: Card[] };
 
-const LINHAS: { t: string; s: string; largo?: boolean; cards: Card[] }[] = [
+function linhas(mods: Modulo[]): Linha[] {
+  const pctAcademy = Math.round(
+    (mods.reduce((a, x) => a + x.feitas, 0) / mods.reduce((a, x) => a + x.aulas.length, 0)) * 100,
+  );
+  return [
   {
     t: "Meus produtos",
     s: "3 ativos",
@@ -37,7 +39,7 @@ const LINHAS: { t: string; s: string; largo?: boolean; cards: Card[] }[] = [
   {
     t: "Hot Academy",
     s: `${MODULOS.length} módulos`,
-    cards: MODULOS.map((x) => {
+    cards: mods.map((x) => {
       const pct = Math.round((x.feitas / x.aulas.length) * 100);
       const lock = x.status === "bloqueado";
       return {
@@ -72,9 +74,15 @@ const LINHAS: { t: string; s: string; largo?: boolean; cards: Card[] }[] = [
     ],
   },
 ];
+}
 
 export default function AreaDeMembros() {
   const router = useRouter();
+  const { modulos, feitas } = useProgresso();
+  const andamento = moduloAtual(modulos);
+  const iProx = proximaAula(andamento, feitas);
+  const proxima = andamento.aulas[iProx];
+  const LINHAS = linhas(modulos);
   const ir = (destino: string) => (destino === "hotphone" ? abrirHotphone() : router.push(destino));
 
   return (
@@ -98,7 +106,7 @@ export default function AreaDeMembros() {
           </p>
           <h2 className={m("stack")}>
             <span className={m("s")}>
-              Módulo {andamento.n} · Aula {andamento.feitas + 1}
+              Módulo {andamento.n} · Aula {iProx + 1}
             </span>
             <span>{proxima.t.split(" ").slice(0, -1).join(" ") || proxima.t}</span>
             {proxima.t.includes(" ") && <span style={{ color: "var(--red-t)" }}>{proxima.t.split(" ").slice(-1)}.</span>}

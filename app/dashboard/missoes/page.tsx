@@ -4,7 +4,10 @@ import { useState } from "react";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { toast } from "../../_components/membros/Toast";
 import { m } from "../../_components/membros/proto";
-import { IMG, MISSOES_PLANO, PERFIL_DEMO, ROUTE_ATUAL, type MissaoPlano } from "./dados";
+import { useProgresso } from "../../_components/membros/Progresso";
+import { missoesDoAluno } from "../../_lib/progresso";
+import { ROUTE } from "../../_lib/site";
+import { IMG, MISSOES_PLANO, type MissaoPlano } from "./dados";
 
 type Aba = "d" | "s" | "m";
 const ABAS: [Aba, string][] = [
@@ -17,16 +20,23 @@ export default function Missoes() {
   const { nome } = useMembro();
   const primeiro = nome.split(/\s+/)[0];
   const [aba, setAba] = useState<Aba>("d");
-  const [lista, setLista] = useState(MISSOES_PLANO);
-  const [xp, setXp] = useState(PERFIL_DEMO.xp);
+  const { perfil, avancos, avancarMissao } = useProgresso();
+  const lista = missoesDoAluno(MISSOES_PLANO, avancos);
+  const xp = perfil.xp;
+  const ROUTE_ATUAL = (ROUTE[perfil.stopAtual] ?? ROUTE[0]).country;
+  const [salvando, setSalvando] = useState<string | null>(null);
 
-  function avancar(i: number) {
+  async function avancar(i: number) {
     const mi = lista[aba][i];
-    const feito = Math.min(mi.total, mi.feito + 1);
-    setLista((l) => ({ ...l, [aba]: l[aba].map((x, k) => (k === i ? { ...x, feito } : x)) }));
-    if (feito === mi.total) {
-      setXp((x) => x + mi.xp);
-      toast(`+${mi.xp} XP · missão concluída`, true);
+    if (salvando) return;
+    setSalvando(mi.id);
+    try {
+      const r = await avancarMissao(mi.id);
+      if (r.concluiu) toast(`+${mi.xp} XP · missão concluída`, true);
+    } catch {
+      toast("Não deu para salvar agora. Tente de novo.");
+    } finally {
+      setSalvando(null);
     }
   }
 
@@ -39,7 +49,7 @@ export default function Missoes() {
         </div>
         <div className={m("chips")}>
           <span className={m("chip fire")}>
-            <i>{PERFIL_DEMO.streak}</i> dias seguidos
+            <i>{perfil.streak}</i> dias seguidos
           </span>
           <span className={m("chip gold")}>
             <i className={m("num")}>{xp.toLocaleString("pt-BR")}</i> XP
