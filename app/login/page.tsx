@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../_lib/supabase";
 import { CHECKOUT, PRICE } from "../_lib/site";
 import { caminhoSeguro } from "../_lib/cursos";
+import Captcha, { CAPTCHA_LIGADO } from "../_components/Captcha";
 import "./login.css";
 import s from "./login.styles";
 
@@ -37,6 +38,8 @@ function Login() {
   const [aviso, setAviso] = useState<Aviso>(null);
   const [carregando, setCarregando] = useState(false);
   const [carregandoGoogle, setCarregandoGoogle] = useState(false);
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const [versaoCaptcha, setVersaoCaptcha] = useState(0);
 
   function seguir() {
     if (checkoutExterno) window.location.href = checkoutExterno;
@@ -46,10 +49,15 @@ function Login() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setAviso(null);
+    if (CAPTCHA_LIGADO && !captcha) {
+      setAviso({ tipo: "erro", texto: "Confirme que você não é um robô (caixa acima do botão)." });
+      return;
+    }
     setCarregando(true);
+    const captchaToken = captcha ?? undefined;
 
     if (modo === "entrar") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+      const { error } = await supabase.auth.signInWithPassword({ email, password: senha, options: { captchaToken } });
       if (error) setAviso({ tipo: "erro", texto: traduzir(error.message) });
       else seguir();
     }
@@ -58,7 +66,7 @@ function Login() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password: senha,
-        options: { emailRedirectTo: `${window.location.origin}${destino}` },
+        options: { emailRedirectTo: `${window.location.origin}${destino}`, captchaToken },
       });
       if (error) setAviso({ tipo: "erro", texto: traduzir(error.message) });
       else if (data.session) seguir();
@@ -68,12 +76,15 @@ function Login() {
     if (modo === "esqueci") {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/login`,
+        captchaToken,
       });
       if (error) setAviso({ tipo: "erro", texto: traduzir(error.message) });
       else setAviso({ tipo: "ok", texto: "Se esse e-mail tiver conta, você vai receber o link para criar uma nova senha." });
     }
 
     setCarregando(false);
+    // Cada token do captcha vale uma vez só: pede outro para a próxima tentativa.
+    if (CAPTCHA_LIGADO) setVersaoCaptcha((n) => n + 1);
   }
 
   async function entrarComGoogle() {
@@ -166,6 +177,8 @@ function Login() {
               </label>
             )}
 
+            <Captcha onToken={setCaptcha} versao={versaoCaptcha} />
+
             {aviso && (
               <p className={aviso.tipo === "erro" ? s.err : s.ok} role={aviso.tipo === "erro" ? "alert" : "status"}>
                 {aviso.texto}
@@ -233,6 +246,7 @@ function traduzir(msg: string) {
   if (m.includes("password should be")) return "A senha precisa ter pelo menos 8 caracteres, com letras e números.";
   if (m.includes("weak") || m.includes("pwned") || m.includes("easy to guess"))
     return "Essa senha já apareceu em vazamentos na internet. Escolha outra.";
+  if (m.includes("captcha")) return "Não deu para confirmar que você não é um robô. Marque a caixa de verificação e tente de novo.";
   if (m.includes("rate limit")) return "Muitas tentativas. Espere um pouco e tente de novo.";
   return msg;
 }
