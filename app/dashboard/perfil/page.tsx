@@ -92,10 +92,10 @@ export default function Perfil() {
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               placeholder="Mínimo 6 caracteres"
-              minLength={6}
+              minLength={8}
             />
           </label>
-          <button type="submit" className={ui.btnGhost} disabled={salvando || senha.length < 6}>
+          <button type="submit" className={ui.btnGhost} disabled={salvando || senha.length < 8}>
             Trocar senha
           </button>
         </form>

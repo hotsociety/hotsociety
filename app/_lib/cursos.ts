@@ -13,7 +13,10 @@ export function formatPreco(preco?: number | null) {
 }
 
 // Evita redirecionamento para fora do site (?callback=https://...).
+// Aceita só caminhos internos como "/dashboard/aulas". Barra invertida e
+// caracteres invisíveis ficam de fora porque o navegador trata "/" + barra invertida como outro site.
 export function caminhoSeguro(valor: string | null | undefined, padrao = "/dashboard") {
-  if (!valor || !valor.startsWith("/") || valor.startsWith("//")) return padrao;
+  if (!valor || valor.length > 300) return padrao;
+  if (!valor.startsWith("/") || valor.startsWith("//") || /[\\\s\u0000-\u001f]/.test(valor)) return padrao;
   return valor;
 }
