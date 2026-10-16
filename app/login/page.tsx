@@ -155,8 +155,8 @@ function Login() {
                     autoComplete={modo === "criar" ? "new-password" : "current-password"}
                     value={senha}
                     onChange={(e) => setSenha(e.target.value)}
-                    placeholder={modo === "criar" ? "Mínimo 6 caracteres" : "Sua senha"}
-                    minLength={6}
+                    placeholder={modo === "criar" ? "Mínimo 8 caracteres" : "Sua senha"}
+                    minLength={modo === "criar" ? 8 : 6}
                     required
                   />
                   <button type="button" onClick={() => setVerSenha((v) => !v)} aria-label={verSenha ? "Esconder senha" : "Mostrar senha"}>
@@ -175,7 +175,7 @@ function Login() {
             <button
               type="submit"
               className={s.primary}
-              disabled={ocupado || !email || (modo !== "esqueci" && senha.length < 6)}
+              disabled={ocupado || !email || (modo !== "esqueci" && senha.length < (modo === "criar" ? 8 : 6))}
             >
               {carregando ? "Aguarde…" : modo === "entrar" ? "Embarcar" : modo === "criar" ? "Criar conta" : "Enviar link"}
             </button>
@@ -230,7 +230,9 @@ function traduzir(msg: string) {
   if (m.includes("invalid login credentials")) return "E-mail ou senha incorretos.";
   if (m.includes("email not confirmed")) return "Confirme seu e-mail antes de entrar.";
   if (m.includes("already registered")) return "Esse e-mail já tem conta. Use Entrar.";
-  if (m.includes("password should be")) return "A senha precisa ter pelo menos 6 caracteres.";
+  if (m.includes("password should be")) return "A senha precisa ter pelo menos 8 caracteres, com letras e números.";
+  if (m.includes("weak") || m.includes("pwned") || m.includes("easy to guess"))
+    return "Essa senha já apareceu em vazamentos na internet. Escolha outra.";
   if (m.includes("rate limit")) return "Muitas tentativas. Espere um pouco e tente de novo.";
   return msg;
 }
