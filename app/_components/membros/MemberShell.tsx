@@ -8,7 +8,8 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "../../_lib/supabase";
 import { ROUTE } from "../../_lib/site";
 import Icon, { type IconName } from "./Icon";
-import { MemberContext, nomeDoUsuario, type Membro } from "./MemberContext";
+import { MemberContext, nomeDoUsuario, PODE, type Cargo, type Membro } from "./MemberContext";
+import SemAcesso, { type Acesso } from "./SemAcesso";
 import { ProgressoProvider, useProgresso } from "./Progresso";
 import Toaster from "./Toast";
 import HotPhone from "./hotphone/HotPhone";
@@ -70,6 +71,17 @@ export const GRUPOS: Grupo[] = [
 ];
 export const NAV: Item[] = GRUPOS.flatMap((g) => g.itens).filter((i) => !i.soon);
 
+// Aba da equipe: só aparece para quem tem cargo (o banco confere de novo em cada ação).
+const EQUIPE: Grupo = { g: "Equipe", itens: [{ href: "/dashboard/painel", t: "Painel da equipe", icon: "shield" }] };
+function gruposDo(cargo: Cargo | null) {
+  return PODE.verPainel(cargo) ? [...GRUPOS, EQUIPE] : GRUPOS;
+}
+function navDo(cargo: Cargo | null) {
+  return gruposDo(cargo)
+    .flatMap((g) => g.itens)
+    .filter((i) => !i.soon);
+}
+
 // No celular, 4 atalhos fixos + "Mais".
 const BOTTOM = ["/dashboard", "/dashboard/feed", "/dashboard/missoes", "/dashboard/aulas"];
 
@@ -82,6 +94,8 @@ export default function MemberShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [mais, setMais] = useState(false);
+  const [acesso, setAcesso] = useState<Acesso | null>(null);
+  const [tentativa, setTentativa] = useState(0);
 
   // Proteção da área: sem sessão volta para o login.
   useEffect(() => {
@@ -101,6 +115,27 @@ export default function MemberShell({ children }: { children: ReactNode }) {
     };
   }, [router]);
 
+  // Assinatura ativa ou cargo da equipe? Quem decide é o banco (função meu_acesso).
+  const uid = user?.id;
+  useEffect(() => {
+    if (!uid) return;
+    let vivo = true;
+    supabase.rpc("meu_acesso").then(({ data, error }) => {
+      if (!vivo) return;
+      if (error) {
+        // Função ainda não criada no Supabase: mantém o comportamento antigo (todos entram).
+        const semFuncao = error.code === "PGRST202" || error.code === "42883";
+        setAcesso(semFuncao ? { ativo: true, cargo: null } : { ativo: false, erro: true });
+        return;
+      }
+      const d = data as { ativo: boolean; cargo: Cargo | null; status: string | null; valido_ate: string | null };
+      setAcesso({ ativo: d.ativo, cargo: d.cargo, status: d.status, validoAte: d.valido_ate });
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [uid, tentativa]);
+
   useEffect(() => {
     document.body.style.overflow = mais ? "hidden" : "";
     if (!mais) return;
@@ -118,11 +153,28 @@ export default function MemberShell({ children }: { children: ReactNode }) {
       <p>Abrindo seu passaporte…</p>
     </div>
   );
-  if (!user) return carregando;
+  if (!user || !acesso) return carregando;
+  if (!acesso.ativo) {
+    return (
+      <SemAcesso
+        acesso={acesso}
+        email={user.email ?? ""}
+        onDeNovo={() => {
+          setAcesso(null);
+          setTentativa((n) => n + 1);
+        }}
+        onSair={async () => {
+          await supabase.auth.signOut();
+          router.replace("/login");
+        }}
+      />
+    );
+  }
 
   const nome = nomeDoUsuario(user);
   const membro: Membro = {
     user,
+    cargo: acesso.cargo ?? null,
     nome,
     iniciais: nome.slice(0, 2).toUpperCase(),
     sair: async () => {
@@ -180,7 +232,7 @@ function Casca({
           </Link>
 
           <nav className={s.nav}>
-            {GRUPOS.map((g, gi) => (
+            {gruposDo(membro.cargo).map((g, gi) => (
               <div key={g.g ?? gi} className={s.grp}>
                 {g.g && <span className={s.grpT}>{g.g}</span>}
                 {g.itens.map((i) =>
@@ -241,7 +293,7 @@ function Casca({
           {children}
         </main>
         <Toaster />
-        <HotPhone />
+        {!pathname.startsWith("/dashboard/painel") && <HotPhone />}
 
         {/* Barra inferior: só celular */}
         <nav className={s.bottom} aria-label="Navegação principal">
@@ -273,7 +325,7 @@ function Casca({
                 </button>
               </div>
               <div className={s.sheetGrid}>
-                {NAV.filter((i) => !BOTTOM.includes(i.href)).map((i) => (
+                {navDo(membro.cargo).filter((i) => !BOTTOM.includes(i.href)).map((i) => (
                   <Link
                     key={i.href}
                     href={i.href}
