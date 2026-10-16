@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../_lib/supabase";
 import { CHECKOUT, PRICE } from "../_lib/site";
@@ -31,7 +31,7 @@ function Login() {
   const checkoutExterno = planoValido && CHECKOUT[planoValido].startsWith("http") ? CHECKOUT[planoValido] : null;
   const destino = caminhoSeguro(params.get("callback"), "/dashboard");
 
-  const [modo, setModo] = useState<Modo>(planoValido ? "criar" : "entrar");
+  const [modo, setModo] = useState<Modo>(params.get("esqueci") ? "esqueci" : planoValido ? "criar" : "entrar");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [verSenha, setVerSenha] = useState(false);
@@ -40,6 +40,14 @@ function Login() {
   const [carregandoGoogle, setCarregandoGoogle] = useState(false);
   const [captcha, setCaptcha] = useState<string | null>(null);
   const [versaoCaptcha, setVersaoCaptcha] = useState(0);
+
+  // Links antigos de "esqueci a senha" caem aqui: manda para a tela de senha nova.
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((evento) => {
+      if (evento === "PASSWORD_RECOVERY") router.replace("/redefinir-senha");
+    });
+    return () => data.subscription.unsubscribe();
+  }, [router]);
 
   function seguir() {
     if (checkoutExterno) window.location.href = checkoutExterno;
@@ -75,7 +83,7 @@ function Login() {
 
     if (modo === "esqueci") {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/login`,
+        redirectTo: `${window.location.origin}/redefinir-senha`,
         captchaToken,
       });
       if (error) setAviso({ tipo: "erro", texto: traduzir(error.message) });
