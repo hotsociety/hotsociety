@@ -1,11 +1,12 @@
 "use client";
 
+import { useProgresso } from "../../_components/membros/Progresso";
 import Image from "next/image";
 import { useState } from "react";
 import Icon from "../../_components/membros/Icon";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { ROUTE } from "../../_lib/site";
-import { PERFIL_DEMO, PLACAS } from "../../_lib/demo";
+import { PLACAS } from "../../_lib/demo";
 import "../../_components/membros/ui.css";
 import ui from "../../_components/membros/ui.styles";
 import "./jornada.css";
@@ -15,7 +16,8 @@ const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL",
 
 export default function Jornada() {
   const { nome, user } = useMembro();
-  const fat = PERFIL_DEMO.faturado;
+  const { perfil } = useProgresso();
+  const fat = perfil.faturado;
   const [placa, setPlaca] = useState(PLACAS[0].id);
   const [nomePlaca, setNomePlaca] = useState(nome);
   const [enviado, setEnviado] = useState(false);
@@ -40,7 +42,7 @@ export default function Jornada() {
           </h2>
           <ol className={s.timeline}>
             {ROUTE.map((r, i) => {
-              const status = i < PERFIL_DEMO.stopAtual ? "ok" : i === PERFIL_DEMO.stopAtual ? "aqui" : "futuro";
+              const status = i < perfil.stopAtual ? "ok" : i === perfil.stopAtual ? "aqui" : "futuro";
               const falta = Math.max(0, (r.meta ?? 0) - fat);
               return (
                 <li key={r.code} className={s[status]}>

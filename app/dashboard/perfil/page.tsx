@@ -1,11 +1,11 @@
 "use client";
 
+import { useProgresso } from "../../_components/membros/Progresso";
 import Link from "next/link";
 import { useState } from "react";
 import Icon from "../../_components/membros/Icon";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { supabase } from "../../_lib/supabase";
-import { PERFIL_DEMO } from "../../_lib/demo";
 import { PRICE } from "../../_lib/site";
 import "../../_components/membros/ui.css";
 import ui from "../../_components/membros/ui.styles";
@@ -15,6 +15,7 @@ import s from "./perfil.styles";
 type Aviso = { tipo: "ok" | "erro"; t: string } | null;
 
 export default function Perfil() {
+  const { perfil } = useProgresso();
   const { user, nome, iniciais, sair } = useMembro();
   const meta = user.user_metadata as { full_name?: string } | undefined;
   const [nomeCompleto, setNomeCompleto] = useState(meta?.full_name ?? "");
@@ -52,7 +53,7 @@ export default function Perfil() {
       <section className={`${ui.card} ${s.pass}`}>
         <span className={s.avatar}>{iniciais}</span>
         <div className={s.passInfo}>
-          <small>Passaporte {PERFIL_DEMO.passaporte}</small>
+          <small>Passaporte {perfil.passaporte}</small>
           <b>{nome}</b>
           <span>{user.email}</span>
         </div>

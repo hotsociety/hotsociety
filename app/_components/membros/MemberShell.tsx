@@ -6,10 +6,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../../_lib/supabase";
-import { PERFIL_DEMO } from "../../_lib/demo";
 import { ROUTE } from "../../_lib/site";
 import Icon, { type IconName } from "./Icon";
 import { MemberContext, nomeDoUsuario, type Membro } from "./MemberContext";
+import { ProgressoProvider, useProgresso } from "./Progresso";
 import Toaster from "./Toast";
 import HotPhone from "./hotphone/HotPhone";
 import "./shell.css";
@@ -112,14 +112,13 @@ export default function MemberShell({ children }: { children: ReactNode }) {
     };
   }, [mais]);
 
-  if (!user) {
-    return (
-      <div className={s.loading}>
-        <Image src="/brand/hs-simbolo.svg" alt="" width={64} height={64} className={s.pulse} />
-        <p>Abrindo seu passaporte…</p>
-      </div>
-    );
-  }
+  const carregando = (
+    <div className={s.loading}>
+      <Image src="/brand/hs-simbolo.svg" alt="" width={64} height={64} className={s.pulse} />
+      <p>Abrindo seu passaporte…</p>
+    </div>
+  );
+  if (!user) return carregando;
 
   const nome = nomeDoUsuario(user);
   const membro: Membro = {
@@ -131,10 +130,37 @@ export default function MemberShell({ children }: { children: ReactNode }) {
       router.replace("/login");
     },
   };
-  const stop = ROUTE[PERFIL_DEMO.stopAtual];
 
   return (
     <MemberContext.Provider value={membro}>
+      <ProgressoProvider user={user} fallback={carregando}>
+        <Casca membro={membro} pathname={pathname} mais={mais} setMais={setMais}>
+          {children}
+        </Casca>
+      </ProgressoProvider>
+    </MemberContext.Provider>
+  );
+}
+
+function Casca({
+  membro,
+  pathname,
+  mais,
+  setMais,
+  children,
+}: {
+  membro: Membro;
+  pathname: string;
+  mais: boolean;
+  setMais: (v: boolean) => void;
+  children: ReactNode;
+}) {
+  const { perfil, nivel, temporadaFim } = useProgresso();
+  const nome = membro.nome;
+  const stop = ROUTE[perfil.stopAtual] ?? ROUTE[0];
+
+  return (
+    <>
       <div className={s.app}>
         {/* Barra lateral: ícones no tablet, completa no PC */}
         <aside className={s.side} aria-label="Menu da área de membros">
@@ -148,7 +174,7 @@ export default function MemberShell({ children }: { children: ReactNode }) {
             <span className={s.meTxt}>
               <b>{nome}</b>
               <small>
-                Nível {PERFIL_DEMO.nivel} · {stop.country.toUpperCase()}
+                Nível {nivel} · {stop.country.toUpperCase()}
               </small>
             </span>
           </Link>
@@ -184,7 +210,7 @@ export default function MemberShell({ children }: { children: ReactNode }) {
 
           <div className={s.season}>
             <small>Temporada fecha em</small>
-            <b>{PERFIL_DEMO.temporadaFim}</b>
+            <b>{temporadaFim}</b>
           </div>
 
           <button type="button" className={s.navItem} onClick={membro.sair} title="Sair">
@@ -200,10 +226,10 @@ export default function MemberShell({ children }: { children: ReactNode }) {
           </Link>
           <div className={s.topRight}>
             <span className={s.xp}>
-              <Icon name="fire" size={16} /> {PERFIL_DEMO.streak}
+              <Icon name="fire" size={16} /> {perfil.streak}
             </span>
             <span className={s.xp}>
-              {PERFIL_DEMO.xp.toLocaleString("pt-BR")} XP
+              {perfil.xp.toLocaleString("pt-BR")} XP
             </span>
             <Link href="/dashboard/perfil" className={s.avatarSm} aria-label="Meu perfil">
               {membro.iniciais}
@@ -267,6 +293,6 @@ export default function MemberShell({ children }: { children: ReactNode }) {
           </div>
         )}
       </div>
-    </MemberContext.Provider>
+    </>
   );
 }

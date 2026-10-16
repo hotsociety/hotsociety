@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useState } from "react";
 import { m } from "../../_components/membros/proto";
-import { MODULOS, type Modulo } from "../../_lib/demo";
+import { type Modulo } from "../../_lib/demo";
+import { moduloAtual, proximaAula } from "../../_lib/progresso";
+import { useProgresso } from "../../_components/membros/Progresso";
 
 type Filtro = "all" | "own" | "lock";
 
@@ -43,9 +45,11 @@ function Selo({ mod }: { mod: Modulo }) {
 }
 
 export default function Modulos() {
+  const { modulos: MODULOS, feitas } = useProgresso();
   const [filtro, setFiltro] = useState<Filtro>("all");
-  const [sel, setSel] = useState(() => Math.max(0, MODULOS.findIndex((x) => x.status === "andamento")));
+  const [sel, setSel] = useState(() => Math.max(0, MODULOS.indexOf(moduloAtual(MODULOS))));
   const mod = MODULOS[sel];
+  const prox = proximaAula(mod, feitas);
   const travado = mod.status === "bloqueado";
 
   const visiveis = MODULOS.map((x, i) => ({ x, i })).filter(({ x }) =>
@@ -125,7 +129,7 @@ export default function Modulos() {
         </div>
         <ol className={m("lessons")}>
           {mod.aulas.map((a, k) => {
-            const estado = travado ? "lk" : k < mod.feitas ? "done" : k === mod.feitas && mod.status === "andamento" ? "cur" : "";
+            const estado = travado ? "lk" : feitas.has(a.id) ? "done" : k === prox && mod.status === "andamento" ? "cur" : "";
             const conteudo = (
               <>
                 <span className={m("c")}>{estado === "done" ? "✓" : estado === "lk" ? LOCK : k + 1}</span>

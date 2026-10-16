@@ -1,9 +1,10 @@
 "use client";
 
+import { useProgresso } from "../../_components/membros/Progresso";
 import { useState } from "react";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { ROUTE } from "../../_lib/site";
-import { MEDALHAS, PERFIL_DEMO, RANKING } from "../../_lib/demo";
+import { MEDALHAS, RANKING } from "../../_lib/demo";
 import "../../_components/membros/ui.css";
 import ui from "../../_components/membros/ui.styles";
 import "./conquistas.css";
@@ -15,7 +16,8 @@ const STATUS = { ok: "Conquistada", perto: "Falta pouco", futuro: "Bloqueada" } 
 export default function Conquistas() {
   const { nome, iniciais } = useMembro();
   const [aba, setAba] = useState<"temporada" | "geral">("temporada");
-  const p = PERFIL_DEMO;
+  const { perfil, nivel, xpProx } = useProgresso();
+  const p = { ...perfil, nivel, xpProx };
   const pct = Math.round((p.xp / p.xpProx) * 100);
   const fator = aba === "geral" ? 3 : 1;
   const ganhas = MEDALHAS.filter((m) => m.status === "ok").length;

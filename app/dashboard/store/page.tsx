@@ -1,9 +1,10 @@
 "use client";
 
+import { useProgresso } from "../../_components/membros/Progresso";
 import { useState } from "react";
 import { Modal, toast } from "../../_components/membros/Toast";
 import { m } from "../../_components/membros/proto";
-import { IMG, PERFIL_DEMO, PRODUTOS, type Produto } from "../../_lib/demo";
+import { IMG, PRODUTOS, type Produto } from "../../_lib/demo";
 
 const CATS = ["Tudo", "Digitais", "Ferramentas", "Mentoria", "Merch"] as const;
 const brl = (v: number) => "R$ " + v.toLocaleString("pt-BR");
@@ -13,7 +14,8 @@ const GFX_BG = "radial-gradient(90% 70% at 30% 20%,#2e2618,#0b0b0c 70%)";
 export default function HotStore() {
   const [cat, setCat] = useState<(typeof CATS)[number]>("Tudo");
   const [carrinho, setCarrinho] = useState<string[]>([]);
-  const [coins, setCoins] = useState(PERFIL_DEMO.coins);
+  const { perfil } = useProgresso();
+  const [coins, setCoins] = useState(perfil.coins);
   const [aberto, setAberto] = useState<null | "carrinho" | "aplicar">(null);
 
   function adicionar(p: Produto) {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useProgresso } from "../../_components/membros/Progresso";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMembro } from "../../_components/membros/MemberContext";
@@ -10,7 +11,6 @@ import {
   COMENTARIOS,
   ENQUETE,
   IMG,
-  PERFIL_DEMO,
   POSTS,
   STORIES,
   SUGESTOES,
@@ -98,6 +98,7 @@ const fmt = (n: number) => n.toLocaleString("pt-BR");
 /* ================================================================== */
 
 export default function ParaVoce({ onCanais }: { onCanais: () => void }) {
+  const { nivel } = useProgresso();
   const router = useRouter();
   const { nome } = useMembro();
   const handle = nome.toLowerCase().replace(/\s+/g, ".");
@@ -358,7 +359,7 @@ export default function ParaVoce({ onCanais }: { onCanais: () => void }) {
           <div>
             <b>{handle}</b>
             <small>
-              {nome} · Nível {PERFIL_DEMO.nivel}
+              {nome} · Nível {nivel}
             </small>
           </div>
           <button type="button" onClick={() => router.push("/dashboard/perfil")}>

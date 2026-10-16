@@ -8,7 +8,10 @@ import Icon from "../_components/membros/Icon";
 import { supabase } from "../_lib/supabase";
 import { formatPreco, type Curso } from "../_lib/cursos";
 import { ROUTE } from "../_lib/site";
-import { LIVE, MISSOES, MODULOS, PERFIL_DEMO, RANKING, VITORIAS } from "../_lib/demo";
+import { LIVE, MISSOES_PLANO, RANKING, VITORIAS } from "../_lib/demo";
+import { moduloAtual, proximaAula } from "../_lib/progresso";
+import { useProgresso } from "../_components/membros/Progresso";
+import { toast } from "../_components/membros/Toast";
 import "../_components/membros/ui.css";
 import ui from "../_components/membros/ui.styles";
 import "./inicio.css";
@@ -19,7 +22,7 @@ const NUM = new Intl.NumberFormat("pt-BR");
 
 export default function Inicio() {
   const { nome } = useMembro();
-  const [feitas, setFeitas] = useState<string[]>([]);
+  const { perfil, nivel, modulos, feitas, avancos, avancarMissao } = useProgresso();
   const [cursos, setCursos] = useState<Curso[] | null>(null);
 
   // Cursos avulsos cadastrados na tabela "cursos" do Supabase.
@@ -37,17 +40,25 @@ export default function Inicio() {
     };
   }, []);
 
-  const p = PERFIL_DEMO;
+  const p = { ...perfil, nivel };
   const atual = ROUTE[p.stopAtual];
   const prox = ROUTE[p.stopAtual + 1];
   const metaProx = prox?.meta || 10000;
   const pctProx = Math.min(100, Math.round((p.faturado / metaProx) * 100));
-  const continuar = MODULOS.find((m) => m.status === "andamento") ?? MODULOS[0];
-  const aula = continuar.aulas[continuar.feitas] ?? continuar.aulas[0];
-  const xpHoje = MISSOES.diarias.filter((m) => feitas.includes(m.id)).reduce((t, m) => t + m.xp, 0);
+  const continuar = moduloAtual(modulos);
+  const iAula = proximaAula(continuar, feitas);
+  const aula = continuar.aulas[iAula];
+  const diarias = MISSOES_PLANO.d.map((m) => ({ ...m, feito: Math.min(m.total, avancos[m.id] ?? 0) }));
+  const xpHoje = diarias.filter((m) => m.feito >= m.total).reduce((t, m) => t + m.xp, 0);
 
-  function alternar(id: string) {
-    setFeitas((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]));
+  async function avancar(id: string) {
+    try {
+      const r = await avancarMissao(id);
+      const mi = diarias.find((m) => m.id === id);
+      if (r.concluiu && mi) toast(`+${mi.xp} XP · missão concluída`, true);
+    } catch {
+      toast("Não deu para salvar agora. Tente de novo.");
+    }
   }
 
   return (
@@ -129,7 +140,7 @@ export default function Inicio() {
                 Continuar · Mod {continuar.n} · {continuar.t}
               </small>
               <b>
-                Aula {String(continuar.feitas + 1).padStart(2, "0")} · {aula.t}
+                Aula {String(iAula + 1).padStart(2, "0")} · {aula.t}
               </b>
               <span className={ui.bar}>
                 <i style={{ width: `${Math.round((continuar.feitas / continuar.aulas.length) * 100)}%` }} />
@@ -146,20 +157,24 @@ export default function Inicio() {
               <span className={`${ui.badge} ${ui.badgeGold}`}>+{xpHoje} XP hoje</span>
             </div>
             <ul className={ui.list}>
-              {MISSOES.diarias.map((m) => {
-                const ok = feitas.includes(m.id);
+              {diarias.map((m) => {
+                const ok = m.feito >= m.total;
                 return (
                   <li key={m.id}>
                     <button
                       type="button"
                       className={`${s.mission} ${ok ? s.missionOk : ""}`}
-                      onClick={() => alternar(m.id)}
+                      onClick={() => !ok && avancar(m.id)}
                       aria-pressed={ok}
+                      disabled={ok}
                     >
                       <span className={s.check}>{ok && <Icon name="check" size={16} />}</span>
                       <span className={ui.rowMain}>
                         <b>{m.t}</b>
-                        <small>{m.meta}</small>
+                        <small>
+                          {m.total > 1 ? `${m.feito} de ${m.total} · ` : ""}
+                          {m.meta}
+                        </small>
                       </span>
                       <span className={s.xpTag}>+{m.xp}</span>
                     </button>
@@ -167,7 +182,7 @@ export default function Inicio() {
                 );
               })}
             </ul>
-            <p className={ui.small}>Toque para marcar. Missão concluída vira XP na hora.</p>
+            <p className={ui.small}>Toque para registrar. Missão concluída vira XP na hora e fica salva.</p>
           </section>
 
           {/* cursos avulsos do Supabase */}
@@ -240,7 +255,7 @@ export default function Inicio() {
                 <span className={s.pos}>14</span>
                 <span className={s.rname}>Você</span>
                 <span className={ui.badge}>{atual.code}</span>
-                <span className={s.rxp}>{NUM.format(p.xp + xpHoje)}</span>
+                <span className={s.rxp}>{NUM.format(p.xp)}</span>
               </li>
             </ol>
           </section>
