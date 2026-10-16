@@ -1,0 +1,22 @@
+/* Tela de pagamento (Pix). Prefixo hs-as-. Reaproveita o visual do login. */
+.hs-as-planos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hs-as-plano{appearance:none;text-align:left;display:grid;gap:4px;padding:14px;border-radius:12px;border:1px solid var(--line,#2e2e33);background:#111113;color:var(--neve,#ECEAE4);cursor:pointer;font:inherit}
+.hs-as-plano b{font:800 15px/1.1 var(--f-d)}
+.hs-as-plano small{color:var(--muted,#a9a69e);font-size:12px}
+.hs-as-plano strong{font:800 18px/1.1 var(--f-d);margin-top:4px}
+.hs-as-plano[aria-checked="true"]{border-color:var(--gold,#c9a24e);box-shadow:0 0 0 1px var(--gold,#c9a24e) inset;background:#1a1710}
+.hs-as-plano[aria-checked="true"] strong{color:var(--gold-t,#d9b566)}
+.hs-as-conta{margin:0;color:var(--muted,#a9a69e);font-size:13px;overflow-wrap:anywhere}
+.hs-as-conta b{color:var(--neve,#ECEAE4);font-weight:600}
+.hs-as-resumo{margin:0;color:var(--muted,#a9a69e)}
+.hs-as-resumo b{color:var(--gold-t,#d9b566);font-size:18px}
+.hs-as-qr{background:#fff;border-radius:14px;padding:10px;width:min(260px,100%);justify-self:center}
+.hs-as-qr svg{display:block;width:100%;height:auto}
+.hs-as-passos{margin:0;color:var(--muted,#a9a69e);font-size:13.5px;text-align:center}
+.hs-as-copia{display:flex;gap:8px}
+.hs-as-copia input{flex:1;min-width:0;min-height:44px;border-radius:10px;border:1px solid var(--line,#2e2e33);background:#111113;color:var(--neve,#ECEAE4);padding:0 12px;font:500 13px/1 var(--f-m)}
+.hs-as-copia button{min-height:44px;padding:0 16px;border-radius:10px;border:0;background:var(--gold-grad);color:#141416;font:700 14px/1 var(--f-t);cursor:pointer;white-space:nowrap}
+.hs-as-espera{display:flex;align-items:center;justify-content:center;gap:8px;margin:0;color:var(--muted,#a9a69e);font-size:13.5px;font-variant-numeric:tabular-nums}
+.hs-as-espera i{width:8px;height:8px;border-radius:50%;background:var(--gold,#c9a24e);animation:hs-as-pulso 1.2s ease-in-out infinite}
+@keyframes hs-as-pulso{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.hs-as-espera i{animation:none}}

@@ -1,0 +1,304 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "../_lib/supabase";
+import { PRICE } from "../_lib/site";
+import { qrSvgPath } from "../_lib/qrcode";
+import "../login/login.css";
+import s from "../login/login.styles";
+import "./assinar.css";
+
+type Plano = "mensal" | "anual";
+type Pedido = { id: string; plano: Plano; valor: number; status: string; br_code: string | null; expira_em: string | null };
+type Etapa = "carregando" | "form" | "pix" | "pago" | "expirado";
+
+const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const PLANOS: Record<Plano, { t: string; s: string; preco: number }> = {
+  anual: { t: "Anual", s: "12 meses · melhor preço", preco: PRICE.anual },
+  mensal: { t: "Mensal", s: "30 dias", preco: PRICE.mensal },
+};
+
+export default function AssinarPage() {
+  return (
+    <Suspense fallback={<div className={s.loading}>Carregando…</div>}>
+      <Assinar />
+    </Suspense>
+  );
+}
+
+function mascaraCpf(v: string) {
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  return d.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+}
+function mascaraTel(v: string) {
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 10) return d.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{4})(\d)/, "$1-$2");
+  return d.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
+}
+
+function Assinar() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const inicial: Plano = params.get("plano") === "mensal" ? "mensal" : "anual";
+
+  const [etapa, setEtapa] = useState<Etapa>("carregando");
+  const [token, setToken] = useState("");
+  const [email, setEmail] = useState("");
+  const [plano, setPlano] = useState<Plano>(inicial);
+  const [nome, setNome] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [tel, setTel] = useState("");
+  const [erro, setErro] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [pedido, setPedido] = useState<Pedido | null>(null);
+  const [copiado, setCopiado] = useState(false);
+  const [agora, setAgora] = useState(0);
+  const [jaAtivo, setJaAtivo] = useState<string | null>(null);
+
+  // Precisa estar logado: o pagamento fica ligado à conta. Roda uma vez só.
+  const rota = useRef(router);
+  useEffect(() => {
+    const router = rota.current;
+    let vivo = true;
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!vivo) return;
+      if (!session) {
+        const volta = `/assinar?plano=${inicial}`;
+        router.replace(`/login?plano=${inicial}&callback=${encodeURIComponent(volta)}`);
+        return;
+      }
+      setToken(session.access_token);
+      setEmail(session.user.email ?? "");
+      const meta = session.user.user_metadata as { full_name?: string; name?: string };
+      setNome(meta?.full_name || meta?.name || "");
+      const { data } = await supabase.rpc("meu_acesso");
+      const a = data as { ativo?: boolean; cargo?: string | null; valido_ate?: string | null } | null;
+      if (vivo && a?.ativo && !a.cargo) setJaAtivo(a.valido_ate ?? "sem prazo");
+      if (vivo) setEtapa("form");
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, sess) => sess && setToken(sess.access_token));
+    return () => {
+      vivo = false;
+      sub.subscription.unsubscribe();
+    };
+  }, [inicial]);
+
+  // Relógio para o tempo do Pix.
+  useEffect(() => {
+    if (etapa !== "pix") return;
+    setAgora(Date.now());
+    const t = setInterval(() => setAgora(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [etapa]);
+
+  const conferir = useCallback(async () => {
+    if (!pedido) return;
+    const r = await fetch(`/api/pagamentos/pix?id=${pedido.id}`, { headers: { authorization: `Bearer ${token}` }, cache: "no-store" });
+    if (!r.ok) return;
+    const p = (await r.json()) as Pedido;
+    if (p.status === "pago") setEtapa("pago");
+    else if (p.status !== "pendente") setEtapa("expirado");
+  }, [pedido, token]);
+
+  // Enquanto o Pix está na tela, confere o pagamento a cada 5 segundos.
+  useEffect(() => {
+    if (etapa !== "pix") return;
+    const t = setInterval(() => {
+      if (document.visibilityState === "visible") conferir();
+    }, 5000);
+    return () => clearInterval(t);
+  }, [etapa, conferir]);
+
+  const restante = pedido?.expira_em ? Math.max(0, new Date(pedido.expira_em).getTime() - agora) : 0;
+  useEffect(() => {
+    if (etapa === "pix" && agora > 0 && pedido?.expira_em && restante === 0) setEtapa("expirado");
+  }, [etapa, agora, restante, pedido]);
+
+  const qr = useMemo(() => (pedido?.br_code ? qrSvgPath(pedido.br_code) : null), [pedido]);
+
+  async function gerar(e?: React.FormEvent) {
+    e?.preventDefault();
+    setErro("");
+    const n = nome.trim().replace(/\s+/g, " ");
+    if (n.split(" ").length < 2) return setErro("Digite seu nome completo, como no CPF.");
+    if (cpf.replace(/\D/g, "").length !== 11) return setErro("Digite os 11 números do CPF.");
+    setEnviando(true);
+    try {
+      const r = await fetch("/api/pagamentos/pix", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+        body: JSON.stringify({ plano, nome: n, cpf, telefone: tel }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) return setErro((j as { erro?: string }).erro || "Não deu para gerar o Pix. Tente de novo.");
+      setPedido(j as Pedido);
+      setEtapa((j as Pedido).status === "pago" ? "pago" : "pix");
+    } catch {
+      setErro("Sem conexão. Confira sua internet e tente de novo.");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  async function copiar() {
+    if (!pedido?.br_code) return;
+    try {
+      await navigator.clipboard.writeText(pedido.br_code);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2500);
+    } catch {
+      setErro("Não deu para copiar. Selecione o código e copie na mão.");
+    }
+  }
+
+  const mm = String(Math.floor(restante / 60000)).padStart(2, "0");
+  const ss = String(Math.floor((restante % 60000) / 1000)).padStart(2, "0");
+
+  return (
+    <main className={s.page}>
+      <aside className={s.visual} aria-hidden="true">
+        <Image src="/img/hero-neve.jpg" alt="" fill preload sizes="(max-width: 1024px) 100vw, 50vw" className={s.visualImg} />
+        <span className={s.goldLine} />
+        <div className={s.visualText}>
+          <span>Embarque no zero.</span>
+          <strong>Desembarque no topo.</strong>
+        </div>
+      </aside>
+
+      <section className={s.panel}>
+        <div className={s.box}>
+          <Link href="/" className={s.logo} aria-label="HOT SOCIETY, voltar ao início">
+            <Image src="/brand/hs-logo.svg" alt="HOT SOCIETY" width={1253} height={170} />
+          </Link>
+
+          {etapa === "carregando" && <p className={s.ok}>Carregando…</p>}
+
+          {etapa === "form" && (
+            <>
+              <h1 className={s.title}>
+                <span>Emita seu</span>
+                <span className={s.gold}>passaporte.</span>
+              </h1>
+              {jaAtivo && (
+                <p className={s.ok}>
+                  Seu acesso já está ativo{jaAtivo !== "sem prazo" ? ` até ${new Date(jaAtivo).toLocaleDateString("pt-BR")}` : ""}. Pagando agora, o tempo novo
+                  soma ao que você já tem.
+                </p>
+              )}
+              <form className={s.form} onSubmit={gerar} noValidate>
+                <div className="hs-as-planos" role="radiogroup" aria-label="Plano">
+                  {(Object.keys(PLANOS) as Plano[]).map((k) => (
+                    <button key={k} type="button" role="radio" aria-checked={plano === k} className="hs-as-plano" onClick={() => setPlano(k)}>
+                      <b>{PLANOS[k].t}</b>
+                      <small>{PLANOS[k].s}</small>
+                      <strong>{BRL.format(PLANOS[k].preco)}</strong>
+                    </button>
+                  ))}
+                </div>
+                <label className={s.field}>
+                  <span>Nome completo</span>
+                  <input value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="name" maxLength={120} required />
+                </label>
+                <label className={s.field}>
+                  <span>CPF (para o Pix)</span>
+                  <input value={cpf} onChange={(e) => setCpf(mascaraCpf(e.target.value))} inputMode="numeric" placeholder="000.000.000-00" required />
+                </label>
+                <label className={s.field}>
+                  <span>Celular (opcional)</span>
+                  <input value={tel} onChange={(e) => setTel(mascaraTel(e.target.value))} inputMode="tel" autoComplete="tel" placeholder="(11) 99999-9999" />
+                </label>
+                <p className="hs-as-conta">
+                  O acesso será liberado na conta <b>{email}</b>.
+                </p>
+                {erro && (
+                  <p className={s.err} role="alert">
+                    {erro}
+                  </p>
+                )}
+                <button type="submit" className={s.primary} disabled={enviando}>
+                  {enviando ? "Gerando Pix…" : `Pagar ${BRL.format(PLANOS[plano].preco)} com Pix`}
+                </button>
+              </form>
+            </>
+          )}
+
+          {etapa === "pix" && pedido && qr && (
+            <>
+              <h1 className={s.title}>
+                <span>Pague com</span>
+                <span className={s.gold}>Pix.</span>
+              </h1>
+              <div className={s.form}>
+                <p className="hs-as-resumo">
+                  {PLANOS[pedido.plano].t} · <b>{BRL.format(pedido.valor)}</b>
+                </p>
+                <div className="hs-as-qr">
+                  <svg viewBox={`0 0 ${qr.tamanho} ${qr.tamanho}`} role="img" aria-label="QR Code do Pix" shapeRendering="crispEdges">
+                    <rect width={qr.tamanho} height={qr.tamanho} fill="#fff" />
+                    <path d={qr.d} fill="#000" />
+                  </svg>
+                </div>
+                <p className="hs-as-passos">Abra o app do seu banco, escolha <b>Pix → Ler QR Code</b> ou use o código abaixo.</p>
+                <div className="hs-as-copia">
+                  <input readOnly value={pedido.br_code ?? ""} aria-label="Pix copia e cola" onFocus={(e) => e.currentTarget.select()} />
+                  <button type="button" onClick={copiar}>
+                    {copiado ? "Copiado ✓" : "Copiar"}
+                  </button>
+                </div>
+                <p className="hs-as-espera" role="status">
+                  <i aria-hidden="true" /> Aguardando o pagamento… expira em {mm}:{ss}
+                </p>
+                <button type="button" className={s.textBtn} onClick={conferir}>
+                  Já paguei, conferir agora
+                </button>
+                {erro && (
+                  <p className={s.err} role="alert">
+                    {erro}
+                  </p>
+                )}
+              </div>
+            </>
+          )}
+
+          {etapa === "pago" && (
+            <>
+              <h1 className={s.title}>
+                <span>Pagamento</span>
+                <span className={s.gold}>aprovado.</span>
+              </h1>
+              <div className={s.form}>
+                <p className={s.ok} role="status">
+                  Seu passaporte está ativo. Boa viagem!
+                </p>
+                <a href="/dashboard" className={s.primary} style={{ display: "grid", placeItems: "center", textDecoration: "none" }}>
+                  Entrar na área de membros
+                </a>
+              </div>
+            </>
+          )}
+
+          {etapa === "expirado" && (
+            <>
+              <h1 className={s.title}>
+                <span>Esse Pix</span>
+                <span className={s.gold}>expirou.</span>
+              </h1>
+              <div className={s.form}>
+                <p className={s.err}>O código vale 1 hora. Se você já pagou, aguarde alguns minutos e confira de novo; senão, gere um novo.</p>
+                <button type="button" className={s.primary} onClick={() => setEtapa("form")}>
+                  Gerar novo Pix
+                </button>
+                <button type="button" className={s.textBtn} onClick={conferir}>
+                  Já paguei, conferir de novo
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+    </main>
+  );
+}

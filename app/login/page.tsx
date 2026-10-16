@@ -29,7 +29,7 @@ function Login() {
   const plano = params.get("plano");
   const planoValido = plano === "mensal" || plano === "anual" ? plano : null;
   const checkoutExterno = planoValido && CHECKOUT[planoValido].startsWith("http") ? CHECKOUT[planoValido] : null;
-  const destino = caminhoSeguro(params.get("callback"), "/dashboard");
+  const destino = caminhoSeguro(params.get("callback"), planoValido ? `/assinar?plano=${planoValido}` : "/dashboard");
 
   const [modo, setModo] = useState<Modo>(params.get("esqueci") ? "esqueci" : planoValido ? "criar" : "entrar");
   const [email, setEmail] = useState("");
