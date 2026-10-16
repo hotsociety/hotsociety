@@ -74,7 +74,8 @@ export const NAV: Item[] = GRUPOS.flatMap((g) => g.itens).filter((i) => !i.soon)
 // Aba da equipe: só aparece para quem tem cargo (o banco confere de novo em cada ação).
 const EQUIPE: Grupo = { g: "Equipe", itens: [{ href: "/dashboard/painel", t: "Painel da equipe", icon: "shield" }] };
 function gruposDo(cargo: Cargo | null) {
-  return PODE.verPainel(cargo) ? [...GRUPOS, EQUIPE] : GRUPOS;
+  // Para a equipe, o painel fica logo abaixo de Início (fácil de achar).
+  return PODE.verPainel(cargo) ? [GRUPOS[0], EQUIPE, ...GRUPOS.slice(1)] : GRUPOS;
 }
 function navDo(cargo: Cargo | null) {
   return gruposDo(cargo)
