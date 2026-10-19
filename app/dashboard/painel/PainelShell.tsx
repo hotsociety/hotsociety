@@ -13,6 +13,9 @@ export const ABAS: Aba[] = [
   { href: "/dashboard/painel", t: "Visão geral", pode: PODE.verValores },
   { href: "/dashboard/painel/vendas", t: "Vendas", pode: PODE.verPainel },
   { href: "/dashboard/painel/alunos", t: "Alunos e acesso", pode: PODE.verPainel },
+  { href: "/dashboard/painel/chamados", t: "Chamados", pode: PODE.verPainel },
+  { href: "/dashboard/painel/placas", t: "Placas", pode: PODE.verPlacas },
+  { href: "/dashboard/painel/aulas", t: "Aulas", pode: PODE.editarAulas },
   { href: "/dashboard/painel/equipe", t: "Equipe e cargos", pode: PODE.darCargo },
   { href: "/dashboard/painel/historico", t: "Histórico", pode: PODE.verHistorico },
 ];
@@ -42,7 +45,7 @@ export default function PainelShell({ children }: { children: ReactNode }) {
       <div className={m("top")}>
         <div>
           <h1>Painel da equipe</h1>
-          <p className={m("sub")}>Vendas, acessos e cargos. Toda ação fica registrada.</p>
+          <p className={m("sub")}>Vendas, acessos, chamados e conteúdo. Toda ação fica registrada.</p>
         </div>
         <span className="hs-pn-role">{NOME_CARGO[cargo!]}</span>
       </div>

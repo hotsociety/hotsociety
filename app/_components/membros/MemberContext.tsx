@@ -39,6 +39,8 @@ export const PODE = {
   mudarAcesso: (c: Cargo | null) => c === "admin" || c === "suporte",
   darCargo: (c: Cargo | null) => c === "admin",
   verHistorico: (c: Cargo | null) => c === "admin",
+  verPlacas: (c: Cargo | null) => c === "admin" || c === "suporte",
+  editarAulas: (c: Cargo | null) => c === "admin",
 };
 
 export const NOME_CARGO: Record<Cargo, string> = { admin: "Admin", financeiro: "Financeiro", suporte: "Suporte" };

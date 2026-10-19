@@ -4,7 +4,7 @@
 // correspondente pela consulta real. Os tipos já estão prontos para isso.
 
 export type Missao = { id: string; t: string; meta: string; xp: number };
-export type Aula = { id: string; t: string; dur: string };
+export type Aula = { id: string; t: string };
 export type Modulo = {
   slug: string;
   n: string;
@@ -44,8 +44,7 @@ export const MISSOES: Record<"diarias" | "semanais" | "mes", Missao[]> = {
 };
 
 function aulas(prefix: string, titulos: string[]): Aula[] {
-  const dur = ["08:40", "12:30", "06:15", "14:02", "09:48", "11:20", "07:05", "13:37", "10:10"];
-  return titulos.map((t, i) => ({ id: `${prefix}-${i + 1}`, t, dur: dur[i % dur.length] }));
+  return titulos.map((t, i) => ({ id: `${prefix}-${i + 1}`, t }));
 }
 
 export const MODULOS: Modulo[] = [
@@ -294,15 +293,10 @@ export const AJUDA_TEMAS = [
 ];
 
 export const AJUDA_FAQ = [
-  { q: "Como comprovo faturamento para subir de país?", a: "Conecte seu gateway em Jornada → Comprovar. A conferência é automática. Print sozinho entra em revisão manual em até 48 h." },
+  { q: "Como comprovo faturamento para subir de país?", a: "Abra um chamado do tipo \"Carimbos e placas\" e envie os comprovantes (extrato ou relatório da plataforma onde você vende). A equipe confere em até 5 dias e atualiza o seu faturamento verificado." },
   { q: "Minha conta na plataforma foi restringida. E agora?", a: "Abra um chamado do tipo \"Conta banida\". Você recebe o checklist de recurso e o passo a passo para voltar a operar." },
-  { q: "Como peço reembolso dentro dos 7 dias?", a: "Em Perfil → Assinatura → Pedir reembolso. O valor volta pelo mesmo meio de pagamento." },
+  { q: "Como peço reembolso dentro dos 7 dias?", a: "Em Perfil → Acesso e compras → Pedir reembolso. Você recebe um protocolo na hora e o valor volta pelo mesmo meio de pagamento." },
   { q: "Posso assistir pelo celular?", a: "Sim. A plataforma funciona no celular, tablet e computador, com o mesmo login." },
-];
-
-export const CHAMADOS = [
-  { id: "#2481", t: "Comprovação de venda", status: "Em análise", quando: "aberto ontem" },
-  { id: "#2310", t: "Acesso ao módulo 02", status: "Resolvido", quando: "03/10" },
 ];
 
 /* ===================== Feed estilo rede social ===================== */
