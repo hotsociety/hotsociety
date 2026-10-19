@@ -1,12 +1,11 @@
 "use client";
 
 import { useProgresso } from "../../_components/membros/Progresso";
-import Link from "next/link";
 import { useState } from "react";
 import Icon from "../../_components/membros/Icon";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { supabase } from "../../_lib/supabase";
-import { PRICE } from "../../_lib/site";
+import MinhasCompras from "./MinhasCompras";
 import "../../_components/membros/ui.css";
 import ui from "../../_components/membros/ui.styles";
 import "./perfil.css";
@@ -91,7 +90,7 @@ export default function Perfil() {
               autoComplete="new-password"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
               minLength={8}
             />
           </label>
@@ -101,29 +100,7 @@ export default function Perfil() {
         </form>
       </div>
 
-      <section className={ui.card} aria-labelledby="assinatura">
-        <div className={ui.rowBetween}>
-          <h2 id="assinatura" className={ui.h2}>
-            Assinatura
-          </h2>
-          <span className={`${ui.badge} ${ui.badgeOk}`}>Ativa</span>
-        </div>
-        <div className={s.plan}>
-          <div>
-            <b>Plano anual · R$ {PRICE.anual}</b>
-            <small>Renova em 14/10/2027</small>
-          </div>
-          <div className={s.planActions}>
-            <Link href="/#planos" className={ui.btnSm}>
-              Mudar plano
-            </Link>
-            <Link href="/dashboard/suporte" className={ui.btnSm}>
-              Pedir reembolso
-            </Link>
-          </div>
-        </div>
-        <p className={ui.small}>Dados da assinatura de exemplo. Eles vêm do gateway quando o webhook estiver ligado.</p>
-      </section>
+      <MinhasCompras />
 
       <button type="button" className={`${ui.btnGhost} ${s.out}`} onClick={sair}>
         <Icon name="out" size={18} /> Sair da conta

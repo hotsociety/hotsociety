@@ -176,6 +176,7 @@ export default function Vendas() {
                   {comValores && <td className={"n" + (pago ? "" : " hs-pn-risk")}>{reais(v.liquido)}</td>}
                   <td>
                     <span className={"hs-pn-st " + v.status}>{STATUS_VENDA[v.status]}</span>
+                    {v.reembolso_pedido_em && v.status === "pago" && <small className="hs-pn-alerta">Reembolso pedido</small>}
                   </td>
                   <td>
                     <div className="hs-pn-acts">
@@ -250,6 +251,12 @@ function Detalhes({
     ["Data", dataHora(v.criado_em)],
     ["Status", STATUS_VENDA[v.status]],
     ["Conta no site", v.user_id ? "Criada e ligada à venda" : "Ainda não criou conta com esse e-mail"],
+    ...(v.reembolso_pedido_em
+      ? ([
+          ["Reembolso pedido", `${dataHora(v.reembolso_pedido_em)} · protocolo ${v.reembolso_protocolo ?? "-"}`],
+          ["Motivo", v.reembolso_motivo || "Não informado"],
+        ] as [string, string][])
+      : []),
   ];
   if (comValores) {
     linhas.push(["Preço", reais(v.valor)], ["Sua parte", reais(v.liquido)], ["Liberação prevista", dataHora(v.liberacao_prevista)]);

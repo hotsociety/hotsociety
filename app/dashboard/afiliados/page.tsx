@@ -1,5 +1,7 @@
 "use client";
 
+import AvisoExemplo from "../../_components/membros/AvisoExemplo";
+import "../../_components/membros/painel.css";
 import { useMemo, useState } from "react";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { Modal, toast } from "../../_components/membros/Toast";
@@ -82,6 +84,7 @@ export default function Afiliados() {
 
   return (
     <section className={m("view")} aria-label="Afiliados">
+      <AvisoExemplo>Programa em breve. Vendas, cliques e comissões abaixo são simulações, não valores reais.</AvisoExemplo>
       <div className={m("top")}>
         <div>
           <h1>Portal do Afiliado</h1>

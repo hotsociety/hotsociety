@@ -89,3 +89,6 @@
 .hs-pn-log li:last-child{border-bottom:0}
 .hs-pn-log time{color:var(--muted2,#85827a);font:500 12px/1.4 var(--f-m)}
 @media (max-width:560px){.hs-pn-log li{grid-template-columns:1fr}}
+.hs-pn-alerta{display:block;margin-top:4px;color:#ffb36b;font-weight:700;font-size:12px}
+.hs-exemplo{margin:0;padding:10px 14px;border:1px dashed #6a5a2a;border-radius:10px;background:#1a1710;color:var(--muted,#a9a69e);font-size:13px;line-height:1.45}
+.hs-exemplo b{display:inline-block;margin-right:6px;padding:2px 7px;border-radius:999px;background:#29230F;color:var(--gold-t,#d9b566);font:700 10.5px/1.4 var(--f-t);letter-spacing:.06em;text-transform:uppercase}

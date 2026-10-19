@@ -20,3 +20,8 @@
 .hs-as-espera i{width:8px;height:8px;border-radius:50%;background:var(--gold,#c9a24e);animation:hs-as-pulso 1.2s ease-in-out infinite}
 @keyframes hs-as-pulso{50%{opacity:.25}}
 @media (prefers-reduced-motion:reduce){.hs-as-espera i{animation:none}}
+.hs-as-aceite{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.45;color:var(--muted,#a9a69e);cursor:pointer}
+.hs-as-aceite input{width:20px;height:20px;margin-top:1px;flex:none;accent-color:#c9a24e}
+.hs-as-aceite a{color:var(--gold-t,#d9b566)}
+.hs-as-selos{display:flex;flex-wrap:wrap;gap:8px 14px;justify-content:center;margin:0;font-size:12.5px;color:var(--muted,#a9a69e)}
+.hs-as-vendedor{margin:0;text-align:center;font-size:11.5px;color:var(--muted2,#85827a);overflow-wrap:anywhere}

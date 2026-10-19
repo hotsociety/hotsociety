@@ -1,25 +1,31 @@
 "use client";
 
 import { useProgresso } from "../../_components/membros/Progresso";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import type { Medalha } from "../../_lib/demo";
+import Ranking from "../../_components/membros/Ranking";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { ROUTE } from "../../_lib/site";
-import { MEDALHAS, RANKING } from "../../_lib/demo";
 import "../../_components/membros/ui.css";
 import ui from "../../_components/membros/ui.styles";
 import "./conquistas.css";
+import "../inicio.css";
 import s from "./conquistas.styles";
 
 const NUM = new Intl.NumberFormat("pt-BR");
 const STATUS = { ok: "Conquistada", perto: "Falta pouco", futuro: "Bloqueada" } as const;
 
 export default function Conquistas() {
-  const { nome, iniciais } = useMembro();
-  const [aba, setAba] = useState<"temporada" | "geral">("temporada");
+  const { nome, iniciais, user } = useMembro();
+  const [dias, setDias] = useState<number | null>(null);
+  useEffect(() => {
+    const t = new Date(user.created_at).getTime();
+    setDias(Number.isFinite(t) ? Math.max(0, Math.floor((Date.now() - t) / 86400000)) : 0);
+  }, [user.created_at]);
   const { perfil, nivel, xpProx } = useProgresso();
   const p = { ...perfil, nivel, xpProx };
   const pct = Math.round((p.xp / p.xpProx) * 100);
-  const fator = aba === "geral" ? 3 : 1;
+  const MEDALHAS = medalhas(dias ?? 0, p.faturado);
   const ganhas = MEDALHAS.filter((m) => m.status === "ok").length;
 
   return (
@@ -71,57 +77,37 @@ export default function Conquistas() {
       <section className={ui.card} aria-labelledby="rank">
         <div className={ui.rowBetween}>
           <h2 id="rank" className={ui.h2}>
-            Ranking por XP
+            Ranking da temporada · XP
           </h2>
-          <div className={ui.tabs} role="group" aria-label="Período do ranking">
-            <button type="button" className={ui.tab} aria-pressed={aba === "temporada"} onClick={() => setAba("temporada")}>
-              Temporada
-            </button>
-            <button type="button" className={ui.tab} aria-pressed={aba === "geral"} onClick={() => setAba("geral")}>
-              Geral
-            </button>
-          </div>
         </div>
-        <div className={s.tableWrap}>
-          <table className={s.table}>
-            <thead>
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">Membro</th>
-                <th scope="col">País</th>
-                <th scope="col" className={s.hideSm}>
-                  Medalhas
-                </th>
-                <th scope="col" className={s.right}>
-                  XP
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {RANKING.map((r) => (
-                <tr key={r.pos}>
-                  <td className={s.pos}>{String(r.pos).padStart(2, "0")}</td>
-                  <td>{r.nome}</td>
-                  <td>
-                    <span className={ui.badge}>{r.stop}</span>
-                  </td>
-                  <td className={s.hideSm}>{r.medalhas}</td>
-                  <td className={s.right}>{NUM.format(r.xp * fator)}</td>
-                </tr>
-              ))}
-              <tr className={s.meRow}>
-                <td className={s.pos}>14</td>
-                <td>Você</td>
-                <td>
-                  <span className={ui.badge}>{ROUTE[p.stopAtual].code}</span>
-                </td>
-                <td className={s.hideSm}>{ganhas}</td>
-                <td className={s.right}>{NUM.format(p.xp * fator)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <Ranking classes={{ lista: "hs-inicio-rank", pos: "hs-inicio-pos", nome: "hs-inicio-rname", badge: ui.badge, xp: "hs-inicio-rxp", eu: "hs-inicio-me", vazio: ui.muted }} />
       </section>
     </div>
   );
+}
+
+// Medalhas calculadas com os dados reais do aluno.
+function medalhas(dias: number, faturado: number): Medalha[] {
+  const tempo = (d: number, sigla: string, t: string, extra?: string): Medalha => ({
+    sigla,
+    t,
+    d: dias >= d ? extra ?? "Tempo de Society" : `Faltam ${d - dias} dias`,
+    status: dias >= d ? "ok" : d - dias <= 7 ? "perto" : "futuro",
+  });
+  const meta = (m: number, sigla: string, t: string): Medalha => ({
+    sigla,
+    t,
+    d: "Placa física",
+    status: faturado >= m ? "ok" : faturado >= m * 0.7 ? "perto" : "futuro",
+  });
+  return [
+    tempo(30, "1M", "1 mês"),
+    tempo(90, "3M", "3 meses"),
+    tempo(180, "6M", "6 meses"),
+    tempo(365, "1A", "1 ano", "Ganha o moletom"),
+    { sigla: "1ª", t: "Primeira venda", d: faturado > 0 ? "Verificada" : "Registre seu primeiro faturamento", status: faturado > 0 ? "ok" : "futuro" },
+    meta(10000, "10K", "R$ 10 mil"),
+    meta(50000, "50K", "R$ 50 mil"),
+    meta(100000, "100K", "R$ 100 mil"),
+  ];
 }

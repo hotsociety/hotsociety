@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../_lib/supabase";
-import { PRICE } from "../_lib/site";
+import { PRICE, SITE } from "../_lib/site";
 import { qrSvgPath } from "../_lib/qrcode";
 import "../login/login.css";
 import s from "../login/login.styles";
@@ -51,6 +51,7 @@ function Assinar() {
   const [nome, setNome] = useState("");
   const [cpf, setCpf] = useState("");
   const [tel, setTel] = useState("");
+  const [aceite, setAceite] = useState(false);
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [pedido, setPedido] = useState<Pedido | null>(null);
@@ -125,12 +126,13 @@ function Assinar() {
     const n = nome.trim().replace(/\s+/g, " ");
     if (n.split(" ").length < 2) return setErro("Digite seu nome completo, como no CPF.");
     if (cpf.replace(/\D/g, "").length !== 11) return setErro("Digite os 11 números do CPF.");
+    if (!aceite) return setErro("Para continuar, confirme que tem 18 anos ou mais e aceita os termos.");
     setEnviando(true);
     try {
       const r = await fetch("/api/pagamentos/pix", {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
-        body: JSON.stringify({ plano, nome: n, cpf, telefone: tel }),
+        body: JSON.stringify({ plano, nome: n, cpf, telefone: tel, aceite }),
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) return setErro((j as { erro?: string }).erro || "Não deu para gerar o Pix. Tente de novo.");
@@ -213,6 +215,20 @@ function Assinar() {
                 <p className="hs-as-conta">
                   O acesso será liberado na conta <b>{email}</b>.
                 </p>
+                <label className="hs-as-aceite">
+                  <input type="checkbox" checked={aceite} onChange={(e) => setAceite(e.target.checked)} />
+                  <span>
+                    Tenho 18 anos ou mais e li os{" "}
+                    <a href="/termos" target="_blank" rel="noopener">
+                      Termos de uso
+                    </a>{" "}
+                    e a{" "}
+                    <a href="/privacidade" target="_blank" rel="noopener">
+                      Política de privacidade
+                    </a>
+                    . Sei que o pagamento é à vista, sem renovação automática, e que posso pedir reembolso integral em até 7 dias.
+                  </span>
+                </label>
                 {erro && (
                   <p className={s.err} role="alert">
                     {erro}
@@ -221,6 +237,13 @@ function Assinar() {
                 <button type="submit" className={s.primary} disabled={enviando}>
                   {enviando ? "Gerando Pix…" : `Pagar ${BRL.format(PLANOS[plano].preco)} com Pix`}
                 </button>
+                <p className="hs-as-selos">
+                  <span>🔒 Pagamento por Pix processado pela Transfeer</span>
+                  <span>↩ Garantia de 7 dias</span>
+                </p>
+                <p className="hs-as-vendedor">
+                  Vendido por {SITE.razaoSocial} · CNPJ {SITE.cnpj} · {SITE.supportEmail}
+                </p>
               </form>
             </>
           )}

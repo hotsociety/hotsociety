@@ -291,7 +291,11 @@ export default function Home() {
         <div className={`${s.wrap} ${s.footerLegal}`}>
           <p>
             Conteúdo para maiores de 18 anos. Resultados dependem do seu trabalho e não são garantidos. Conteúdo de IA é
-            sempre identificado. © {SITE.year} HOT SOCIETY · CNPJ {SITE.cnpj}
+            sempre identificado. © {SITE.year} HOT SOCIETY
+          </p>
+          <p>
+            {SITE.razaoSocial} · CNPJ {SITE.cnpj} · {SITE.endereco} · Atendimento:{" "}
+            <a href={`mailto:${SITE.supportEmail}`}>{SITE.supportEmail}</a>
           </p>
         </div>
       </footer>

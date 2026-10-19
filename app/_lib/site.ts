@@ -8,7 +8,14 @@ export const SITE = {
     "Plataforma de assinatura para quem quer faturar no digital com modelo IA ou modelo real: aulas, ferramentas, comunidade e a CappuIA.",
   instagram: "https://instagram.com/capputin0",
   supportEmail: "suporte@hotsociety.com.br",
+  // ⚠️ PREENCHER com os dados reais da empresa (obrigatório pelo Decreto 7.962/2013).
+  razaoSocial: "PREENCHER RAZÃO SOCIAL LTDA",
   cnpj: "00.000.000/0001-00",
+  endereco: "PREENCHER endereço completo, cidade/UF, CEP",
+  // Encarregado de dados (LGPD art. 41): pode ser o próprio dono.
+  encarregado: "PREENCHER nome do encarregado",
+  privacidadeEmail: "privacidade@hotsociety.com.br",
+  versaoTermos: "2026-10-19",
   year: 2026,
 };
 
@@ -33,7 +40,7 @@ export const PLANS = [
     name: "Anual",
     price: brl(PRICE.anual),
     period: "/ano",
-    note: `${brl(ANUAL_MES)} por mês · economize ${brl(ECONOMIA)}`,
+    note: `${brl(ANUAL_MES)} por mês · economize ${brl(ECONOMIA)} · Pix à vista, sem renovação automática`,
     badge: "Melhor valor",
     href: CHECKOUT.anual,
     featured: true,
@@ -51,7 +58,7 @@ export const PLANS = [
     name: "Mensal",
     price: brl(PRICE.mensal),
     period: "/mês",
-    note: "Renova todo mês · sem fidelidade",
+    note: "Pix à vista · 30 dias de acesso · sem renovação automática",
     badge: null,
     href: CHECKOUT.mensal,
     featured: false,
@@ -79,12 +86,12 @@ export const ROUTE: readonly { code: string; country: string; goal: string; rewa
 export const FEATURES = [
   { t: "Hot Academy", d: "5 módulos, do primeiro passo à escala, com aulas curtas e missões." },
   { t: "Feed da Society", d: "Stories, posts, enquetes e canais para trocar ideia com quem está no mesmo jogo." },
-  { t: "CappuIA", d: "Assistente que responde dúvidas das aulas 24 horas por dia." },
+  { t: "CappuIA (beta)", d: "Assistente para tirar dúvidas rápidas sobre as aulas. Em evolução." },
   { t: "HOTPHONE", d: "Seu celular dentro da plataforma: CappuIA, cofre de anotações e feed das aulas." },
   { t: "Ferramentas", d: "Prompts, abordagens, tráfego pago e orgânico e funil operacional prontos para copiar." },
   { t: "Missões e games", d: "Missões diárias, quiz e desafios que valem XP para a sua rota." },
   { t: "Levantar caixa", d: "Calculadora de meta, jogadas de 48 horas e plano de 7 dias." },
-  { t: "Afiliados", d: "Indique a Society e ganhe na primeira venda e em toda renovação." },
+  { t: "Afiliados (em breve)", d: "Programa de indicação com comissão. Abre em breve para os assinantes." },
 ] as const;
 
 export const MODULES = [
@@ -105,8 +112,8 @@ export const FAQ = [
     a: "Depende do seu trabalho, do seu nicho e do tempo que você dedica. Não prometemos ganho. Os valores de 10K, 50K e 100K são metas da rota, comprovadas com faturamento verificado.",
   },
   {
-    q: "Posso cancelar quando quiser?",
-    a: "Sim. O cancelamento é feito em 2 cliques na sua conta. Nos primeiros 7 dias você recebe o reembolso integral.",
+    q: "Tem renovação automática? E se eu me arrepender?",
+    a: "Não há renovação automática: o pagamento é por Pix e vale pelo período do plano. Se você se arrepender, pede o reembolso integral em até 7 dias da compra em Perfil → Minhas compras, sem precisar explicar o motivo (Código de Defesa do Consumidor, art. 49).",
   },
   {
     q: "Quais são as regras para modelo real e modelo IA?",
@@ -115,6 +122,10 @@ export const FAQ = [
   {
     q: "Como funcionam as placas?",
     a: "Quando você bate a meta com faturamento verificado pelo time, pede a placa na aba Prêmios e ela é enviada para a sua casa.",
+  },
+  {
+    q: "Quem vende a HOT SOCIETY?",
+    a: `${SITE.razaoSocial}, CNPJ ${SITE.cnpj}. Atendimento: ${SITE.supportEmail} (respondemos em até 5 dias úteis).`,
   },
   {
     q: "Qual a diferença entre o mensal e o anual?",

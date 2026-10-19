@@ -1,5 +1,7 @@
 "use client";
 
+import AvisoExemplo from "../../_components/membros/AvisoExemplo";
+import "../../_components/membros/painel.css";
 import { useProgresso } from "../../_components/membros/Progresso";
 import { useState } from "react";
 import { Modal, toast } from "../../_components/membros/Toast";
@@ -28,6 +30,7 @@ export default function HotStore() {
 
   return (
     <section className={m("view")} aria-label="Hot Store">
+      <AvisoExemplo>Loja em teste: os resgates ainda não são enviados de verdade.</AvisoExemplo>
       <div className={m("top")}>
         <div>
           <h1>Hot Store</h1>

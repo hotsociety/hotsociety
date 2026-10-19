@@ -178,6 +178,8 @@ export async function aplicarCobranca(sb: SupabaseClient, c: Cobranca): Promise<
     .select("*")
     .single<Pedido>();
 
+  if (novo === "pago") await enviarRecibo(p, c).catch((e) => console.error("recibo:", (e as Error).message));
+
   const statusVenda = STATUS_VENDA[novo];
   if (statusVenda) {
     const { error } = await sb.rpc("receber_venda", {
@@ -198,4 +200,36 @@ export async function aplicarCobranca(sb: SupabaseClient, c: Cobranca): Promise<
     if (error) console.error("receber_venda:", error.message);
   }
   return atual ?? p;
+}
+
+// Recibo por e-mail (Decreto 7.962/2013: confirmar a compra). Só envia se RESEND_API_KEY estiver configurada.
+async function enviarRecibo(p: Pedido, c: Cobranca) {
+  const chave = process.env.RESEND_API_KEY;
+  if (!chave) return;
+  const valor = (p.valor_centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const data = new Date(c.paid_at ?? Date.now()).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+  const esc = (t: string) => t.replace(/[&<>"]/g, (x) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[x]!);
+  const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#141416">
+  <h2 style="margin:0 0 12px">Pagamento aprovado ✈️</h2>
+  <p>Olá${p.nome ? ", " + esc(p.nome.split(" ")[0]) : ""}! Seu passaporte HOT SOCIETY está ativo.</p>
+  <table style="width:100%;border-collapse:collapse;font-size:14px">
+    <tr><td style="padding:6px 0;color:#666">Produto</td><td>${PRODUTO[p.plano]}</td></tr>
+    <tr><td style="padding:6px 0;color:#666">Valor</td><td>${valor} (Pix)</td></tr>
+    <tr><td style="padding:6px 0;color:#666">Data</td><td>${data}</td></tr>
+    <tr><td style="padding:6px 0;color:#666">Pedido</td><td>${esc(c.id)}</td></tr>
+  </table>
+  <p><a href="${SITE}/dashboard" style="display:inline-block;background:#C9A24E;color:#141416;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold">Entrar na área de membros</a></p>
+  <p style="font-size:12px;color:#666">Garantia de 7 dias: se se arrepender, peça o reembolso integral em Perfil → Minhas compras. Não há renovação automática.</p>
+</div>`;
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { authorization: `Bearer ${chave}`, "content-type": "application/json", "Idempotency-Key": `recibo-${p.id}` },
+    body: JSON.stringify({
+      from: process.env.EMAIL_REMETENTE || "HOT SOCIETY <nao-responda@hotsociety.com.br>",
+      to: [p.email],
+      subject: `Pagamento aprovado · ${PRODUTO[p.plano]}`,
+      html,
+    }),
+    signal: AbortSignal.timeout(8000),
+  });
 }

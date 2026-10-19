@@ -8,7 +8,8 @@ import Icon from "../_components/membros/Icon";
 import { supabase } from "../_lib/supabase";
 import { formatPreco, type Curso } from "../_lib/cursos";
 import { ROUTE } from "../_lib/site";
-import { LIVE, MISSOES_PLANO, RANKING, VITORIAS } from "../_lib/demo";
+import { LIVE, MISSOES_PLANO } from "../_lib/demo";
+import Ranking from "../_components/membros/Ranking";
 import { moduloAtual, proximaAula } from "../_lib/progresso";
 import { useProgresso } from "../_components/membros/Progresso";
 import { toast } from "../_components/membros/Toast";
@@ -242,47 +243,12 @@ export default function Inicio() {
                 Ver tudo
               </Link>
             </div>
-            <ol className={s.rank}>
-              {RANKING.slice(0, 5).map((r) => (
-                <li key={r.pos}>
-                  <span className={s.pos}>{String(r.pos).padStart(2, "0")}</span>
-                  <span className={s.rname}>{r.nome}</span>
-                  <span className={ui.badge}>{r.stop}</span>
-                  <span className={s.rxp}>{NUM.format(r.xp)}</span>
-                </li>
-              ))}
-              <li className={s.me}>
-                <span className={s.pos}>14</span>
-                <span className={s.rname}>Você</span>
-                <span className={ui.badge}>{atual.code}</span>
-                <span className={s.rxp}>{NUM.format(p.xp)}</span>
-              </li>
-            </ol>
+            <Ranking classes={{ lista: s.rank, pos: s.pos, nome: s.rname, badge: ui.badge, xp: s.rxp, eu: s.me, vazio: ui.muted }} />
           </section>
 
-          {/* vitórias */}
-          <section className={ui.card} aria-labelledby="vitorias">
-            <h2 id="vitorias" className={ui.h2}>
-              Vitórias da comunidade
-            </h2>
-            <ul className={ui.list}>
-              {VITORIAS.map((v) => (
-                <li key={v.t} className={ui.row}>
-                  <span className={ui.ini}>{v.ini}</span>
-                  <span className={ui.rowMain}>
-                    <b>{v.t}</b>
-                    <small>{v.quando}</small>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
         </div>
       </div>
 
-      <p className={ui.note}>
-        Números, ranking e missões desta tela são exemplos até as tabelas de progresso existirem no Supabase.
-      </p>
     </div>
   );
 }

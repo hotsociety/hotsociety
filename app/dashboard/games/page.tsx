@@ -1,5 +1,7 @@
 "use client";
 
+import AvisoExemplo from "../../_components/membros/AvisoExemplo";
+import "../../_components/membros/painel.css";
 import { useEffect, useRef, useState } from "react";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { toast } from "../../_components/membros/Toast";
@@ -38,6 +40,7 @@ export default function Games() {
 
   return (
     <section className={m("view")} aria-label="Games">
+      <AvisoExemplo>O ranking de games usa nomes de exemplo por enquanto.</AvisoExemplo>
       <div className={m("top")}>
         <div>
           <h1>Games</h1>
