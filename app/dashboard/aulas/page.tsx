@@ -6,6 +6,7 @@ import { m } from "../../_components/membros/proto";
 import { type Modulo } from "../../_lib/demo";
 import { moduloAtual, proximaAula } from "../../_lib/progresso";
 import { useProgresso } from "../../_components/membros/Progresso";
+import { useAulasInfo } from "../../_components/membros/useAulasInfo";
 
 type Filtro = "all" | "own" | "lock";
 
@@ -46,6 +47,7 @@ function Selo({ mod }: { mod: Modulo }) {
 
 export default function Modulos() {
   const { modulos: MODULOS, feitas } = useProgresso();
+  const info = useAulasInfo();
   const [filtro, setFiltro] = useState<Filtro>("all");
   const [sel, setSel] = useState(() => Math.max(0, MODULOS.indexOf(moduloAtual(MODULOS))));
   const mod = MODULOS[sel];
@@ -138,7 +140,7 @@ export default function Modulos() {
                   {estado === "lk" && <small>{mod.trava}</small>}
                   {estado === "cur" && <small>Próxima aula</small>}
                 </span>
-                <span className={m("t")}>{travado ? "—" : a.dur}</span>
+                <span className={m("t")}>{travado ? "—" : (info?.get(a.id)?.duracao ?? "")}</span>
               </>
             );
             return (

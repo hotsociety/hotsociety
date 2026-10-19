@@ -25,6 +25,14 @@ function frase(l: Linha) {
       return `pediu reembolso do pedido ${l.alvo} (protocolo ${d.protocolo}, ${reais(d.valor as number)})`;
     case "faturamento_teste":
       return `TESTE: faturamento de ${l.alvo} alterado para ${reais(d.faturado as number)}`;
+    case "chamado_resposta":
+      return `respondeu o chamado ${l.alvo} (${d.email})`;
+    case "chamado_status":
+      return `marcou o chamado ${l.alvo} como ${d.para === "resolvido" ? "resolvido" : d.para === "aberto" ? "aberto" : d.para}`;
+    case "placa_status":
+      return `mudou o pedido de placa ${d.placa} ${l.alvo} (${d.email}) para "${d.para}"`;
+    case "aula_editada":
+      return `editou a aula ${l.alvo}${d.tem_video ? " (com vídeo)" : " (sem vídeo)"}`;
     case "status_venda":
       return `mudou o pedido ${l.alvo} de ${STATUS_VENDA[d.de as StatusVenda] ?? d.de} para ${STATUS_VENDA[d.para as StatusVenda] ?? d.para}`;
     default:

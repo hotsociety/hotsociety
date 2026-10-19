@@ -7,7 +7,9 @@ import { useState, Suspense } from "react";
 import Icon from "@/app/_components/membros/Icon";
 import { useProgresso } from "@/app/_components/membros/Progresso";
 import { toast } from "@/app/_components/membros/Toast";
+import { useAulasInfo } from "@/app/_components/membros/useAulasInfo";
 import { proximaAula } from "@/app/_lib/progresso";
+import { embedDoVideo } from "@/app/_lib/video";
 
 function ModuloContent() {
   const { modulo } = useParams<{ modulo: string }>();
@@ -41,10 +43,13 @@ export default function ModuloPage() {
 
 function Player({ slug }: { slug: string }) {
   const { modulos, feitas, concluirAula } = useProgresso();
+  const info = useAulasInfo();
   const m = modulos.find((x) => x.slug === slug)!;
   const [atual, setAtual] = useState(() => proximaAula(m, feitas));
   const aula = m.aulas[atual];
   const concluida = feitas.has(aula.id);
+  const extra = info?.get(aula.id);
+  const video = embedDoVideo(extra?.video_url);
   const pct = Math.round((m.aulas.filter((a) => feitas.has(a.id)).length / m.aulas.length) * 100);
 
   async function concluir() {
@@ -68,14 +73,25 @@ function Player({ slug }: { slug: string }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center group">
-            <Image src={m.img} alt="" fill className="object-cover opacity-60 group-hover:opacity-80 transition-opacity" sizes="(max-width: 1024px) 100vw, 700px" />
-            <button type="button" className="absolute z-10 w-16 h-16 rounded-full bg-[#c9a24e] text-black flex items-center justify-center shadow-lg hover:scale-105 transition-transform" aria-label={`Assistir ${aula.t}`}>
-              <Icon name="play" size={30} />
-            </button>
-            <span className="absolute bottom-4 left-4 z-10 bg-black/70 backdrop-blur-md px-3 py-1 rounded-md text-xs font-mono text-zinc-200">
-              Aula {String(atual + 1).padStart(2, "0")} · {aula.dur}
-            </span>
+          <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+            {video ? (
+              <iframe
+                key={aula.id}
+                src={video}
+                title={aula.t}
+                className="absolute inset-0 w-full h-full bg-black border-0"
+                allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
+            ) : (
+              <>
+                <Image src={m.img} alt="" fill className="object-cover opacity-40" sizes="(max-width: 1024px) 100vw, 700px" />
+                <span className="relative z-10 bg-black/70 backdrop-blur-md px-4 py-2 rounded-lg text-sm text-zinc-200">
+                  {info === null ? "Carregando vídeo…" : "Vídeo desta aula em breve"}
+                </span>
+              </>
+            )}
           </div>
 
           <header className="space-y-2">
@@ -85,8 +101,18 @@ function Player({ slug }: { slug: string }) {
             <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight">
               {aula.t}
             </h1>
-            <p className="text-zinc-400 text-sm md:text-base">{m.desc}</p>
+            <p className="text-zinc-400 text-sm md:text-base">
+              Aula {String(atual + 1).padStart(2, "0")}
+              {extra?.duracao && ` · ${extra.duracao}`} · {m.desc}
+            </p>
           </header>
+
+          {extra?.material && (
+            <section className="bg-[#141416] border border-[#2e2e33] rounded-2xl p-5 space-y-2" aria-label="Material da aula">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-[#c9a24e]">Material da aula</h2>
+              <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap break-words">{extra.material}</p>
+            </section>
+          )}
 
           <div className="flex flex-wrap gap-4 pt-2">
             <button type="button" className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#c9a24e] text-black font-semibold hover:bg-[#d9b566] transition-colors disabled:opacity-50" onClick={concluir} disabled={concluida && atual === m.aulas.length - 1}>
@@ -97,9 +123,6 @@ function Player({ slug }: { slug: string }) {
             </Link>
           </div>
 
-          <p className="text-xs text-zinc-500 italic">
-            O vídeo entra aqui. Coloque a URL de cada aula (Vimeo, Panda, YouTube não listado) no campo da aula quando a tabela de aulas existir no Supabase.
-          </p>
         </div>
 
         <aside className="bg-[#141416] border border-[#2e2e33] rounded-2xl p-6 h-fit space-y-6">
@@ -130,7 +153,7 @@ function Player({ slug }: { slug: string }) {
                     <span className="flex-1 text-sm font-medium truncate">
                       {a.t}
                     </span>
-                    <span className="text-xs font-mono text-zinc-500">{a.dur}</span>
+                    {info?.get(a.id)?.duracao && <span className="text-xs font-mono text-zinc-500">{info.get(a.id)!.duracao}</span>}
                   </button>
                 </li>
               );
