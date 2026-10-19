@@ -17,6 +17,9 @@ export type Venda = {
   liberacao_prevista?: string | null;
   criado_em: string;
   user_id: string | null;
+  reembolso_pedido_em?: string | null;
+  reembolso_motivo?: string | null;
+  reembolso_protocolo?: string | null;
 };
 
 export type Aluno = {

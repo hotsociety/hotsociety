@@ -26,8 +26,8 @@ export const GRUPOS: Grupo[] = [
   {
     g: "Comunidade",
     itens: [
-      { href: "/dashboard/feed", t: "Feed", icon: "feed", badge: "12" },
-      { href: "/dashboard/missoes", t: "Missões", icon: "target", badge: "3" },
+      { href: "/dashboard/feed", t: "Feed", icon: "feed" },
+      { href: "/dashboard/missoes", t: "Missões", icon: "target" },
     ],
   },
   {
@@ -49,7 +49,7 @@ export const GRUPOS: Grupo[] = [
   {
     g: "Extras",
     itens: [
-      { href: "/dashboard/store", t: "Hot Store", icon: "bag", badge: "novo" },
+      { href: "/dashboard/store", t: "Hot Store", icon: "bag", badge: "teste" },
       { href: "/dashboard/games", t: "Games", icon: "pad" },
     ],
   },

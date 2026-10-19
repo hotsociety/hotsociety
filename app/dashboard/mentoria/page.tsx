@@ -1,5 +1,7 @@
 "use client";
 
+import AvisoExemplo from "../../_components/membros/AvisoExemplo";
+import "../../_components/membros/painel.css";
 import { useState } from "react";
 import { Modal, toast } from "../../_components/membros/Toast";
 import { m } from "../../_components/membros/proto";
@@ -30,6 +32,7 @@ export default function MinhaMentoria() {
 
   return (
     <section className={m("view")} aria-label="Minha Mentoria">
+      <AvisoExemplo>Tela de exemplo da mentoria High Ticket (liberada em Dubai).</AvisoExemplo>
       <div className={m("split")}>
         <div className={m("seg")} role="group" aria-label="Visualização">
           <button type="button" aria-pressed={mentorado} onClick={() => setMentorado(true)}>

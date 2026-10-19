@@ -21,6 +21,10 @@ function frase(l: Linha) {
       return `bloqueou o acesso de ${l.alvo} · "${d.motivo ?? ""}"`;
     case "venda_manual":
       return `lançou a venda ${l.alvo} (${d.email}, ${reais(d.valor as number)})`;
+    case "reembolso_pedido":
+      return `pediu reembolso do pedido ${l.alvo} (protocolo ${d.protocolo}, ${reais(d.valor as number)})`;
+    case "faturamento_teste":
+      return `TESTE: faturamento de ${l.alvo} alterado para ${reais(d.faturado as number)}`;
     case "status_venda":
       return `mudou o pedido ${l.alvo} de ${STATUS_VENDA[d.de as StatusVenda] ?? d.de} para ${STATUS_VENDA[d.para as StatusVenda] ?? d.para}`;
     default:

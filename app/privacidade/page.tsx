@@ -6,32 +6,83 @@ export const metadata: Metadata = { title: "Política de privacidade" };
 
 export default function Privacidade() {
   return (
-    <LegalPage title="Política de privacidade" updated="outubro de 2026">
-      <h2>1. Dados que coletamos</h2>
-      <ul>
-        <li>Cadastro: nome, e-mail e dados de pagamento processados pelo gateway.</li>
-        <li>Uso da plataforma: aulas assistidas, missões, XP e mensagens na comunidade.</li>
-        <li>Dados técnicos: dispositivo, navegador e cookies essenciais de login.</li>
-      </ul>
-      <h2>2. Para que usamos</h2>
-      <ul>
-        <li>Liberar e manter seu acesso.</li>
-        <li>Processar pagamentos, renovações e reembolsos.</li>
-        <li>Calcular progresso, ranking e prêmios.</li>
-        <li>Enviar avisos sobre a sua conta.</li>
-      </ul>
-      <h2>3. Compartilhamento</h2>
+    <LegalPage title="Política de privacidade" updated={`19/10/2026 (versão ${SITE.versaoTermos})`}>
+      <h2>1. Quem cuida dos seus dados</h2>
       <p>
-        Compartilhamos dados apenas com prestadores necessários para operar a plataforma, como hospedagem, banco de
-        dados e gateway de pagamento. Não vendemos dados pessoais.
+        Controladora: {SITE.razaoSocial}, CNPJ {SITE.cnpj}, {SITE.endereco}. Encarregado de dados (LGPD, art. 41):{" "}
+        {SITE.encarregado}, pelo e-mail <a href={`mailto:${SITE.privacidadeEmail}`}>{SITE.privacidadeEmail}</a>.
       </p>
-      <h2>4. Seus direitos (LGPD)</h2>
+
+      <h2>2. Dados que coletamos e por quê</h2>
+      <ul>
+        <li>
+          <b>Conta</b> (nome, e-mail, senha protegida, foto opcional): para criar e proteger seu acesso. Base legal: execução de
+          contrato.
+        </li>
+        <li>
+          <b>Compra</b> (nome, e-mail, plano, valor, data e status). O <b>CPF</b> é enviado direto ao processador de pagamento para
+          gerar o Pix e não fica guardado no nosso banco. Base legal: execução de contrato e obrigação legal/fiscal.
+        </li>
+        <li>
+          <b>Uso</b> (aulas assistidas, missões, XP, moedas e faturamento verificado que você nos envia): para mostrar seu
+          progresso, a rota e os prêmios. Base legal: execução de contrato.
+        </li>
+        <li>
+          <b>Segurança</b> (registros de acesso, endereço IP e verificação anti-robô): para evitar fraudes e cumprir o Marco
+          Civil da Internet. Base legal: legítimo interesse e obrigação legal.
+        </li>
+        <li>
+          <b>Equipe</b>: ações feitas no painel interno ficam registradas com o autor, para auditoria.
+        </li>
+      </ul>
+
+      <h2>3. Ranking e comunidade</h2>
       <p>
-        Você pode pedir acesso, correção, portabilidade ou exclusão dos seus dados a qualquer momento pelo e-mail{" "}
-        <a href={`mailto:${SITE.supportEmail}`}>{SITE.supportEmail}</a>.
+        No ranking aparecem só o seu primeiro nome, a inicial do sobrenome, sua escala na rota e seu XP. Para sair do ranking,
+        peça pelo e-mail de privacidade.
       </p>
-      <h2>5. Segurança</h2>
-      <p>Usamos conexão criptografada e controle de acesso aos dados. Nunca pedimos sua senha por mensagem.</p>
+
+      <h2>4. Com quem compartilhamos</h2>
+      <p>Só com empresas necessárias para a plataforma funcionar. Não vendemos dados pessoais.</p>
+      <ul>
+        <li>Supabase: banco de dados e login (servidores no Canadá).</li>
+        <li>Vercel: hospedagem do site (servidores nos EUA e em outros países).</li>
+        <li>Transfeer: processamento do pagamento por Pix (Brasil).</li>
+        <li>Resend: envio de e-mails da conta.</li>
+        <li>Cloudflare Turnstile: verificação anti-robô no login.</li>
+        <li>Google: somente se você escolher entrar com o Google.</li>
+      </ul>
+      <p>
+        Como alguns desses serviços ficam fora do Brasil, há transferência internacional de dados, feita com empresas que
+        adotam padrões de proteção compatíveis com a LGPD (art. 33).
+      </p>
+
+      <h2>5. Por quanto tempo guardamos</h2>
+      <ul>
+        <li>Dados da conta e progresso: enquanto a conta existir.</li>
+        <li>Registros de compra: 5 anos, por obrigação fiscal.</li>
+        <li>Registros de acesso: no mínimo 6 meses, pelo Marco Civil da Internet.</li>
+      </ul>
+
+      <h2>6. Cookies e armazenamento no navegador</h2>
+      <p>
+        Usamos apenas o necessário para manter você logado e lembrar preferências da plataforma (como a cor do seu HOTPHONE). Não
+        usamos cookies de anúncio.
+      </p>
+
+      <h2>7. Seus direitos (LGPD, art. 18)</h2>
+      <p>
+        Você pode pedir confirmação, acesso, correção, portabilidade, anonimização ou exclusão dos seus dados, e informações sobre
+        com quem os compartilhamos. Peça pelo e-mail{" "}
+        <a href={`mailto:${SITE.privacidadeEmail}`}>{SITE.privacidadeEmail}</a>. Respondemos em até 15 dias. Se não ficar satisfeito,
+        você pode procurar a ANPD.
+      </p>
+
+      <h2>8. Segurança</h2>
+      <p>
+        Usamos conexão criptografada, controle de acesso por cargo, verificação anti-robô e registros de auditoria. Nunca pedimos
+        sua senha por mensagem. Se houver incidente que traga risco a você, avisaremos você e a ANPD.
+      </p>
     </LegalPage>
   );
 }

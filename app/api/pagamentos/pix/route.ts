@@ -13,6 +13,7 @@ import {
   type Pedido,
   type Plano,
 } from "../../../_lib/pagamentos";
+import { SITE } from "../../../_lib/site";
 
 const resp = (corpo: object, status = 200) => Response.json(corpo, { status, headers: { "cache-control": "no-store" } });
 
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
   const user = await usuarioDoPedido(req);
   if (!user) return resp({ erro: "Entre na sua conta para assinar." }, 401);
 
-  let corpo: { plano?: string; nome?: string; cpf?: string; telefone?: string };
+  let corpo: { plano?: string; nome?: string; cpf?: string; telefone?: string; aceite?: boolean };
   try {
     corpo = await req.json();
   } catch {
@@ -50,6 +51,7 @@ export async function POST(req: Request) {
   if (!plano) return resp({ erro: "Escolha um plano." }, 400);
   if (nome.split(" ").length < 2) return resp({ erro: "Digite seu nome completo." }, 400);
   if (!cpfValido(cpf)) return resp({ erro: "CPF inválido. Confira os números." }, 400);
+  if (corpo.aceite !== true) return resp({ erro: "Para continuar, confirme que tem 18 anos ou mais e aceita os termos." }, 400);
 
   const sb = admin();
 
@@ -74,11 +76,17 @@ export async function POST(req: Request) {
     .gt("criado_em", new Date(Date.now() - 3600_000).toISOString());
   if ((count ?? 0) >= 8) return resp({ erro: "Muitas tentativas. Espere um pouco e tente de novo." }, 429);
 
-  const { data: pedido, error } = await sb
+  const novo = { user_id: user.id, email: user.email!, nome, plano, valor_centavos: VALOR_CENTAVOS[plano as Plano] };
+  // Guarda quando e qual versão dos termos foi aceita (prova em caso de contestação).
+  let { data: pedido, error } = await sb
     .from("pedidos")
-    .insert({ user_id: user.id, email: user.email!, nome, plano, valor_centavos: VALOR_CENTAVOS[plano as Plano] })
+    .insert({ ...novo, aceite_termos_em: new Date().toISOString(), versao_termos: SITE.versaoTermos })
     .select("*")
     .single<Pedido>();
+  if (error && /aceite_termos_em|versao_termos/.test(error.message)) {
+    // Banco ainda sem as colunas novas: grava sem elas para não travar a venda.
+    ({ data: pedido, error } = await sb.from("pedidos").insert(novo).select("*").single<Pedido>());
+  }
   if (error || !pedido) {
     console.error("criar pedido:", error?.message);
     return resp({ erro: "Não deu para iniciar o pagamento. Tente de novo." }, 500);

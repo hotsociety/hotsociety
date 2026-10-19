@@ -1,5 +1,7 @@
 "use client";
 
+import AvisoExemplo from "../../_components/membros/AvisoExemplo";
+import "../../_components/membros/painel.css";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Canais from "../../_components/membros/Canais";
@@ -18,6 +20,7 @@ function Feed() {
 
   return (
     <section className={m("view")} aria-label="Feed">
+      <AvisoExemplo>Os posts, nomes e números desta tela são exemplos enquanto a comunidade é aberta.</AvisoExemplo>
       <div className={m("top")}>
         <div>
           <h1>Feed</h1>
