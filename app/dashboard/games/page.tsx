@@ -45,7 +45,6 @@ export default function Games() {
 
   return (
     <section className={m("view")} aria-label="Games">
-      <AvisoExemplo>O ranking de games usa nomes de exemplo por enquanto.</AvisoExemplo>
       <div className={m("top")}>
         <div>
           <h1>Games</h1>
