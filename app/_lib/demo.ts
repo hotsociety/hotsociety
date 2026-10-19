@@ -293,7 +293,7 @@ export const AJUDA_TEMAS = [
 ];
 
 export const AJUDA_FAQ = [
-  { q: "Como comprovo faturamento para subir de país?", a: "Abra um chamado do tipo \"Carimbos e placas\" e envie os comprovantes (extrato ou relatório da plataforma onde você vende). A equipe confere em até 5 dias e atualiza o seu faturamento verificado." },
+  { q: "Como comprovo faturamento para subir de país?", a: "Em Prêmios → Comprovar faturamento, envie o extrato ou o relatório da plataforma onde você vende. A equipe confere em até 5 dias e soma o valor ao seu faturamento verificado." },
   { q: "Minha conta na plataforma foi restringida. E agora?", a: "Abra um chamado do tipo \"Conta banida\". Você recebe o checklist de recurso e o passo a passo para voltar a operar." },
   { q: "Como peço reembolso dentro dos 7 dias?", a: "Em Perfil → Acesso e compras → Pedir reembolso. Você recebe um protocolo na hora e o valor volta pelo mesmo meio de pagamento." },
   { q: "Posso assistir pelo celular?", a: "Sim. A plataforma funciona no celular, tablet e computador, com o mesmo login." },

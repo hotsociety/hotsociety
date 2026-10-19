@@ -14,6 +14,7 @@ export const ABAS: Aba[] = [
   { href: "/dashboard/painel/vendas", t: "Vendas", pode: PODE.verPainel },
   { href: "/dashboard/painel/alunos", t: "Alunos e acesso", pode: PODE.verPainel },
   { href: "/dashboard/painel/chamados", t: "Chamados", pode: PODE.verPainel },
+  { href: "/dashboard/painel/faturamento", t: "Faturamento", pode: PODE.verValores },
   { href: "/dashboard/painel/placas", t: "Placas", pode: PODE.verPlacas },
   { href: "/dashboard/painel/aulas", t: "Aulas", pode: PODE.editarAulas },
   { href: "/dashboard/painel/equipe", t: "Equipe e cargos", pode: PODE.darCargo },

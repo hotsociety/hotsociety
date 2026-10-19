@@ -5,6 +5,7 @@ import { useState } from "react";
 import Icon from "../../_components/membros/Icon";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { supabase } from "../../_lib/supabase";
+import MeusDados from "./MeusDados";
 import MinhasCompras from "./MinhasCompras";
 import "../../_components/membros/ui.css";
 import ui from "../../_components/membros/ui.styles";
@@ -101,6 +102,8 @@ export default function Perfil() {
       </div>
 
       <MinhasCompras />
+
+      <MeusDados />
 
       <button type="button" className={`${ui.btnGhost} ${s.out}`} onClick={sair}>
         <Icon name="out" size={18} /> Sair da conta

@@ -31,6 +31,12 @@ function frase(l: Linha) {
       return `marcou o chamado ${l.alvo} como ${d.para === "resolvido" ? "resolvido" : d.para === "aberto" ? "aberto" : d.para}`;
     case "placa_status":
       return `mudou o pedido de placa ${d.placa} ${l.alvo} (${d.email}) para "${d.para}"`;
+    case "comprovante_aprovado":
+      return `aprovou ${reais(d.valor as number)} de faturamento de ${l.alvo} (total ${reais(d.faturado as number)})`;
+    case "comprovante_recusado":
+      return `recusou o comprovante de ${l.alvo}`;
+    case "conta_excluida":
+      return `excluiu a própria conta (${l.alvo})`;
     case "aula_editada":
       return `editou a aula ${l.alvo}${d.tem_video ? " (com vídeo)" : " (sem vídeo)"}`;
     case "status_venda":
