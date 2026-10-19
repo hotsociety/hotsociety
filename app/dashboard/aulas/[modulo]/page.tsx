@@ -130,6 +130,11 @@ function Player({ slug }: { slug: string }) {
             <h2 className="text-lg font-bold text-white">Aulas do módulo</h2>
             <span className="bg-[#c9a24e]/20 text-[#c9a24e] text-xs font-mono px-2.5 py-1 rounded-full font-bold">{pct}%</span>
           </div>
+          {pct === 100 && (
+            <Link href={`/dashboard/certificado/${m.slug}`} className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-[#c9a24e]/50 text-[#d9b566] font-semibold hover:bg-[#c9a24e]/10 transition-colors">
+              <Icon name="medal" size={18} /> Emitir certificado
+            </Link>
+          )}
           <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
             <div className="bg-[#c9a24e] h-full transition-all duration-300" style={{ width: `${pct}%` }} />
           </div>

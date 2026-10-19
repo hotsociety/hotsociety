@@ -1,36 +1,52 @@
 "use client";
 
-import AvisoExemplo from "../../_components/membros/AvisoExemplo";
 import "../../_components/membros/painel.css";
 import { useProgresso } from "../../_components/membros/Progresso";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal, toast } from "../../_components/membros/Toast";
 import { m } from "../../_components/membros/proto";
+import { postApi } from "../../_lib/api";
 import { IMG, PRODUTOS, type Produto } from "../../_lib/demo";
+import { supabase } from "../../_lib/supabase";
 
 const CATS = ["Tudo", "Digitais", "Ferramentas", "Mentoria", "Merch"] as const;
 const brl = (v: number) => "R$ " + v.toLocaleString("pt-BR");
 const num = (v: number) => v.toLocaleString("pt-BR");
 const GFX_BG = "radial-gradient(90% 70% at 30% 20%,#2e2618,#0b0b0c 70%)";
+const FISICOS = ["mo", "bn"];
+type Resgate = { id: string; protocolo: string; item_id: string; titulo: string; coins: number; status: string; rastreio: string | null; criado_em: string };
+const ST_RESGATE: Record<string, string> = { recebido: "Separando", enviado: "Enviado", entregue: "Entregue", cancelado: "Cancelado (coins devolvidas)" };
 
 export default function HotStore() {
   const [cat, setCat] = useState<(typeof CATS)[number]>("Tudo");
-  const [carrinho, setCarrinho] = useState<string[]>([]);
   const { perfil } = useProgresso();
   const [coins, setCoins] = useState(perfil.coins);
-  const [aberto, setAberto] = useState<null | "carrinho" | "aplicar">(null);
+  const [aberto, setAberto] = useState<null | "aplicar">(null);
+  const [resgatar, setResgatar] = useState<Produto | null>(null);
+  const [resgates, setResgates] = useState<Resgate[]>([]);
+  const [avisados, setAvisados] = useState<Record<string, boolean>>({});
 
-  function adicionar(p: Produto) {
-    if (carrinho.includes(p.id)) return setAberto("carrinho");
-    setCarrinho((c) => [...c, p.id]);
-    toast("Adicionado ao carrinho");
+  function carregar() {
+    supabase.rpc("meus_resgates").then(({ data }) => setResgates((data ?? []) as Resgate[]));
+  }
+  useEffect(carregar, []);
+
+  async function avisar(p: Produto) {
+    const r = await postApi("/api/suporte", {
+      acao: "abrir",
+      tema: "Hot Store",
+      assunto: `Interesse: ${p.t}`,
+      texto: `Quero comprar "${p.t}" quando estiver disponível.`,
+    });
+    if (r.erro) return toast(r.erro);
+    setAvisados((a) => ({ ...a, [p.id]: true }));
+    toast("Anotado! Avisamos você pelo Suporte.");
   }
 
   const lista = PRODUTOS.filter((p) => cat === "Tudo" || p.cat === cat);
 
   return (
     <section className={m("view")} aria-label="Hot Store">
-      <AvisoExemplo>Loja em teste: os resgates ainda não são enviados de verdade.</AvisoExemplo>
       <div className={m("top")}>
         <div>
           <h1>Hot Store</h1>
@@ -40,9 +56,6 @@ export default function HotStore() {
           <span className={m("chip coin")}>
             <i className={m("num")}>{num(coins)}</i> Cappu Coins
           </span>
-          <button className={m("btn btn-s")} type="button" onClick={() => setAberto("carrinho")}>
-            Carrinho <span className={m("st-n")}>{carrinho.length}</span>
-          </button>
         </div>
       </div>
 
@@ -77,7 +90,7 @@ export default function HotStore() {
 
       <div className={m("st-grid")}>
         {lista.map((p) => {
-          const no = carrinho.includes(p.id);
+          const temHp = p.id === "hp" && resgates.some((r) => r.item_id === "hp" && r.status !== "cancelado");
           return (
             <div key={p.id} className={m("st-p")}>
               <div
@@ -99,8 +112,10 @@ export default function HotStore() {
                 </div>
                 <div className={m("pr")}>
                   <div>
-                    {p.rs ? (
-                      <span className={m("rs")}>{brl(p.rs)}</span>
+                    {p.rs && !p.coins ? (
+                      <span className={m("rs")} style={{ fontSize: 15 }}>
+                        Em breve · {brl(p.rs)}
+                      </span>
                     ) : p.aplicacao ? (
                       <span className={m("rs")} style={{ fontSize: 15 }}>
                         Por aplicação
@@ -108,7 +123,6 @@ export default function HotStore() {
                     ) : null}
                     {p.coins && (
                       <div className={m("cc")}>
-                        {p.soCoins ? "" : "ou "}
                         {num(p.coins)} coins
                       </div>
                     )}
@@ -117,9 +131,13 @@ export default function HotStore() {
                     <button type="button" className={m("btn btn-s")} onClick={() => setAberto("aplicar")}>
                       Aplicar
                     </button>
+                  ) : p.coins ? (
+                    <button type="button" className={m("btn btn-p")} disabled={temHp} onClick={() => setResgatar(p)}>
+                      {temHp ? "Já é seu ✓" : "Resgatar"}
+                    </button>
                   ) : (
-                    <button type="button" className={m("btn " + (no ? "btn-s" : "btn-p"))} onClick={() => adicionar(p)}>
-                      {no ? "No carrinho ✓" : "Adicionar"}
+                    <button type="button" className={m("btn btn-s")} disabled={avisados[p.id]} onClick={() => avisar(p)}>
+                      {avisados[p.id] ? "Anotado ✓" : "Avise-me"}
                     </button>
                   )}
                 </div>
@@ -129,21 +147,38 @@ export default function HotStore() {
         })}
       </div>
 
+      {resgates.length > 0 && (
+        <div className="hs-st-res">
+          <h3>Meus resgates</h3>
+          {resgates.map((r) => (
+            <div key={r.id}>
+              <span>
+                <b>{r.titulo}</b>
+                <small>
+                  {r.protocolo} · {num(r.coins)} coins
+                  {r.rastreio && ` · rastreio ${r.rastreio}`}
+                </small>
+              </span>
+              <em>{ST_RESGATE[r.status] ?? r.status}</em>
+            </div>
+          ))}
+        </div>
+      )}
+
       <p className={m("demo")}>
-        Cappu Coins são pontos de fidelidade: não têm valor em dinheiro, não podem ser sacados nem transferidos. Nenhuma
-        compra é processada nesta versão.
+        Cappu Coins são pontos de fidelidade que você ganha nas aulas e missões. Não têm valor em dinheiro, não podem ser sacados nem transferidos. Os
+        produtos com preço em reais chegam em breve: toque em &ldquo;Avise-me&rdquo; para ser avisado.
       </p>
 
-      {aberto === "carrinho" && (
-        <Carrinho
-          ids={carrinho}
+      {resgatar && (
+        <Resgatar
+          p={resgatar}
           coins={coins}
-          onRemover={(id) => setCarrinho((c) => c.filter((x) => x !== id))}
-          onComprar={(gasto, ganho) => {
-            setCoins((c) => c - gasto + ganho);
-            setCarrinho([]);
+          onClose={() => setResgatar(null)}
+          onFeito={(saldo) => {
+            setCoins(saldo);
+            carregar();
           }}
-          onClose={() => setAberto(null)}
         />
       )}
       {aberto === "aplicar" && <Aplicar onClose={() => setAberto(null)} />}
@@ -151,120 +186,105 @@ export default function HotStore() {
   );
 }
 
-function Carrinho({
-  ids,
-  coins,
-  onRemover,
-  onComprar,
-  onClose,
-}: {
-  ids: string[];
-  coins: number;
-  onRemover: (id: string) => void;
-  onComprar: (gasto: number, ganho: number) => void;
-  onClose: () => void;
-}) {
-  const [feito, setFeito] = useState<number | null>(null);
-  const itens = ids.map((id) => PRODUTOS.find((p) => p.id === id)!).filter(Boolean);
-  const total = itens.reduce((a, p) => a + (p.soCoins ? 0 : (p.rs ?? 0)), 0);
-  const emCoins = itens.reduce((a, p) => a + (p.soCoins ? (p.coins ?? 0) : 0), 0);
+function Resgatar({ p, coins, onClose, onFeito }: { p: Produto; coins: number; onClose: () => void; onFeito: (saldo: number) => void }) {
+  const fisico = FISICOS.includes(p.id);
+  const custo = p.coins ?? 0;
+  const [tam, setTam] = useState(p.id === "mo" ? "M" : "Único");
+  const [end, setEnd] = useState({ cep: "", endereco: "", cidade_uf: "", whatsapp: "" });
+  const [enviando, setEnviando] = useState(false);
+  const [feito, setFeito] = useState<string | null>(null);
+  const falta = custo - coins;
 
-  function finalizar() {
-    if (emCoins > coins) return toast("Coins insuficientes para esse item");
-    const ganho = Math.round(total * 2);
-    onComprar(emCoins, ganho);
-    setFeito(ganho);
+  async function confirmar() {
+    if (fisico && (end.cep.replace(/\D/g, "").length !== 8 || end.endereco.trim().length < 5 || end.cidade_uf.trim().length < 3))
+      return toast("Preencha CEP, endereço e cidade.");
+    setEnviando(true);
+    const { data, error } = await supabase.rpc("resgatar_item", {
+      p_item: p.id,
+      p_tamanho: fisico ? tam : null,
+      p_endereco: fisico ? { ...end, cep: end.cep.replace(/\D/g, ""), whatsapp: end.whatsapp.replace(/\D/g, "") } : null,
+    });
+    setEnviando(false);
+    if (error) return toast(/insuficientes/.test(error.message) ? "Coins insuficientes." : /já tem/.test(error.message) ? "Você já tem este item." : "Não deu para resgatar agora.");
+    const r = data as { protocolo: string; saldo: number };
+    setFeito(r.protocolo);
+    onFeito(r.saldo);
   }
 
-  if (feito !== null)
-    return (
-      <Modal
-        title="Carrinho"
-        onClose={onClose}
-        foot={
-          <>
-            <span style={{ flex: 1 }} />
+  return (
+    <Modal
+      title={`Resgatar · ${p.t}`}
+      onClose={onClose}
+      foot={
+        <>
+          <span style={{ flex: 1 }} />
+          {feito ? (
             <button type="button" className={m("btn btn-p")} onClick={onClose}>
               Fechar
             </button>
-          </>
-        }
-      >
+          ) : (
+            <button type="button" className={m("btn btn-p")} onClick={confirmar} disabled={enviando || falta > 0}>
+              {falta > 0 ? `Faltam ${num(falta)} coins` : enviando ? "Resgatando…" : `Resgatar por ${num(custo)} coins`}
+            </button>
+          )}
+        </>
+      }
+    >
+      {feito ? (
         <div className={m("gm-end")}>
           <span className={m("sc")} style={{ fontSize: 48 }}>
             ✓
           </span>
           <h3 className={m("stack")} style={{ fontSize: 30 }}>
-            <span>Pedido</span>
+            <span>Resgate</span>
             <span style={{ color: "var(--red-t)" }}>confirmado.</span>
           </h3>
           <p className={m("sub")} style={{ margin: 0 }}>
-            Os digitais aparecem na Área de Membros. Você ganhou {num(feito)} Cappu Coins de fidelidade.
-          </p>
-          <p className={m("demo")} style={{ margin: 0 }}>
-            Nenhuma cobrança foi feita nesta versão.
+            Protocolo {feito}.{" "}
+            {fisico ? "Enviamos em até 20 dias úteis, frete por nossa conta. O rastreio aparece em Meus resgates." : "A cor já está liberada nos Ajustes do seu HOTPHONE (recarregue a página)."}
           </p>
         </div>
-      </Modal>
-    );
-
-  return (
-    <Modal
-      title="Carrinho"
-      onClose={onClose}
-      foot={
-        itens.length ? (
-          <>
-            <button type="button" className={m("btn btn-s")} onClick={onClose}>
-              Continuar comprando
-            </button>
-            <span style={{ flex: 1 }} />
-            <button type="button" className={m("btn btn-p")} onClick={finalizar}>
-              Finalizar compra
-            </button>
-          </>
-        ) : undefined
-      }
-    >
-      {itens.length ? (
+      ) : (
         <>
-          {itens.map((p) => (
-            <div key={p.id} className={m("st-ci")}>
-              <span className={m("th")} style={p.img ? { backgroundImage: `url(${p.img})` } : undefined}>
-                {p.img ? "" : p.gfx}
-              </span>
-              <div>
-                <b>{p.t}</b>
-                <small>{p.soCoins ? `${num(p.coins ?? 0)} coins` : brl(p.rs ?? 0)}</small>
+          <p className={m("sub")} style={{ margin: 0 }}>
+            Você tem {num(coins)} coins. Este item custa {num(custo)}.
+          </p>
+          {fisico && (
+            <div className="hs-pn-form">
+              {p.id === "mo" && (
+                <label className="hs-pn-fld">
+                  Tamanho
+                  <select className="hs-pn-sel" value={tam} onChange={(e) => setTam(e.target.value)}>
+                    {["P", "M", "G", "GG"].map((t) => (
+                      <option key={t}>{t}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <div className="hs-pn-form2">
+                <label className="hs-pn-fld">
+                  CEP
+                  <input className="hs-pn-in" inputMode="numeric" autoComplete="postal-code" placeholder="00000-000" value={end.cep} onChange={(e) => setEnd({ ...end, cep: e.target.value })} />
+                </label>
+                <label className="hs-pn-fld">
+                  WhatsApp (para a entrega)
+                  <input className="hs-pn-in" inputMode="tel" autoComplete="tel" value={end.whatsapp} onChange={(e) => setEnd({ ...end, whatsapp: e.target.value })} />
+                </label>
               </div>
-              <button type="button" aria-label="Remover" onClick={() => onRemover(p.id)}>
-                ×
-              </button>
+              <label className="hs-pn-fld">
+                Endereço, número e complemento
+                <input className="hs-pn-in" autoComplete="street-address" maxLength={160} value={end.endereco} onChange={(e) => setEnd({ ...end, endereco: e.target.value })} />
+              </label>
+              <label className="hs-pn-fld">
+                Cidade / UF
+                <input className="hs-pn-in" maxLength={80} value={end.cidade_uf} onChange={(e) => setEnd({ ...end, cidade_uf: e.target.value })} />
+              </label>
             </div>
-          ))}
-          <div className={m("st-tot")}>
-            <span>Total</span>
-            <span>
-              {brl(total)}
-              {emCoins ? ` + ${num(emCoins)} coins` : ""}
-            </span>
-          </div>
-          <div className={m("st-pay")}>
-            <label>
-              <input type="radio" name="stp" defaultChecked /> Pix
-            </label>
-            <label>
-              <input type="radio" name="stp" /> Cartão
-            </label>
-          </div>
+          )}
           <p className={m("demo")} style={{ margin: 0 }}>
-            Itens com preço em coins usam seus pontos de fidelidade. Merch tem frete calculado no endereço.
+            As coins saem do seu saldo na hora. Se o resgate for cancelado, elas voltam.
           </p>
         </>
-      ) : (
-        <p className={m("sub")} style={{ textAlign: "center", padding: "20px 0" }}>
-          Seu carrinho está vazio.
-        </p>
       )}
     </Modal>
   );
@@ -282,10 +302,12 @@ function Aplicar({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             className={m("btn btn-p")}
-            onClick={() => {
-              if (!texto.trim()) return toast("Conta um pouco sobre você antes de enviar");
+            onClick={async () => {
+              if (texto.trim().length < 20) return toast("Conta um pouco mais sobre você antes de enviar");
+              const r = await postApi<{ protocolo: string }>("/api/suporte", { acao: "abrir", tema: "Mentoria", assunto: "Aplicação · Mentoria High Ticket", texto: texto.trim() });
+              if (r.erro) return toast(r.erro);
               onClose();
-              toast("Aplicação enviada. Resposta em até 48 h");
+              toast(`Aplicação enviada · ${r.protocolo}`);
             }}
           >
             Enviar aplicação

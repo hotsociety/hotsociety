@@ -58,6 +58,10 @@ function Assinar() {
   const [copiado, setCopiado] = useState(false);
   const [agora, setAgora] = useState(0);
   const [jaAtivo, setJaAtivo] = useState<string | null>(null);
+  const [cupomTxt, setCupomTxt] = useState(() => (params.get("cupom") ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20));
+  const [cupom, setCupom] = useState<{ codigo: string; desconto: number; plano: Plano } | null>(null);
+  const [cupomErro, setCupomErro] = useState("");
+  const [abrirCupom, setAbrirCupom] = useState(() => !!params.get("cupom"));
 
   // Precisa estar logado: o pagamento fica ligado à conta. Roda uma vez só.
   const rota = useRef(router);
@@ -132,7 +136,7 @@ function Assinar() {
       const r = await fetch("/api/pagamentos/pix", {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
-        body: JSON.stringify({ plano, nome: n, cpf, telefone: tel, aceite }),
+        body: JSON.stringify({ plano, nome: n, cpf, telefone: tel, aceite, cupom: cupom?.plano === plano ? cupom.codigo : undefined }),
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) return setErro((j as { erro?: string }).erro || "Não deu para gerar o Pix. Tente de novo.");
@@ -155,6 +159,26 @@ function Assinar() {
       setErro("Não deu para copiar. Selecione o código e copie na mão.");
     }
   }
+
+  // Cupom vindo do link (?cupom=CODIGO): confere sozinho quando o formulário abre e quando troca o plano.
+  useEffect(() => {
+    if (etapa === "form" && abrirCupom && cupomTxt && (!cupom || cupom.plano !== plano)) aplicarCupom();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [etapa, plano]);
+
+  async function aplicarCupom() {
+    setCupomErro("");
+    const codigo = cupomTxt.trim();
+    if (!codigo) return;
+    const { data } = await supabase.rpc("conferir_cupom", { p_codigo: codigo, p_plano: plano });
+    const r = data as { ok: boolean; codigo?: string; desconto?: number } | null;
+    if (!r?.ok) {
+      setCupom(null);
+      return setCupomErro("Cupom inválido, vencido ou não vale para este plano.");
+    }
+    setCupom({ codigo: r.codigo!, desconto: r.desconto!, plano });
+  }
+  const precoCom = (k: Plano) => (cupom && cupom.plano === k ? Math.round(PLANOS[k].preco * (100 - cupom.desconto)) / 100 : PLANOS[k].preco);
 
   const mm = String(Math.floor(restante / 60000)).padStart(2, "0");
   const ss = String(Math.floor((restante % 60000) / 1000)).padStart(2, "0");
@@ -196,7 +220,10 @@ function Assinar() {
                     <button key={k} type="button" role="radio" aria-checked={plano === k} className="hs-as-plano" onClick={() => setPlano(k)}>
                       <b>{PLANOS[k].t}</b>
                       <small>{PLANOS[k].s}</small>
-                      <strong>{BRL.format(PLANOS[k].preco)}</strong>
+                      <strong>
+                        {precoCom(k) !== PLANOS[k].preco && <s style={{ opacity: 0.55, fontSize: 13, marginRight: 6 }}>{BRL.format(PLANOS[k].preco)}</s>}
+                        {BRL.format(precoCom(k))}
+                      </strong>
                     </button>
                   ))}
                 </div>
@@ -212,6 +239,34 @@ function Assinar() {
                   <span>Celular (opcional)</span>
                   <input value={tel} onChange={(e) => setTel(mascaraTel(e.target.value))} inputMode="tel" autoComplete="tel" placeholder="(11) 99999-9999" />
                 </label>
+                {abrirCupom ? (
+                  <div className="hs-as-cupom">
+                    <input
+                      value={cupomTxt}
+                      onChange={(e) => {
+                        setCupomTxt(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20));
+                        setCupom(null);
+                      }}
+                      placeholder="CUPOM"
+                      aria-label="Cupom de desconto"
+                      autoCapitalize="characters"
+                    />
+                    <button type="button" onClick={aplicarCupom} disabled={!cupomTxt}>
+                      Aplicar
+                    </button>
+                  </div>
+                ) : (
+                  <button type="button" className="hs-as-link" onClick={() => setAbrirCupom(true)}>
+                    Tenho um cupom
+                  </button>
+                )}
+                {cupom && cupom.plano === plano && <p className={s.ok}>Cupom {cupom.codigo} aplicado: {cupom.desconto}% de desconto.</p>}
+                {cupom && cupom.plano !== plano && <p className="hs-as-conta">O cupom {cupom.codigo} foi conferido para o outro plano. Toque em Aplicar de novo.</p>}
+                {cupomErro && (
+                  <p className={s.err} role="alert">
+                    {cupomErro}
+                  </p>
+                )}
                 <p className="hs-as-conta">
                   O acesso será liberado na conta <b>{email}</b>.
                 </p>
@@ -235,7 +290,7 @@ function Assinar() {
                   </p>
                 )}
                 <button type="submit" className={s.primary} disabled={enviando}>
-                  {enviando ? "Gerando Pix…" : `Pagar ${BRL.format(PLANOS[plano].preco)} com Pix`}
+                  {enviando ? "Gerando Pix…" : `Pagar ${BRL.format(precoCom(plano))} com Pix`}
                 </button>
                 <p className="hs-as-selos">
                   <span>🔒 Pagamento por Pix processado pela Transfeer</span>

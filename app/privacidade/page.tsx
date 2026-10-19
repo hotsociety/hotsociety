@@ -28,6 +28,17 @@ export default function Privacidade() {
           progresso, a rota e os prêmios. Base legal: execução de contrato.
         </li>
         <li>
+          <b>Comprovantes de faturamento</b> (arquivos que você envia em Prêmios): para conferir e liberar escalas e placas. Ficam em
+          pasta privada, vistos só por Admin e Financeiro. Base legal: execução de contrato.
+        </li>
+        <li>
+          <b>Endereço de entrega</b> (placas e resgates da Hot Store): só para o envio. Base legal: execução de contrato.
+        </li>
+        <li>
+          <b>Suporte</b> (chamados e mensagens): para responder e guardar o histórico do atendimento (Decreto 7.962/2013). Base legal:
+          execução de contrato e obrigação legal.
+        </li>
+        <li>
           <b>Segurança</b> (registros de acesso, endereço IP e verificação anti-robô): para evitar fraudes e cumprir o Marco
           Civil da Internet. Base legal: legítimo interesse e obrigação legal.
         </li>
@@ -38,8 +49,9 @@ export default function Privacidade() {
 
       <h2>3. Ranking e comunidade</h2>
       <p>
-        No ranking aparecem só o seu primeiro nome, a inicial do sobrenome, sua escala na rota e seu XP. Para sair do ranking,
-        peça pelo e-mail de privacidade.
+        No ranking, no feed e nos canais aparecem só o seu primeiro nome e a inicial do sobrenome, nunca o e-mail. O que você
+        publica no feed e nos canais fica visível para os outros assinantes até você apagar. Posts denunciados são revistos pela
+        equipe. Para sair do ranking, peça pelo e-mail de privacidade.
       </p>
 
       <h2>4. Com quem compartilhamos</h2>
@@ -59,7 +71,7 @@ export default function Privacidade() {
 
       <h2>5. Por quanto tempo guardamos</h2>
       <ul>
-        <li>Dados da conta e progresso: enquanto a conta existir.</li>
+        <li>Dados da conta, progresso, posts, chamados e comprovantes: enquanto a conta existir. Ao excluir a conta, são apagados.</li>
         <li>Registros de compra: 5 anos, por obrigação fiscal.</li>
         <li>Registros de acesso: no mínimo 6 meses, pelo Marco Civil da Internet.</li>
       </ul>
@@ -73,7 +85,7 @@ export default function Privacidade() {
       <h2>7. Seus direitos (LGPD, art. 18)</h2>
       <p>
         Você pode pedir confirmação, acesso, correção, portabilidade, anonimização ou exclusão dos seus dados, e informações sobre
-        com quem os compartilhamos. Peça pelo e-mail{" "}
+        com quem os compartilhamos. Em Perfil → Privacidade você baixa uma cópia dos seus dados e exclui a conta na hora. Para o resto, peça pelo e-mail{" "}
         <a href={`mailto:${SITE.privacidadeEmail}`}>{SITE.privacidadeEmail}</a>. Respondemos em até 15 dias. Se não ficar satisfeito,
         você pode procurar a ANPD.
       </p>

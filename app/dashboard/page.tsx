@@ -8,7 +8,8 @@ import Icon from "../_components/membros/Icon";
 import { supabase } from "../_lib/supabase";
 import { formatPreco, type Curso } from "../_lib/cursos";
 import { ROUTE } from "../_lib/site";
-import { LIVE, MISSOES_PLANO } from "../_lib/demo";
+import { MISSOES_PLANO } from "../_lib/demo";
+import ProximaLive from "../_components/membros/ProximaLive";
 import Ranking from "../_components/membros/Ranking";
 import { moduloAtual, proximaAula } from "../_lib/progresso";
 import { useProgresso } from "../_components/membros/Progresso";
@@ -220,18 +221,7 @@ export default function Inicio() {
 
         <div className={ui.page}>
           {/* live */}
-          <section className={`${ui.card} ${ui.cardGold}`} aria-labelledby="live">
-            <div className={ui.rowBetween}>
-              <h2 id="live" className={ui.h2}>
-                Próxima live
-              </h2>
-              <span className={`${ui.badge} ${ui.badgeRed}`}>
-                <Icon name="live" size={14} /> {LIVE.dia}
-              </span>
-            </div>
-            <b className={s.liveT}>{LIVE.t}</b>
-            <p className={ui.muted}>{LIVE.d}</p>
-          </section>
+          <ProximaLive classeTitulo={s.liveT} />
 
           {/* ranking */}
           <section className={ui.card} aria-labelledby="ranking">

@@ -37,6 +37,16 @@ function frase(l: Linha) {
       return `recusou o comprovante de ${l.alvo}`;
     case "conta_excluida":
       return `excluiu a própria conta (${l.alvo})`;
+    case "moderacao":
+      return `removeu ${l.alvo} (autor ${d.autor})`;
+    case "denuncia_ignorada":
+      return `manteve ${l.alvo} após denúncia`;
+    case "live":
+      return `marcou/editou a live "${l.alvo}"`;
+    case "resgate_status":
+      return `mudou o resgate ${l.alvo} para "${d.para}"`;
+    case "cupom":
+      return `salvou o cupom ${l.alvo} (${d.desconto}%${d.ativo === false ? ", desligado" : ""})`;
     case "aula_editada":
       return `editou a aula ${l.alvo}${d.tem_video ? " (com vídeo)" : " (sem vídeo)"}`;
     case "status_venda":

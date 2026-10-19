@@ -38,7 +38,7 @@ export async function POST(req: Request) {
   const user = await usuarioDoPedido(req);
   if (!user) return resp({ erro: "Entre na sua conta para assinar." }, 401);
 
-  let corpo: { plano?: string; nome?: string; cpf?: string; telefone?: string; aceite?: boolean };
+  let corpo: { plano?: string; nome?: string; cpf?: string; telefone?: string; aceite?: boolean; cupom?: string };
   try {
     corpo = await req.json();
   } catch {
@@ -55,12 +55,24 @@ export async function POST(req: Request) {
 
   const sb = admin();
 
-  // Já existe um Pix deste plano ainda válido? Reaproveita.
+  // Cupom de desconto (conferido no banco, nunca pelo navegador).
+  const codigo = (corpo.cupom ?? "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20);
+  let desconto = 0;
+  if (codigo) {
+    const { data: c } = await sb.rpc("conferir_cupom", { p_codigo: codigo, p_plano: plano });
+    const r = c as { ok: boolean; desconto?: number } | null;
+    if (!r?.ok) return resp({ erro: "Cupom inválido, vencido ou esgotado." }, 400);
+    desconto = Math.round((VALOR_CENTAVOS[plano as Plano] * (r.desconto ?? 0)) / 100);
+  }
+  const valor = VALOR_CENTAVOS[plano as Plano] - desconto;
+
+  // Já existe um Pix deste plano (e mesmo valor) ainda válido? Reaproveita.
   const { data: aberto } = await sb
     .from("pedidos")
     .select("*")
     .eq("user_id", user.id)
     .eq("plano", plano)
+    .eq("valor_centavos", valor)
     .eq("status", "pendente")
     .gt("expira_em", new Date(Date.now() + 5 * 60_000).toISOString())
     .order("criado_em", { ascending: false })
@@ -76,7 +88,14 @@ export async function POST(req: Request) {
     .gt("criado_em", new Date(Date.now() - 3600_000).toISOString());
   if ((count ?? 0) >= 8) return resp({ erro: "Muitas tentativas. Espere um pouco e tente de novo." }, 429);
 
-  const novo = { user_id: user.id, email: user.email!, nome, plano, valor_centavos: VALOR_CENTAVOS[plano as Plano] };
+  const novo = {
+    user_id: user.id,
+    email: user.email!,
+    nome,
+    plano,
+    valor_centavos: valor,
+    ...(codigo ? { cupom: codigo, desconto_centavos: desconto } : {}),
+  };
   // Guarda quando e qual versão dos termos foi aceita (prova em caso de contestação).
   let { data: pedido, error } = await sb
     .from("pedidos")

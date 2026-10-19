@@ -1,0 +1,16 @@
+.hs-cert{background:#0b0b0c;border-radius:16px;padding:14px;color:#ECEAE4;max-width:960px;width:100%;margin:0 auto;aspect-ratio:1.414/1;container-type:inline-size}
+.hs-cert-in{height:100%;border:1.5px solid #C9A24E;border-radius:10px;display:grid;align-content:center;justify-items:center;text-align:center;gap:1.6cqw;padding:4cqw;background:radial-gradient(80% 70% at 50% 0%,#221d10,#0b0b0c 70%)}
+.hs-cert-logo{width:28cqw;height:auto}
+.hs-cert-eb{margin:1cqw 0 0;font:700 1.6cqw/1 var(--f-t,system-ui);letter-spacing:.3em;text-transform:uppercase;color:#D9B566}
+.hs-cert-txt{margin:0;font:400 2cqw/1.45 var(--f-t,system-ui);color:#cfccc4;max-width:70cqw}
+.hs-cert-txt b{color:#ECEAE4}
+.hs-cert-nome{margin:.5cqw 0;font:800 5.6cqw/1.05 var(--f-d,system-ui);font-stretch:112%;color:#F1DC9A;overflow-wrap:anywhere}
+.hs-cert-pe{display:flex;flex-wrap:wrap;justify-content:center;gap:1cqw 4cqw;margin-top:2cqw;font:500 1.45cqw/1.4 var(--f-m,ui-monospace,monospace);color:#a9a69e}
+.hs-cert-pe b{color:#ECEAE4}
+.hs-cert-nota{margin:0;font-size:1.2cqw;color:#85827a}
+@media print{
+  @page{size:A4 landscape;margin:0}
+  body *{visibility:hidden}
+  .hs-cert,.hs-cert *{visibility:visible}
+  .hs-cert{position:fixed;inset:0;max-width:none;border-radius:0;padding:8mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}

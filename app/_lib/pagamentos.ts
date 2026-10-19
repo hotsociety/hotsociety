@@ -29,6 +29,7 @@ export type Pedido = {
   expira_em: string | null;
   pago_em: string | null;
   criado_em: string;
+  cupom?: string | null;
 };
 
 export type Cobranca = {
@@ -178,7 +179,10 @@ export async function aplicarCobranca(sb: SupabaseClient, c: Cobranca): Promise<
     .select("*")
     .single<Pedido>();
 
-  if (novo === "pago") await enviarRecibo(p, c).catch((e) => console.error("recibo:", (e as Error).message));
+  if (novo === "pago") {
+    await enviarRecibo(p, c).catch((e) => console.error("recibo:", (e as Error).message));
+    if (p.cupom) await sb.rpc("hs_usar_cupom", { p_codigo: p.cupom });
+  }
 
   const statusVenda = STATUS_VENDA[novo];
   if (statusVenda) {

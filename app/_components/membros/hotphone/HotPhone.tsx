@@ -8,7 +8,6 @@ import {
   CATEGORIAS,
   COFRE_INICIAL,
   CORES,
-  LIVES,
   MISSOES_HP,
   POSTS_HP,
   RESPOSTAS,
@@ -150,6 +149,36 @@ export default function HotPhone() {
   });
   const [aberto, setAberto] = useState(false);
   const [saindo, setSaindo] = useState(false); // animação de saída do presente
+  const [dubai, setDubai] = useState(false);
+  const cofreSync = useRef<"carregando" | "pronto">("carregando");
+
+  // Cofre salvo na conta (vale em qualquer aparelho) e cor Dubai resgatada na Hot Store.
+  useEffect(() => {
+    let vivo = true;
+    supabase.rpc("meu_cofre").then(({ data, error }) => {
+      if (!vivo) return;
+      if (!error && Array.isArray(data)) setS((s) => ({ ...s, cofre: data as Nota[] }));
+      else if (!error) {
+        const local = ler(chave).cofre;
+        if (local) supabase.rpc("salvar_cofre", { p_notas: local }).then(() => {});
+      }
+      cofreSync.current = "pronto";
+    });
+    supabase.rpc("meus_resgates").then(({ data }) => {
+      if (vivo) setDubai(((data ?? []) as { item_id: string; status: string }[]).some((r) => r.item_id === "hp" && r.status !== "cancelado"));
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [chave]);
+
+  useEffect(() => {
+    if (cofreSync.current !== "pronto") return;
+    const t = setTimeout(() => {
+      supabase.rpc("salvar_cofre", { p_notas: S.cofre ?? [] }).then(() => {});
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [S.cofre]);
 
   useEffect(() => {
     try {
@@ -199,6 +228,7 @@ export default function HotPhone() {
           {aberto ? (
             <Celular
               S={S}
+              dubai={dubai}
               nome={nome}
               atualizar={atualizar}
               onCor={(k) => {
@@ -418,7 +448,7 @@ function Presente({
             {c.n}
           </h3>
           <div className={h("colors")} role="radiogroup" aria-label="Cores">
-            {CORES.map((x) => (
+            {CORES.filter((x) => !x.premio).map((x) => (
               <button
                 key={x.k}
                 type="button"
@@ -558,6 +588,7 @@ function Icone({ k, onClick, rotulo = true }: { k: keyof typeof ICONES; onClick:
 
 function Celular({
   S,
+  dubai,
   nome,
   atualizar,
   onCor,
@@ -565,6 +596,7 @@ function Celular({
   onFechar,
 }: {
   S: Estado;
+  dubai: boolean;
   nome: string;
   atualizar: (p: Partial<Estado>) => void;
   onCor: (k: string) => void;
@@ -675,13 +707,14 @@ function Celular({
                   onLembrar={(i) => {
                     const v = !S.rem[i];
                     atualizar({ rem: { ...S.rem, [i]: v } });
-                    toast(v ? "Lembrete ativado" : "Lembrete removido");
+                    toast(v ? "Live marcada" : "Desmarcada");
                   }}
                 />
               )}
               {app === "cfg" && (
                 <AppAjustes
                   cor={S.color}
+                  dubai={dubai}
                   onCor={(k) => (onCor(k), toast(corDe(k).n))}
                   onMinimizar={onFechar}
                   onRever={onRever}
@@ -1107,31 +1140,45 @@ function AppMissoes({ feitas, onFeita, onSite }: { feitas: Record<string, boolea
 }
 
 /* ---------- Lives ---------- */
+type Live = { id: string; titulo: string; descricao: string | null; inicio: string; link: string | null };
+const QUANDO_LIVE = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+
 function AppLives({ lembretes, onLembrar }: { lembretes: Record<string, boolean>; onLembrar: (i: string) => void }) {
+  const [lives, setLives] = useState<Live[] | null>(null);
+  useEffect(() => {
+    supabase.rpc("proximas_lives").then(({ data }) => setLives((data ?? []) as Live[]));
+  }, []);
   return (
     <div className={h("ab")}>
-      {LIVES.map(([q, t, quem], i) => {
-        const on = !!lembretes[i];
+      {lives === null && <p className={h("note")}>Carregando…</p>}
+      {lives?.length === 0 && <p className={h("note")}>Nenhuma live marcada agora. Assim que o time marcar, ela aparece aqui.</p>}
+      {lives?.map((l) => {
+        const on = !!lembretes[l.id];
+        const comecou = new Date(l.inicio).getTime() <= Date.now();
         return (
-          <div key={t} className={h("li")} style={{ gridTemplateColumns: "1fr auto", cursor: "default" }}>
+          <div key={l.id} className={h("li")} style={{ gridTemplateColumns: "1fr auto", cursor: "default" }}>
             <span>
-              <b>{t}</b>
-              <small>
-                {q} · {quem}
-              </small>
+              <b>{l.titulo}</b>
+              <small>{comecou ? "Ao vivo agora" : QUANDO_LIVE.format(new Date(l.inicio))}</small>
             </span>
-            <button
-              className={h("ob")}
-              type="button"
-              onClick={() => onLembrar(String(i))}
-              style={{ width: "auto", minHeight: 34, padding: "0 10px", fontSize: 12, ...(on ? { borderColor: "#D9B566", color: "#F1DC9A" } : null) }}
-            >
-              {on ? "Lembrete ✓" : "Lembrar"}
-            </button>
+            {comecou && l.link ? (
+              <a className={h("ob")} href={l.link} target="_blank" rel="noopener noreferrer" style={{ width: "auto", minHeight: 34, padding: "0 10px", fontSize: 12 }}>
+                Entrar
+              </a>
+            ) : (
+              <button
+                className={h("ob")}
+                type="button"
+                onClick={() => onLembrar(l.id)}
+                style={{ width: "auto", minHeight: 34, padding: "0 10px", fontSize: 12, ...(on ? { borderColor: "#D9B566", color: "#F1DC9A" } : null) }}
+              >
+                {on ? "Marcada ✓" : "Marcar"}
+              </button>
+            )}
           </div>
         );
       })}
-      <p className={h("note")}>Avisamos no HOTPHONE e no e-mail 1 hora antes.</p>
+      <p className={h("note")}>O link para entrar aparece aqui e na tela inicial na hora da live.</p>
     </div>
   );
 }
@@ -1139,12 +1186,14 @@ function AppLives({ lembretes, onLembrar }: { lembretes: Record<string, boolean>
 /* ---------- Ajustes ---------- */
 function AppAjustes({
   cor,
+  dubai,
   onCor,
   onMinimizar,
   onRever,
   onZerar,
 }: {
   cor: string;
+  dubai: boolean;
   onCor: (k: string) => void;
   onMinimizar: () => void;
   onRever: () => void;
@@ -1157,7 +1206,7 @@ function AppAjustes({
         Cor do HOTPHONE
       </p>
       <div className={h("colors")} style={{ justifyContent: "flex-start", marginBottom: 14 }}>
-        {CORES.map((c) => (
+        {CORES.filter((c) => !c.premio || dubai).map((c) => (
           <button key={c.k} type="button" aria-label={c.n} aria-pressed={c.k === cor} onClick={() => onCor(c.k)}>
             <i style={{ background: c.sw }} />
           </button>

@@ -150,11 +150,6 @@ export const VITORIAS = [
   { ini: "JB", t: "João B. fez a primeira venda", quando: "2 d" },
 ];
 
-export const LIVE = {
-  dia: "Qui · 20h",
-  t: "Revisão de funis dos membros",
-  d: "Envie o seu até quarta. Os escolhidos são analisados ao vivo.",
-};
 
 export type Medalha = { sigla: string; t: string; d: string; status: "ok" | "perto" | "futuro" };
 export const MEDALHAS: Medalha[] = [
@@ -175,39 +170,14 @@ export const PLACAS = [
 ];
 
 export type Msg = { id: string; ini: string; nome: string; t: string; quando: string; eu?: boolean };
-export const CANAIS: { id: string; nome: string; desc: string; novas: number; msgs: Msg[] }[] = [
-  {
-    id: "geral",
-    nome: "geral",
-    desc: "Conversa livre da comunidade. Regras fixadas no topo.",
-    novas: 4,
-    msgs: [
-      { id: "g1", ini: "VP", nome: "Vini P.", t: "Bom dia, Society. Quem vai na live de quinta?", quando: "09:12" },
-      { id: "g2", ini: "AM", nome: "Ana M.", t: "Eu! Já mandei meu funil pra análise.", quando: "09:15" },
-      { id: "g3", ini: "GS", nome: "Gui S.", t: "Dica: a aula 05 do módulo 02 mudou meu jogo de prévias.", quando: "09:31" },
-    ],
-  },
-  {
-    id: "duvidas",
-    nome: "dúvidas",
-    desc: "Pergunte sem medo. Marque o módulo e a aula.",
-    novas: 6,
-    msgs: [
-      { id: "d1", ini: "LC", nome: "Leo C.", t: "Qual preço de entrada vocês estão testando?", quando: "08:02" },
-      { id: "d2", ini: "RT", nome: "Rafa T.", t: "Começa baixo e sobe a cada 50 assinantes. Tá no módulo 04, aula 07.", quando: "08:10" },
-    ],
-  },
-  {
-    id: "resultados",
-    nome: "resultados",
-    desc: "Print de resultado só seu e real.",
-    novas: 2,
-    msgs: [{ id: "r1", ini: "JB", nome: "João B.", t: "Primeira venda feita! R$ 39,90. Rumo ao Chile.", quando: "ontem" }],
-  },
-  { id: "modelo-ia", nome: "modelo-ia", desc: "Persona, visual e rotina com IA.", novas: 0, msgs: [] },
-  { id: "modelo-real", nome: "modelo-real", desc: "Operação com modelo real, contrato e gestão.", novas: 0, msgs: [] },
-  { id: "trafego", nome: "tráfego", desc: "Orgânico, pago e criativos.", novas: 0, msgs: [] },
-  { id: "apresente-se", nome: "apresente-se", desc: "Chegou agora? Conta quem você é.", novas: 0, msgs: [] },
+export const CANAIS: { id: string; nome: string; desc: string }[] = [
+  { id: "geral", nome: "geral", desc: "Conversa livre da comunidade. Regras ao lado." },
+  { id: "duvidas", nome: "dúvidas", desc: "Pergunte sem medo. Marque o módulo e a aula." },
+  { id: "resultados", nome: "resultados", desc: "Print de resultado só seu e real." },
+  { id: "modelo-ia", nome: "modelo-ia", desc: "Persona, visual e rotina com IA." },
+  { id: "modelo-real", nome: "modelo-real", desc: "Operação com modelo real, contrato e gestão." },
+  { id: "trafego", nome: "tráfego", desc: "Orgânico, pago e criativos." },
+  { id: "apresente-se", nome: "apresente-se", desc: "Chegou agora? Conta quem você é." },
 ];
 
 export const REGRAS = [
@@ -506,12 +476,6 @@ export const GANCHOS: [string, 0 | 1, string][] = [
 
 export const FUNIL_ETAPAS = ["Conteúdo gratuito no perfil", "Link na bio", "Página da persona", "Assinatura na plataforma", "Upsell de pacote"];
 
-export const RANKING_GAMES: [string, number][] = [
-  ["gui.moraes", 540],
-  ["vini.alves", 480],
-  ["rafa.souza", 410],
-  ["pedro.h", 350],
-];
 
 /* ===================== Afiliados ===================== */
 

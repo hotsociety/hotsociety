@@ -1,18 +1,18 @@
 "use client";
 
-import AvisoExemplo from "../../_components/membros/AvisoExemplo";
 import "../../_components/membros/painel.css";
 import { useEffect, useRef, useState } from "react";
-import { useMembro } from "../../_components/membros/MemberContext";
 import { toast } from "../../_components/membros/Toast";
 import { m } from "../../_components/membros/proto";
-import { FUNIL_ETAPAS, GANCHOS, JOGOS, QUIZ, RANKING_GAMES } from "../../_lib/demo";
+import { FUNIL_ETAPAS, GANCHOS, JOGOS, QUIZ } from "../../_lib/demo";
+import { supabase } from "../../_lib/supabase";
 
 type Jogo = "quiz" | "hook" | "funil";
-type Fim = { k: Jogo; pontos: number; max: number };
+type Fim = { k: Jogo; pontos: number; max: number; xp: number | null };
+type Linha = { pos: number; nome: string; pontos: number; eu: boolean };
 
 export default function Games() {
-  const { nome } = useMembro();
+  const [ranking, setRanking] = useState<Linha[] | null>(null);
   const [jogo, setJogo] = useState<Jogo | null>(null);
   const [rodada, setRodada] = useState(0); // muda para reiniciar o mesmo jogo
   const [fim, setFim] = useState<Fim | null>(null);
@@ -27,16 +27,21 @@ export default function Games() {
     setTimeout(() => palco.current?.scrollIntoView({ block: "start", behavior: "smooth" }), 30);
   }
 
-  function terminar(k: Jogo, pontos: number, max: number) {
-    const xp = pontos * 10;
-    setFim({ k, pontos, max });
-    setHoje((h) => h + xp);
-    setRecorde((r) => ({ ...r, [k]: Math.max(r[k] ?? 0, pontos) }));
-    if (xp) toast(`+${xp} XP · game`, true);
+  function carregarRanking() {
+    supabase.rpc("ranking_games").then(({ data, error }) => setRanking(error ? [] : ((data ?? []) as Linha[])));
   }
+  useEffect(carregarRanking, []);
 
-  const voce = nome.toLowerCase();
-  const ranking = [...RANKING_GAMES, [voce, hoje + 120] as [string, number]].sort((a, b) => b[1] - a[1]);
+  async function terminar(k: Jogo, pontos: number, max: number) {
+    setFim({ k, pontos, max, xp: null });
+    setRecorde((r) => ({ ...r, [k]: Math.max(r[k] ?? 0, pontos) }));
+    const { data, error } = await supabase.rpc("registrar_partida", { p_jogo: k, p_pontos: pontos });
+    const xp = error ? 0 : ((data as { xp: number }).xp ?? 0);
+    setFim({ k, pontos, max, xp });
+    setHoje((h) => h + xp);
+    if (xp) toast(`+${xp} XP · game`, true);
+    carregarRanking();
+  }
 
   return (
     <section className={m("view")} aria-label="Games">
@@ -44,7 +49,7 @@ export default function Games() {
       <div className={m("top")}>
         <div>
           <h1>Games</h1>
-          <p className={m("sub")}>Aprenda jogando. Cada partida vale XP para a sua rota.</p>
+          <p className={m("sub")}>Aprenda jogando. Seu melhor resultado do dia em cada jogo vale XP.</p>
         </div>
         <div className={m("chips")}>
           <span className={m("chip gold")}>
@@ -93,6 +98,11 @@ export default function Games() {
                     ? "Mandou bem. Revise o módulo e volte para bater o recorde."
                     : "Bora revisar as aulas e tentar de novo."}
               </p>
+              {fim.xp !== null && (
+                <p className={m("demo")} style={{ margin: 0, textAlign: "center" }}>
+                  {fim.xp > 0 ? `+${fim.xp} XP` : "Sem XP novo: só conta o melhor resultado do dia em cada jogo."}
+                </p>
+              )}
               <div className={m("row")} style={{ justifyContent: "center" }}>
                 <button type="button" className={m("btn btn-p")} onClick={() => comecar(fim.k)}>
                   Jogar de novo
@@ -113,18 +123,24 @@ export default function Games() {
       )}
 
       <div className={m("card")}>
-        <h2>Ranking dos games da semana</h2>
-        <ol className={m("rank")}>
-          {ranking.map(([u, xp], i) => (
-            <li key={u} className={u === voce ? m("me") : undefined}>
-              <span className={m("p")}>{String(i + 1).padStart(2, "0")}</span>
-              <span>{u === voce ? "Você" : u}</span>
-              <span className={m("mono")} style={{ fontSize: 12 }}>
-                {xp} XP
-              </span>
-            </li>
-          ))}
-        </ol>
+        <h2>Ranking dos games · últimos 7 dias</h2>
+        {ranking === null ? (
+          <p className={m("sub")}>Carregando…</p>
+        ) : ranking.length === 0 ? (
+          <p className={m("sub")}>Ninguém jogou esta semana ainda. Seja o primeiro do ranking.</p>
+        ) : (
+          <ol className={m("rank")}>
+            {ranking.map((r) => (
+              <li key={r.pos} className={r.eu ? m("me") : undefined}>
+                <span className={m("p")}>{String(r.pos).padStart(2, "0")}</span>
+                <span>{r.eu ? "Você" : r.nome}</span>
+                <span className={m("mono")} style={{ fontSize: 12 }}>
+                  {r.pontos} XP
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
       </div>
     </section>
   );

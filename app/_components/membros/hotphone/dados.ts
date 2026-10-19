@@ -1,6 +1,6 @@
 // Dados do HOTPHONE (exemplo). Quando existir tabela no Supabase, troque por consultas.
 
-export type Cor = { k: string; n: string; pc: string; pc2: string; pb: string; pb2: string; pt: string; sw: string };
+export type Cor = { k: string; n: string; pc: string; pc2: string; pb: string; pb2: string; pt: string; sw: string; premio?: boolean };
 
 export const CORES: Cor[] = [
   { k: "onix", n: "Preto Ônix", pc: "#1b1b1e", pc2: "#4a4a52", pb: "#111113", pb2: "#2c2c31", pt: "#C9A24E", sw: "linear-gradient(135deg,#3a3a40,#0e0e10)" },
@@ -8,6 +8,8 @@ export const CORES: Cor[] = [
   { k: "neve", n: "Branco Neve", pc: "#d9d6cf", pc2: "#ffffff", pb: "#ECEAE4", pb2: "#ffffff", pt: "#9C7A33", sw: "linear-gradient(135deg,#ffffff,#cfccc4)" },
   { k: "titanio", n: "Titânio", pc: "#7c7972", pc2: "#b7b3ab", pb: "#8E8B85", pb2: "#b9b5ad", pt: "#141416", sw: "linear-gradient(135deg,#c2beb6,#6b6862)" },
   { k: "carimbo", n: "Vermelho Carimbo", pc: "#6e1c1c", pc2: "#b84040", pb: "#8E2424", pb2: "#b84040", pt: "#F1DC9A", sw: "linear-gradient(135deg,#c24a4a,#5c1515)" },
+  // Resgatada na Hot Store com Cappu Coins.
+  { k: "dubai", n: "Edição Dubai", pc: "#3b2a12", pc2: "#d9b566", pb: "#2a1e0c", pb2: "#C9A24E", pt: "#F1DC9A", sw: "linear-gradient(135deg,#F1DC9A,#7a5a1e 55%,#1b140a)", premio: true },
 ];
 
 export const CATEGORIAS = ["Tudo", "Prompts", "Ideias", "Links", "Contatos", "Metas"] as const;
@@ -48,8 +50,3 @@ export const MISSOES_HP: [string, string, string, number][] = [
   ["m5", "Ir na live de quinta", "Semanal", 200],
 ];
 
-export const LIVES: [string, string, string][] = [
-  ["Qui · 21h", "Tráfego pago sem perder conta", "Cappu"],
-  ["Sáb · 15h", "Plantão de dúvidas: modelo IA", "Time HS"],
-  ["Ter · 20h", "Bastidores da operação", "Cappu"],
-];

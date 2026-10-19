@@ -49,7 +49,7 @@ export const GRUPOS: Grupo[] = [
   {
     g: "Extras",
     itens: [
-      { href: "/dashboard/store", t: "Hot Store", icon: "bag", badge: "teste" },
+      { href: "/dashboard/store", t: "Hot Store", icon: "bag" },
       { href: "/dashboard/games", t: "Games", icon: "pad" },
     ],
   },
