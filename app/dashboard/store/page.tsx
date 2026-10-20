@@ -62,7 +62,7 @@ export default function HotStore() {
       <div className={m("st-feat")} style={{ backgroundImage: `url(${IMG.hero})` }}>
         <div className={m("in")}>
           <p className={m("eb")} style={{ color: "var(--red-t)" }}>
-            Destaque · Dubai
+            Destaque · Mônaco
           </p>
           <h2 className={m("stack")}>
             <span className={m("s")}>Mentoria</span>

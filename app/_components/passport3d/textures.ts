@@ -405,7 +405,7 @@ export function drawVisaPage(c: TexCtx): Draw {
     g.font = `600 24px ${F.mono}`;
     g.fillStyle = BRAND.inkMuted;
     g.fillText('ROTA HOT SOCIETY', 70, 184);
-    // grade 2 colunas; com 4 destinos fica 2×2. O último (Dubai) é o topo da rota.
+    // grade 2 colunas; com 4 destinos fica 2×2. O último (Mônaco) é o topo da rota.
     const rows = Math.ceil(ROUTE.length / 2);
     const rowY = (row: number) => h * (rows <= 2 ? 0.31 + row * 0.33 : 0.27 + row * 0.235);
     ROUTE.forEach((r, i) => {
@@ -455,7 +455,7 @@ export function drawVisaPage(c: TexCtx): Draw {
     g.fillStyle = BRAND.inkMuted;
     g.font = `600 20px ${F.text}`;
     g.textAlign = 'center';
-    g.fillText('O país se conquista. Ninguém compra Dubai.', w / 2, h - 70);
+    g.fillText('O país se conquista. Ninguém compra Mônaco.', w / 2, h - 70);
   };
 }
 

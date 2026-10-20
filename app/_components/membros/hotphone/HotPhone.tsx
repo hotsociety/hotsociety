@@ -371,7 +371,7 @@ function Presente({
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <small>Destino</small>
-                  <b>DXB</b>
+                  <b>MCM</b>
                 </div>
               </div>
               <div className={h("kv")}>

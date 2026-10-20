@@ -71,7 +71,7 @@ interface City {
   on: boolean;
 }
 
-/** Globo com a rota GRU → … → DXB: arcos dourados, avião voando e órbita final. */
+/** Globo com a rota GRU → … → MCM: arcos dourados, avião voando e órbita final. */
 export class Globe {
   readonly group = new THREE.Group();
   private spinG = new THREE.Group();
