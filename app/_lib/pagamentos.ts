@@ -6,6 +6,12 @@
 // Opcionais: NOVUS_WEBHOOK_SECRET (whsec_… se criar um webhook global no painel da Novus),
 //            NOVUS_API_URL (padrão https://api.novuspagamentos.com), SITE_URL (padrão https://hotsociety.com.br)
 // Transfeer (alternativa, usada só se NOVUS_API_KEY não existir): TRANSFEER_API_KEY e TRANSFEER_WEBHOOK_SECRET.
+//
+// Divisão automática (split) do Pix na Novus — parte de cada venda vai direto para a chave Pix do sócio:
+//   NOVUS_SPLIT_PIX_KEY   → chave Pix do sócio
+//   NOVUS_SPLIT_PIX_TYPE  → CPF | CNPJ | PHONE | EMAIL | RANDOM
+//   NOVUS_SPLIT_NOME      → nome do titular (opcional)
+//   NOVUS_SPLIT_PERCENTUAL→ parte do sócio em % (ex.: 70)
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { createHmac, timingSafeEqual } from "node:crypto";
@@ -35,6 +41,7 @@ export type Pedido = {
   pago_em: string | null;
   criado_em: string;
   cupom?: string | null;
+  split_centavos?: number | null;
 };
 
 /** Cobrança no formato do site, igual para qualquer gateway. */
@@ -184,7 +191,22 @@ function dados(j: Record<string, unknown>): ObjNovus {
   return ((j.data && typeof j.data === "object" ? j.data : j) as ObjNovus) ?? {};
 }
 
+// Divisão do Pix configurada na Vercel (ou null se não houver).
+export function splitNovus(valorCentavos: number) {
+  const chave = process.env.NOVUS_SPLIT_PIX_KEY?.trim();
+  const tipo = process.env.NOVUS_SPLIT_PIX_TYPE?.trim().toUpperCase();
+  const pct = Number(process.env.NOVUS_SPLIT_PERCENTUAL);
+  if (!chave || !tipo || !["CPF", "CNPJ", "PHONE", "EMAIL", "RANDOM"].includes(tipo) || !(pct > 0 && pct < 100)) return null;
+  const bp = Math.round(pct * 100); // 70% = 7000 basis points
+  const nome = process.env.NOVUS_SPLIT_NOME?.trim();
+  return {
+    centavos: Math.floor((valorCentavos * bp) / 10000),
+    corpo: { pix_key: chave, pix_type: tipo, percentage_basis_points: bp, ...(nome ? { recipient_name: nome } : {}) },
+  };
+}
+
 async function novusCriarPix(p: Pedido, c: Cliente): Promise<Cobranca> {
+  const split = splitNovus(p.valor_centavos);
   const j = await chamar(`${NOVUS}/api/v2/invoices`, {
     method: "POST",
     chave: process.env.NOVUS_API_KEY!,
@@ -197,6 +219,7 @@ async function novusCriarPix(p: Pedido, c: Cliente): Promise<Cobranca> {
       postback_url: `${SITE}/api/pagamentos/novus`,
       payer: { name: c.nome, cpf_cnpj: c.cpf, email: c.email, ...(c.telefone ? { phone: c.telefone } : {}) },
       items: [{ name: PRODUTO[p.plano], unit_price: p.valor_centavos, quantity: 1 }],
+      ...(split ? { splits: [{ ...split.corpo, external_id: `${p.id}-socio` }] } : {}),
     }),
   });
   const n = novusNormalizar(dados(j));
@@ -377,7 +400,8 @@ export async function aplicarCobranca(sb: SupabaseClient, c: Cobranca): Promise<
         cliente_email: p.email,
         metodo: p.metodo === "cartao" ? "cartao" : "pix",
         valor: p.valor_centavos / 100,
-        liquido: p.valor_centavos / 100,
+        liquido: (p.valor_centavos - (p.split_centavos ?? 0)) / 100, // o que fica na sua conta depois da divisão
+
         status: statusVenda,
         criado_em: p.criado_em,
       },
