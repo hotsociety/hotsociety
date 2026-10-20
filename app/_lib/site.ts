@@ -8,13 +8,15 @@ export const SITE = {
     "Plataforma de assinatura para quem quer faturar no digital com modelo IA ou modelo real: aulas, ferramentas, comunidade e a CappuIA.",
   instagram: "https://instagram.com/capputin0",
   supportEmail: "suporte@hotsociety.com.br",
-  // ⚠️ PREENCHER com os dados reais da empresa (obrigatório pelo Decreto 7.962/2013).
+  // Dados da empresa (obrigatórios pelo Decreto 7.962/2013), mostrados numa linha discreta.
   // Nome empresarial e CNPJ como estão na Receita Federal (MEI).
   razaoSocial: "54.438.333 GUSTAVO R. S.",
   cnpj: "54.438.333/0001-26",
-  endereco: "PREENCHER endereço completo, cidade/UF, CEP",
+  // Endereço comercial (escritório virtual). Vazio = não aparece no site.
+  endereco: "",
   // Encarregado de dados (LGPD art. 41): pode ser o próprio dono.
-  encarregado: "PREENCHER nome do encarregado",
+  // Encarregado de dados (LGPD art. 41). Vazio = atendimento pelo e-mail de privacidade.
+  encarregado: "",
   privacidadeEmail: "privacidade@hotsociety.com.br",
   versaoTermos: "2026-10-19",
   year: 2026,
@@ -126,10 +128,13 @@ export const FAQ = [
   },
   {
     q: "Quem vende a HOT SOCIETY?",
-    a: `${SITE.razaoSocial}, CNPJ ${SITE.cnpj}. Atendimento: ${SITE.supportEmail} (respondemos em até 5 dias úteis).`,
+    a: `Os dados da empresa responsável (nome empresarial e CNPJ) ficam no rodapé do site e nos Termos de uso. Atendimento: ${SITE.supportEmail} (respondemos em até 5 dias úteis).`,
   },
   {
     q: "Qual a diferença entre o mensal e o anual?",
     a: `O conteúdo é o mesmo. No anual você paga ${brl(PRICE.anual)} por ano, o equivalente a ${brl(ANUAL_MES)} por mês, economiza ${brl(ECONOMIA)} e ganha bônus exclusivos.`,
   },
 ] as const;
+
+// Linha única e discreta com os dados que a lei exige (Decreto 7.962/2013, art. 2º).
+export const DADOS_EMPRESA = [SITE.name, SITE.razaoSocial, `CNPJ ${SITE.cnpj}`, SITE.endereco].filter(Boolean).join(" · ");

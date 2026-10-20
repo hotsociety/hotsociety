@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../_lib/supabase";
-import { PRICE, SITE } from "../_lib/site";
+import { DADOS_EMPRESA, PRICE, SITE } from "../_lib/site";
 import { qrSvgPath } from "../_lib/qrcode";
 import "../login/login.css";
 import s from "../login/login.styles";
@@ -338,7 +338,7 @@ function Assinar() {
                   <span>↩ Garantia de 7 dias</span>
                 </p>
                 <p className="hs-as-vendedor">
-                  Vendido por {SITE.name} · {SITE.razaoSocial} · CNPJ {SITE.cnpj} · {SITE.supportEmail}
+                  Vendido por {DADOS_EMPRESA} · {SITE.supportEmail}
                 </p>
               </form>
             </>

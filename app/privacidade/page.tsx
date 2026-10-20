@@ -9,8 +9,9 @@ export default function Privacidade() {
     <LegalPage title="Política de privacidade" updated={`19/10/2026 (versão ${SITE.versaoTermos})`}>
       <h2>1. Quem cuida dos seus dados</h2>
       <p>
-        Controladora: {SITE.razaoSocial}, CNPJ {SITE.cnpj}, {SITE.endereco}. Encarregado de dados (LGPD, art. 41):{" "}
-        {SITE.encarregado}, pelo e-mail <a href={`mailto:${SITE.privacidadeEmail}`}>{SITE.privacidadeEmail}</a>.
+        Controladora: {SITE.razaoSocial}, CNPJ {SITE.cnpj}
+        {SITE.endereco ? `, ${SITE.endereco}` : ""}. Encarregado de dados (LGPD, art. 41){SITE.encarregado ? `: ${SITE.encarregado}` : ""}, pelo
+        e-mail <a href={`mailto:${SITE.privacidadeEmail}`}>{SITE.privacidadeEmail}</a>.
       </p>
 
       <h2>2. Dados que coletamos e por quê</h2>

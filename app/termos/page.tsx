@@ -10,7 +10,8 @@ export default function Termos() {
       <h2>1. Quem somos</h2>
       <p>
         A {SITE.name} é uma plataforma de assinatura de conteúdo educacional sobre negócios digitais, operada por{" "}
-        {SITE.razaoSocial}, CNPJ {SITE.cnpj}, com endereço em {SITE.endereco}.
+        {SITE.razaoSocial}, CNPJ {SITE.cnpj}
+        {SITE.endereco ? `, com endereço em ${SITE.endereco}` : ""}. Contato: {SITE.supportEmail}.
       </p>
 
       <h2>2. Idade mínima</h2>

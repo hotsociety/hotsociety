@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import SiteHeader from "./_components/home/SiteHeader";
 import CourseGrid, { CourseGridSkeleton } from "./_components/catalog/CourseGrid";
 import { Passport3D } from "./_components/passport3d";
-import { FAQ, FEATURES, MODULES, PLANS, ROUTE, SITE } from "./_lib/site";
+import { DADOS_EMPRESA, FAQ, FEATURES, MODULES, PLANS, ROUTE, SITE } from "./_lib/site";
 import "./home.css";
 import s from "./home.styles";
 
@@ -294,8 +294,7 @@ export default function Home() {
             sempre identificado. © {SITE.year} HOT SOCIETY
           </p>
           <p>
-            {SITE.razaoSocial} · CNPJ {SITE.cnpj} · {SITE.endereco} · Atendimento:{" "}
-            <a href={`mailto:${SITE.supportEmail}`}>{SITE.supportEmail}</a>
+            {DADOS_EMPRESA} · <a href={`mailto:${SITE.supportEmail}`}>{SITE.supportEmail}</a>
           </p>
         </div>
       </footer>
