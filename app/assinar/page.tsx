@@ -338,7 +338,7 @@ function Assinar() {
                   <span>↩ Garantia de 7 dias</span>
                 </p>
                 <p className="hs-as-vendedor">
-                  Vendido por {SITE.razaoSocial} · CNPJ {SITE.cnpj} · {SITE.supportEmail}
+                  Vendido por {SITE.name} · {SITE.razaoSocial} · CNPJ {SITE.cnpj} · {SITE.supportEmail}
                 </p>
               </form>
             </>
