@@ -1,6 +1,5 @@
 "use client";
 
-import AvisoExemplo from "../../_components/membros/AvisoExemplo";
 import "../../_components/membros/painel.css";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -20,16 +19,10 @@ function Feed() {
 
   return (
     <section className={m("view")} aria-label="Feed">
-      <AvisoExemplo>Os posts, nomes e números desta tela são exemplos enquanto a comunidade é aberta.</AvisoExemplo>
       <div className={m("top")}>
         <div>
           <h1>Feed</h1>
           <p className={m("sub")}>O chat da Society. Dúvida, resultado e troca de ideia, tudo aqui.</p>
-        </div>
-        <div className={m("chips")}>
-          <span className={m("chip")}>
-            <i style={{ color: "var(--ok)" }}>●</i> 214 online
-          </span>
         </div>
       </div>
       <div className={m("seg")} role="group" aria-label="Modo do feed" style={{ marginTop: -8, justifySelf: "start" }}>

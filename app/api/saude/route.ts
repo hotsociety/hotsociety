@@ -2,6 +2,7 @@
 // 200 = site e banco respondendo. 503 = algo fora do ar.
 // Não mostra nenhum dado, só se cada parte está de pé.
 import { connection } from "next/server";
+import { configurado } from "../../_lib/pagamentos";
 
 export async function GET() {
   await connection(); // sempre na hora, nunca guardado em cache
@@ -15,10 +16,11 @@ export async function GET() {
   } catch {
     banco = false;
   }
-  const pix = !!(process.env.TRANSFEER_API_KEY && process.env.TRANSFEER_WEBHOOK_SECRET && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const cfg = configurado();
+  const pix = cfg.ok;
   const ok = banco;
   return Response.json(
-    { ok, banco, pix, ms: Date.now() - inicio },
+    { ok, banco, pix, gateway: cfg.gateway, cartao: cfg.ok && cfg.cartao, ms: Date.now() - inicio },
     { status: ok ? 200 : 503, headers: { "cache-control": "no-store" } },
   );
 }

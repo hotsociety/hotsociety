@@ -2,13 +2,13 @@
 
 import { useProgresso } from "../../_components/membros/Progresso";
 import Image from "next/image";
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import Icon from "../../_components/membros/Icon";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { ROUTE } from "../../_lib/site";
 import { PLACAS } from "../../_lib/demo";
 import { supabase } from "../../_lib/supabase";
+import Comprovantes from "./Comprovantes";
 import "../../_components/membros/ui.css";
 import ui from "../../_components/membros/ui.styles";
 import "./jornada.css";
@@ -131,9 +131,9 @@ export default function Jornada() {
               <i style={{ width: `${Math.min(100, (fat / 10000) * 100)}%` }} />
             </div>
             <p className={ui.small}>Faltam {BRL.format(Math.max(0, 10000 - fat))} para carimbar o Chile.</p>
-            <Link href={`/dashboard/suporte?tema=${encodeURIComponent("Carimbos e placas")}`} className={ui.btnGhost}>
+            <a href="#comprovantes" className={ui.btnGhost}>
               Enviar comprovantes
-            </Link>
+            </a>
           </section>
 
           <div className={s.plaque}>
@@ -141,6 +141,8 @@ export default function Jornada() {
           </div>
         </div>
       </div>
+
+      <Comprovantes />
 
       {/* pedido de placa */}
       <section className={ui.card} aria-labelledby="placa">

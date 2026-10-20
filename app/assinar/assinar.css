@@ -25,3 +25,8 @@
 .hs-as-aceite a{color:var(--gold-t,#d9b566)}
 .hs-as-selos{display:flex;flex-wrap:wrap;gap:8px 14px;justify-content:center;margin:0;font-size:12.5px;color:var(--muted,#a9a69e)}
 .hs-as-vendedor{margin:0;text-align:center;font-size:11.5px;color:var(--muted2,#85827a);overflow-wrap:anywhere}
+.hs-as-cupom{display:flex;gap:8px}
+.hs-as-cupom input{flex:1;min-width:0;min-height:44px;border-radius:10px;border:1px solid var(--line,#2e2e33);background:#111113;color:var(--neve,#ECEAE4);padding:0 12px;font:600 14px/1 var(--f-m);letter-spacing:.06em}
+.hs-as-cupom button{min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line2,#3a3a40);background:transparent;color:var(--neve,#ECEAE4);font:700 14px/1 var(--f-t);cursor:pointer}
+.hs-as-cupom button:disabled{opacity:.5;cursor:not-allowed}
+.hs-as-link{appearance:none;justify-self:start;border:0;background:none;padding:4px 0;color:var(--gold-t,#d9b566);font:600 13.5px/1 var(--f-t);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
