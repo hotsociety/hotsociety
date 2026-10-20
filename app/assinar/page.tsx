@@ -12,8 +12,8 @@ import s from "../login/login.styles";
 import "./assinar.css";
 
 type Plano = "mensal" | "anual";
-type Pedido = { id: string; plano: Plano; valor: number; status: string; br_code: string | null; expira_em: string | null };
-type Etapa = "carregando" | "form" | "pix" | "pago" | "expirado";
+type Pedido = { id: string; plano: Plano; metodo?: "pix" | "cartao"; valor: number; status: string; br_code: string | null; checkout_url?: string | null; expira_em: string | null };
+type Etapa = "carregando" | "form" | "pix" | "cartao" | "pago" | "expirado";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const PLANOS: Record<Plano, { t: string; s: string; preco: number }> = {
@@ -62,6 +62,9 @@ function Assinar() {
   const [cupom, setCupom] = useState<{ codigo: string; desconto: number; plano: Plano } | null>(null);
   const [cupomErro, setCupomErro] = useState("");
   const [abrirCupom, setAbrirCupom] = useState(() => !!params.get("cupom"));
+  const [metodo, setMetodo] = useState<"pix" | "cartao">("pix");
+  const [temCartao, setTemCartao] = useState(false);
+  const voltaPedido = useRef(params.get("pedido"));
 
   // Precisa estar logado: o pagamento fica ligado à conta. Roda uma vez só.
   const rota = useRef(router);
@@ -82,6 +85,17 @@ function Assinar() {
       const { data } = await supabase.rpc("meu_acesso");
       const a = data as { ativo?: boolean; cargo?: string | null; valido_ate?: string | null } | null;
       if (vivo && a?.ativo && !a.cargo) setJaAtivo(a.valido_ate ?? "sem prazo");
+      fetch("/api/pagamentos/pix", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((c: { cartao?: boolean }) => vivo && setTemCartao(!!c.cartao))
+        .catch(() => {});
+      // Voltou da página do cartão: confere o pedido.
+      const volta = voltaPedido.current;
+      if (vivo && volta && /^[0-9a-f-]{36}$/i.test(volta)) {
+        setPedido({ id: volta, plano: inicial, metodo: "cartao", valor: 0, status: "pendente", br_code: null, expira_em: null });
+        setEtapa("cartao");
+        return;
+      }
       if (vivo) setEtapa("form");
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, sess) => sess && setToken(sess.access_token));
@@ -104,13 +118,15 @@ function Assinar() {
     const r = await fetch(`/api/pagamentos/pix?id=${pedido.id}`, { headers: { authorization: `Bearer ${token}` }, cache: "no-store" });
     if (!r.ok) return;
     const p = (await r.json()) as Pedido;
+    setPedido(p);
     if (p.status === "pago") setEtapa("pago");
     else if (p.status !== "pendente") setEtapa("expirado");
   }, [pedido, token]);
 
-  // Enquanto o Pix está na tela, confere o pagamento a cada 5 segundos.
+  // Enquanto o Pix (ou a volta do cartão) está na tela, confere o pagamento a cada 5 segundos.
   useEffect(() => {
-    if (etapa !== "pix") return;
+    if (etapa !== "pix" && etapa !== "cartao") return;
+    if (etapa === "cartao") conferir();
     const t = setInterval(() => {
       if (document.visibilityState === "visible") conferir();
     }, 5000);
@@ -136,12 +152,18 @@ function Assinar() {
       const r = await fetch("/api/pagamentos/pix", {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
-        body: JSON.stringify({ plano, nome: n, cpf, telefone: tel, aceite, cupom: cupom?.plano === plano ? cupom.codigo : undefined }),
+        body: JSON.stringify({ plano, metodo, nome: n, cpf, telefone: tel, aceite, cupom: cupom?.plano === plano ? cupom.codigo : undefined }),
       });
       const j = await r.json().catch(() => ({}));
-      if (!r.ok) return setErro((j as { erro?: string }).erro || "Não deu para gerar o Pix. Tente de novo.");
-      setPedido(j as Pedido);
-      setEtapa((j as Pedido).status === "pago" ? "pago" : "pix");
+      if (!r.ok) return setErro((j as { erro?: string }).erro || "Não deu para gerar o pagamento. Tente de novo.");
+      const p = j as Pedido;
+      setPedido(p);
+      if (p.status === "pago") return setEtapa("pago");
+      if (p.metodo === "cartao" && p.checkout_url && /^https:\/\//.test(p.checkout_url)) {
+        window.location.href = p.checkout_url; // página segura do gateway (o número do cartão não passa pelo nosso site)
+        return;
+      }
+      setEtapa("pix");
     } catch {
       setErro("Sem conexão. Confira sua internet e tente de novo.");
     } finally {
@@ -232,7 +254,7 @@ function Assinar() {
                   <input value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="name" maxLength={120} required />
                 </label>
                 <label className={s.field}>
-                  <span>CPF (para o Pix)</span>
+                  <span>CPF</span>
                   <input value={cpf} onChange={(e) => setCpf(mascaraCpf(e.target.value))} inputMode="numeric" placeholder="000.000.000-00" required />
                 </label>
                 <label className={s.field}>
@@ -281,19 +303,38 @@ function Assinar() {
                     <a href="/privacidade" target="_blank" rel="noopener">
                       Política de privacidade
                     </a>
-                    . Sei que o pagamento é à vista, sem renovação automática, e que posso pedir reembolso integral em até 7 dias.
+                    . Sei que não há renovação automática e que posso pedir reembolso integral em até 7 dias.
                   </span>
                 </label>
+                {temCartao && (
+                  <div className="hs-as-planos" role="radiogroup" aria-label="Forma de pagamento">
+                    <button type="button" role="radio" aria-checked={metodo === "pix"} className="hs-as-plano" onClick={() => setMetodo("pix")}>
+                      <b>Pix</b>
+                      <small>Aprovação na hora</small>
+                    </button>
+                    <button type="button" role="radio" aria-checked={metodo === "cartao"} className="hs-as-plano" onClick={() => setMetodo("cartao")}>
+                      <b>Cartão</b>
+                      <small>Em até 12x</small>
+                    </button>
+                  </div>
+                )}
                 {erro && (
                   <p className={s.err} role="alert">
                     {erro}
                   </p>
                 )}
                 <button type="submit" className={s.primary} disabled={enviando}>
-                  {enviando ? "Gerando Pix…" : `Pagar ${BRL.format(precoCom(plano))} com Pix`}
+                  {enviando
+                    ? metodo === "cartao"
+                      ? "Abrindo pagamento…"
+                      : "Gerando Pix…"
+                    : metodo === "cartao"
+                      ? `Pagar ${BRL.format(precoCom(plano))} no cartão`
+                      : `Pagar ${BRL.format(precoCom(plano))} com Pix`}
                 </button>
+                {metodo === "cartao" && <p className="hs-as-conta">Você vai para a página segura de pagamento e escolhe as parcelas lá. O número do cartão não passa pelo nosso site.</p>}
                 <p className="hs-as-selos">
-                  <span>🔒 Pagamento por Pix processado pela Transfeer</span>
+                  <span>🔒 Pagamento seguro e criptografado</span>
                   <span>↩ Garantia de 7 dias</span>
                 </p>
                 <p className="hs-as-vendedor">
@@ -341,6 +382,27 @@ function Assinar() {
             </>
           )}
 
+          {etapa === "cartao" && (
+            <>
+              <h1 className={s.title}>
+                <span>Conferindo seu</span>
+                <span className={s.gold}>pagamento.</span>
+              </h1>
+              <div className={s.form}>
+                <p className="hs-as-espera" role="status">
+                  <i aria-hidden="true" /> Aguardando a confirmação do cartão…
+                </p>
+                <p className="hs-as-passos">Costuma levar alguns segundos. Pode deixar esta página aberta.</p>
+                <button type="button" className={s.textBtn} onClick={conferir}>
+                  Conferir agora
+                </button>
+                <button type="button" className={s.textBtn} onClick={() => setEtapa("form")}>
+                  Voltar e escolher outra forma de pagamento
+                </button>
+              </div>
+            </>
+          )}
+
           {etapa === "pago" && (
             <>
               <h1 className={s.title}>
@@ -361,13 +423,17 @@ function Assinar() {
           {etapa === "expirado" && (
             <>
               <h1 className={s.title}>
-                <span>Esse Pix</span>
-                <span className={s.gold}>expirou.</span>
+                <span>{pedido?.metodo === "cartao" ? "Pagamento" : "Esse Pix"}</span>
+                <span className={s.gold}>{pedido?.metodo === "cartao" ? "não concluído." : "expirou."}</span>
               </h1>
               <div className={s.form}>
-                <p className={s.err}>O código vale 1 hora. Se você já pagou, aguarde alguns minutos e confira de novo; senão, gere um novo.</p>
+                <p className={s.err}>
+                  {pedido?.metodo === "cartao"
+                    ? "O cartão não foi aprovado ou a página expirou. Tente de novo ou pague com Pix."
+                    : "O código vale 1 hora. Se você já pagou, aguarde alguns minutos e confira de novo; senão, gere um novo."}
+                </p>
                 <button type="button" className={s.primary} onClick={() => setEtapa("form")}>
-                  Gerar novo Pix
+                  Tentar de novo
                 </button>
                 <button type="button" className={s.textBtn} onClick={conferir}>
                   Já paguei, conferir de novo
