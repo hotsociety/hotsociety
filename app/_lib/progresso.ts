@@ -7,7 +7,7 @@ export type Perfil = {
   xp: number;
   coins: number;
   streak: number;
-  stopAtual: number; // 0 GRU · 1 SCL · 2 LIS · 3 JFK · 4 MCM · 5 DXB
+  stopAtual: number; // 0 GRU · 1 SCL · 2 LIS · 3 DXB · 4 JFK · 5 MCM
   faturado: number;
 };
 

@@ -32,7 +32,7 @@ function linhas(mods: Modulo[]): Linha[] {
     largo: true,
     cards: [
       { img: IMG.hero, t: "Hot Academy", s: `Curso completo · ${MODULOS.length} módulos`, tag: "Ativo", tagCor: "ok", ir: "/dashboard/aulas", pct: pctAcademy },
-      { gfx: "H", t: "HOTPHONE", s: "CappuIA, Cofre e Feed no canto da tela", tag: "Ativo", tagCor: "ok", ir: "hotphone" },
+      { img: IMG.hotphone, t: "HOTPHONE", s: "CappuIA, Cofre e Feed no canto da tela", tag: "Ativo", tagCor: "ok", ir: "hotphone" },
       { img: IMG.cappu, t: "Comunidade", s: "Feed, canais e lives", tag: "Ativo", tagCor: "ok", ir: "/dashboard/feed" },
     ],
   },
@@ -58,9 +58,9 @@ function linhas(mods: Modulo[]): Linha[] {
     t: "Bônus da assinatura",
     s: "Liberados",
     cards: [
-      { gfx: "100", t: "Pack de prompts", s: "Personas e cenários", ir: "/dashboard/ferramentas" },
-      { gfx: "R$", t: "Planilha de operação", s: "Funil e metas", ir: "/dashboard/ferramentas" },
-      { img: IMG.teleferico, t: "Lives gravadas", s: "12 encontros", ir: "/dashboard/feed" },
+      { img: IMG.prompts, t: "Pack de prompts", s: "Personas e cenários", ir: "/dashboard/ferramentas" },
+      { img: IMG.planilha, t: "Planilha de operação", s: "Funil e metas", ir: "/dashboard/ferramentas" },
+      { img: IMG.lives, t: "Lives", s: "Agenda e gravações", ir: "/dashboard/feed" },
       { img: IMG.placas, t: "Guia das placas", s: "Como pedir sua placa", ir: "/dashboard/jornada" },
     ],
   },
@@ -69,8 +69,8 @@ function linhas(mods: Modulo[]): Linha[] {
     s: "Na Hot Store",
     cards: [
       { img: IMG.hero, t: "Mentoria High Ticket", s: "Acompanhamento com o Cappu", lock: true, ir: "/dashboard/store" },
-      { gfx: "1:1", t: "Consultoria", s: "Uma call de 60 min", lock: true, ir: "/dashboard/store" },
-      { img: IMG.m4, t: "Funis prontos", s: "Templates editáveis", lock: true, ir: "/dashboard/store" },
+      { img: IMG.consultoria, t: "Consultoria", s: "Uma call de 60 min", lock: true, ir: "/dashboard/store" },
+      { img: IMG.funil, t: "Funis prontos", s: "Templates editáveis", lock: true, ir: "/dashboard/store" },
     ],
   },
 ];

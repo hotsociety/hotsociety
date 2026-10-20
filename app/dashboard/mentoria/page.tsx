@@ -32,7 +32,7 @@ export default function MinhaMentoria() {
 
   return (
     <section className={m("view")} aria-label="Minha Mentoria">
-      <AvisoExemplo>Tela de exemplo da mentoria High Ticket (liberada em Dubai).</AvisoExemplo>
+      <AvisoExemplo>Tela de exemplo da mentoria High Ticket (liberada em Mônaco).</AvisoExemplo>
       <div className={m("split")}>
         <div className={m("seg")} role="group" aria-label="Visualização">
           <button type="button" aria-pressed={mentorado} onClick={() => setMentorado(true)}>
@@ -137,7 +137,7 @@ export default function MinhaMentoria() {
         <div className={m("mhero")}>
           <div style={{ display: "grid", gap: 12 }}>
             <p className={m("eb")} style={{ color: "var(--ambar)" }}>
-              Mentoria High Ticket · Dubai
+              Mentoria High Ticket · Mônaco
             </p>
             <h1 className={m("stack")}>
               <span className={m("s")}>Acesso direto ao</span>
@@ -149,7 +149,7 @@ export default function MinhaMentoria() {
             <ul style={{ margin: 0, paddingLeft: 18, color: "#C9CFDB", fontSize: 14, display: "grid", gap: 4 }}>
               <li>Análise da sua operação</li>
               <li>Hotseats com o seu funil</li>
-              <li>Encontro presencial em Dubai para quem carimbar Dubai</li>
+              <li>Encontro presencial para quem carimbar Mônaco</li>
             </ul>
             <div className={m("row")}>
               <button className={m("btn btn-p")} type="button" onClick={() => setAplicar(true)}>

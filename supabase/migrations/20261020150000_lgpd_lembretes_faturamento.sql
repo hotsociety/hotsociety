@@ -240,7 +240,7 @@ begin
     limit 300;
 end $$;
 
--- Escala da rota a partir do faturamento: GRU 0 · SCL 10k · LIS 50k · JFK 100k · MCM 500k · DXB 1M
+-- Escala da rota a partir do faturamento: GRU 0 · SCL 10k · LIS 50k · DXB 100k · JFK 500k · MCM 1M
 create or replace function public.hs_escala(p_fat numeric)
 returns integer
 language sql immutable set search_path = '' as $$
