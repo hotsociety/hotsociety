@@ -9,8 +9,9 @@ export const SITE = {
   instagram: "https://instagram.com/capputin0",
   supportEmail: "suporte@hotsociety.com.br",
   // ⚠️ PREENCHER com os dados reais da empresa (obrigatório pelo Decreto 7.962/2013).
-  razaoSocial: "PREENCHER RAZÃO SOCIAL LTDA",
-  cnpj: "00.000.000/0001-00",
+  // Nome empresarial e CNPJ como estão na Receita Federal (MEI).
+  razaoSocial: "54.438.333 GUSTAVO R. S.",
+  cnpj: "54.438.333/0001-26",
   endereco: "PREENCHER endereço completo, cidade/UF, CEP",
   // Encarregado de dados (LGPD art. 41): pode ser o próprio dono.
   encarregado: "PREENCHER nome do encarregado",
