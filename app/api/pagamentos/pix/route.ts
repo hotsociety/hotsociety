@@ -19,6 +19,8 @@ import {
   type Plano,
 } from "../../../_lib/pagamentos";
 import { SITE } from "../../../_lib/site";
+import { limparUtm } from "../../../_lib/utm";
+import { enviarUtmify } from "../../../_lib/utmify";
 
 const resp = (corpo: object, status = 200) => Response.json(corpo, { status, headers: { "cache-control": "no-store" } });
 
@@ -45,7 +47,7 @@ export async function POST(req: Request) {
   const user = await usuarioDoPedido(req);
   if (!user) return resp({ erro: "Entre na sua conta para assinar." }, 401);
 
-  let corpo: { plano?: string; nome?: string; cpf?: string; telefone?: string; aceite?: boolean; cupom?: string; metodo?: string };
+  let corpo: { plano?: string; nome?: string; cpf?: string; telefone?: string; aceite?: boolean; cupom?: string; metodo?: string; utm?: unknown };
   try {
     corpo = await req.json();
   } catch {
@@ -114,6 +116,7 @@ export async function POST(req: Request) {
       split_centavos: gateway === "novus" && metodo === "pix" ? (splitNovus(valor)?.centavos ?? 0) : 0,
       aceite_termos_em: new Date().toISOString(),
       versao_termos: SITE.versaoTermos,
+      utm: limparUtm(corpo.utm),
       ...(codigo ? { cupom: codigo, desconto_centavos: desconto } : {}),
     })
     .select("*")
@@ -140,6 +143,8 @@ export async function POST(req: Request) {
       .select("*")
       .single<Pedido>();
     if (!atual) throw new Error("não deu para salvar a cobrança");
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+    await enviarUtmify(atual, { ip, cpf, telefone: telefone || null });
     return resp(publico(atual));
   } catch (e) {
     const err = e as ErroGateway;

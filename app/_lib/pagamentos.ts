@@ -13,6 +13,8 @@
 //   NOVUS_SPLIT_NOME      → nome do titular (opcional)
 //   NOVUS_SPLIT_PERCENTUAL→ parte do sócio em % (ex.: 70)
 
+import { enviarUtmify } from "./utmify";
+import type { Utm } from "./utm";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { PRICE } from "./site";
@@ -42,6 +44,7 @@ export type Pedido = {
   criado_em: string;
   cupom?: string | null;
   split_centavos?: number | null;
+  utm?: Utm | null;
 };
 
 /** Cobrança no formato do site, igual para qualquer gateway. */
@@ -382,6 +385,8 @@ export async function aplicarCobranca(sb: SupabaseClient, c: Cobranca): Promise<
     .eq("id", p.id)
     .select("*")
     .single<Pedido>();
+
+  if (atual && ["pago", "reembolsado", "chargeback", "falhou"].includes(novo)) await enviarUtmify(atual);
 
   if (novo === "pago" && p.status !== "chargeback") {
     await enviarRecibo(p, c).catch((e) => console.error("recibo:", (e as Error).message));
