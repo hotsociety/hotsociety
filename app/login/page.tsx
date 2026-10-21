@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../_lib/supabase";
+import { problemaNaSenha } from "../_lib/senha";
 import { CHECKOUT, PRICE } from "../_lib/site";
 import { caminhoSeguro } from "../_lib/cursos";
 import Captcha, { CAPTCHA_LIGADO } from "../_components/Captcha";
@@ -71,6 +72,12 @@ function Login() {
     }
 
     if (modo === "criar") {
+      const problema = await problemaNaSenha(senha);
+      if (problema) {
+        setAviso({ tipo: "erro", texto: problema });
+        setCarregando(false);
+        return;
+      }
       const { data, error } = await supabase.auth.signUp({
         email,
         password: senha,

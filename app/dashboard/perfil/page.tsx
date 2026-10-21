@@ -5,6 +5,7 @@ import { useState } from "react";
 import Icon from "../../_components/membros/Icon";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { supabase } from "../../_lib/supabase";
+import { problemaNaSenha } from "../../_lib/senha";
 import MeusDados from "./MeusDados";
 import MinhasCompras from "./MinhasCompras";
 import "../../_components/membros/ui.css";
@@ -35,6 +36,12 @@ export default function Perfil() {
   async function trocarSenha(e: React.FormEvent) {
     e.preventDefault();
     setSalvando(true);
+    const problema = await problemaNaSenha(senha);
+    if (problema) {
+      setAviso({ tipo: "erro", t: problema });
+      setSalvando(false);
+      return;
+    }
     const { error } = await supabase.auth.updateUser({ password: senha });
     setAviso(error ? { tipo: "erro", t: "Não deu para trocar a senha: " + error.message } : { tipo: "ok", t: "Senha alterada." });
     if (!error) setSenha("");
