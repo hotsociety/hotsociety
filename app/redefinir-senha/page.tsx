@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "../_lib/supabase";
+import { problemaNaSenha } from "../_lib/senha";
 import "../login/login.css";
 import s from "../login/login.styles";
 
@@ -84,9 +85,13 @@ export default function RedefinirSenha() {
   async function salvar(e: React.FormEvent) {
     e.preventDefault();
     setErro("");
-    if (senha.length < 8) return setErro("A senha precisa ter pelo menos 8 caracteres.");
     if (senha !== confirma) return setErro("As duas senhas não são iguais.");
     setSalvando(true);
+    const problema = await problemaNaSenha(senha);
+    if (problema) {
+      setSalvando(false);
+      return setErro(problema);
+    }
     const { error } = await supabase.auth.updateUser({ password: senha });
     if (error) {
       setSalvando(false);
