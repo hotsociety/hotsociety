@@ -31,9 +31,9 @@ function linhas(mods: Modulo[]): Linha[] {
     s: "3 ativos",
     largo: true,
     cards: [
-      { img: IMG.hero, t: "Hot Academy", s: `Curso completo · ${MODULOS.length} módulos`, tag: "Ativo", tagCor: "ok", ir: "/dashboard/aulas", pct: pctAcademy },
+      { img: IMG.academy, t: "Hot Academy", s: `Curso completo · ${MODULOS.length} módulos`, tag: "Ativo", tagCor: "ok", ir: "/dashboard/aulas", pct: pctAcademy },
       { img: IMG.hotphone, t: "HOTPHONE", s: "CappuIA, Cofre e Feed no canto da tela", tag: "Ativo", tagCor: "ok", ir: "hotphone" },
-      { img: IMG.cappu, t: "Comunidade", s: "Feed, canais e lives", tag: "Ativo", tagCor: "ok", ir: "/dashboard/feed" },
+      { img: IMG.comunidade, t: "Comunidade", s: "Feed, canais e lives", tag: "Ativo", tagCor: "ok", ir: "/dashboard/feed" },
     ],
   },
   {
@@ -68,7 +68,7 @@ function linhas(mods: Modulo[]): Linha[] {
     t: "Libere mais",
     s: "Na Hot Store",
     cards: [
-      { img: IMG.hero, t: "Mentoria High Ticket", s: "Acompanhamento com o Cappu", lock: true, ir: "/dashboard/store" },
+      { img: IMG.mentoria, t: "Mentoria High Ticket", s: "Acompanhamento com o Cappu", lock: true, ir: "/dashboard/store" },
       { img: IMG.consultoria, t: "Consultoria", s: "Uma call de 60 min", lock: true, ir: "/dashboard/store" },
       { img: IMG.funil, t: "Funis prontos", s: "Templates editáveis", lock: true, ir: "/dashboard/store" },
     ],
