@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { Archivo, Inter, JetBrains_Mono } from "next/font/google";
 import { SITE } from "./_lib/site";
+import UtmCaptura from "./_components/UtmCaptura";
 
 const archivo = Archivo({
   subsets: ["latin"],
@@ -48,7 +49,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${archivo.variable} ${inter.variable} ${mono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <UtmCaptura />
+        {children}
+      </body>
     </html>
   );
 }

@@ -7,6 +7,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { supabase } from "../_lib/supabase";
 import { DADOS_EMPRESA, PRICE, SITE } from "../_lib/site";
 import { qrSvgPath } from "../_lib/qrcode";
+import { lerUtm } from "../_lib/utm";
 import "../login/login.css";
 import s from "../login/login.styles";
 import "./assinar.css";
@@ -152,7 +153,7 @@ function Assinar() {
       const r = await fetch("/api/pagamentos/pix", {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
-        body: JSON.stringify({ plano, metodo, nome: n, cpf, telefone: tel, aceite, cupom: cupom?.plano === plano ? cupom.codigo : undefined }),
+        body: JSON.stringify({ plano, metodo, nome: n, cpf, telefone: tel, aceite, cupom: cupom?.plano === plano ? cupom.codigo : undefined, utm: lerUtm() }),
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) return setErro((j as { erro?: string }).erro || "Não deu para gerar o pagamento. Tente de novo.");
