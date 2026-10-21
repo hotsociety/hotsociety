@@ -290,6 +290,8 @@ export const IMG = {
   moletom: "/img/produtos/moletom.jpg",
   bone: "/img/produtos/bone.jpg",
   mentoria: "/img/produtos/mentoria.jpg",
+  academy: "/img/produtos/academy.jpg",
+  comunidade: "/img/produtos/comunidade.jpg",
   hotphone: "/img/produtos/hotphone.jpg",
   hotphoneDubai: "/img/produtos/hotphone-dubai.jpg",
   lives: "/img/produtos/lives.jpg",
