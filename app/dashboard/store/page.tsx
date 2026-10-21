@@ -8,6 +8,7 @@ import { m } from "../../_components/membros/proto";
 import { postApi } from "../../_lib/api";
 import { IMG, PRODUTOS, type Produto } from "../../_lib/demo";
 import { supabase } from "../../_lib/supabase";
+import Icon from "../../_components/membros/Icon";
 
 const CATS = ["Tudo", "Digitais", "Ferramentas", "Mentoria", "Merch"] as const;
 const brl = (v: number) => "R$ " + v.toLocaleString("pt-BR");
@@ -104,6 +105,12 @@ export default function HotStore() {
                   </>
                 )}
                 {p.tag && <span className={m("tag am tg")}>{p.tag}</span>}
+                {p.breve && (
+                  <span className={m("lk")}>
+                    <Icon name="lock" size={30} />
+                    Em breve
+                  </span>
+                )}
               </div>
               <div className={m("bd")}>
                 <div>
@@ -130,6 +137,10 @@ export default function HotStore() {
                   {p.aplicacao ? (
                     <button type="button" className={m("btn btn-s")} onClick={() => setAberto("aplicar")}>
                       Aplicar
+                    </button>
+                  ) : p.breve ? (
+                    <button type="button" className={m("btn btn-s")} disabled style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <Icon name="lock" size={15} /> Em breve
                     </button>
                   ) : p.coins ? (
                     <button type="button" className={m("btn btn-p")} disabled={temHp} onClick={() => setResgatar(p)}>

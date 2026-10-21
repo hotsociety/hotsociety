@@ -332,6 +332,8 @@
 .hs-m-st-p .hs-m-cv .hs-m-gx{font:900 40px/.85 var(--f-d);font-stretch:125%;text-transform:uppercase;text-align:center;background:linear-gradient(180deg,#FFF3C4,#C9A24E);-webkit-background-clip:text;background-clip:text;color:transparent;padding:10px}
 .hs-m-st-p .hs-m-cv .hs-m-tg{position:absolute;top:10px;left:10px}
 .hs-m-st-p .hs-m-cv .hs-m-rl{position:absolute;left:0;right:0;top:62%;height:3px;background:linear-gradient(90deg,transparent,#C9A24E,transparent);opacity:.5}
+.hs-m-st-p .hs-m-cv .hs-m-lk{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:8px;background:linear-gradient(0deg,rgba(9,9,10,.55),rgba(9,9,10,.25));color:#F1DC9A;font:700 12px/1 var(--f-m,monospace);letter-spacing:.16em;text-transform:uppercase}
+.hs-m-st-p .hs-m-cv .hs-m-lk svg{width:44px;height:44px;padding:10px;border-radius:50%;border:1px solid #4a3d1c;background:#141210}
 .hs-m-st-p .hs-m-cv svg.hs-m-mc{width:62%;height:auto}
 .hs-m-st-p .hs-m-bd{padding:14px;display:grid;gap:10px;align-content:space-between}
 .hs-m-st-p b{font-size:15px}
