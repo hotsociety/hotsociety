@@ -14,6 +14,7 @@
 //   NOVUS_SPLIT_PERCENTUAL→ parte do sócio em % (ex.: 70)
 
 import { enviarUtmify } from "./utmify";
+import { avisarVenda } from "./avisoVenda";
 import type { Utm } from "./utm";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { createHmac, timingSafeEqual } from "node:crypto";
@@ -387,6 +388,7 @@ export async function aplicarCobranca(sb: SupabaseClient, c: Cobranca): Promise<
     .single<Pedido>();
 
   if (atual && ["pago", "reembolsado", "chargeback", "falhou"].includes(novo)) await enviarUtmify(atual);
+  if (atual && ["pago", "reembolsado", "chargeback"].includes(novo)) await avisarVenda(atual);
 
   if (novo === "pago" && p.status !== "chargeback") {
     await enviarRecibo(p, c).catch((e) => console.error("recibo:", (e as Error).message));
