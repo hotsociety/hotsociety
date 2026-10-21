@@ -289,6 +289,7 @@ export const IMG = {
   consultoria: "/img/produtos/consultoria.jpg",
   moletom: "/img/produtos/moletom.jpg",
   bone: "/img/produtos/bone.jpg",
+  mentoria: "/img/produtos/mentoria.jpg",
   hotphone: "/img/produtos/hotphone.jpg",
   hotphoneDubai: "/img/produtos/hotphone-dubai.jpg",
   lives: "/img/produtos/lives.jpg",
@@ -441,6 +442,7 @@ export type Produto = {
   aplicacao?: boolean; // entra por aplicação, sem carrinho
   img?: string;
   gfx?: string; // grafismo dourado no lugar da foto
+  breve?: boolean; // aparece com cadeado e "Em breve", sem resgate
   tag?: string;
 };
 
@@ -450,9 +452,9 @@ export const PRODUTOS: Produto[] = [
   { id: "pl", cat: "Ferramentas", t: "Planilha de operação", d: "Metas, custos, ROI por canal e controle de modelos.", rs: 37, img: IMG.planilha },
   { id: "ct", cat: "Ferramentas", t: "Kit contrato e consentimento", d: "Modelos revisáveis por advogado para operar com modelo real.", rs: 57, img: IMG.contrato },
   { id: "cs", cat: "Mentoria", t: "Consultoria 1:1", d: "Uma call de 60 minutos com o time para destravar sua operação.", rs: 497, img: IMG.consultoria },
-  { id: "ht", cat: "Mentoria", t: "Mentoria High Ticket", d: "Acompanhamento direto com o Cappu, turma pequena. Por aplicação.", rs: null, img: IMG.hero, aplicacao: true },
-  { id: "mo", cat: "Merch", t: "Moletom HOT SOCIETY", d: "Preto, bordado dourado, edição da temporada.", rs: 249, coins: 6000, img: IMG.moletom },
-  { id: "bn", cat: "Merch", t: "Boné HOT SOCIETY", d: "Aba curva, H bordado em dourado.", rs: 129, coins: 3000, img: IMG.bone },
+  { id: "ht", cat: "Mentoria", t: "Mentoria High Ticket", d: "Acompanhamento direto com o Cappu, turma pequena. Por aplicação.", rs: null, img: IMG.mentoria, aplicacao: true },
+  { id: "mo", cat: "Merch", t: "Moletom HOT SOCIETY", d: "Preto, bordado dourado, edição da temporada.", rs: 249, coins: 6000, img: IMG.moletom, breve: true },
+  { id: "bn", cat: "Merch", t: "Boné HOT SOCIETY", d: "Aba curva, H bordado em dourado.", rs: 129, coins: 3000, img: IMG.bone, breve: true },
   { id: "hp", cat: "Digitais", t: "HOTPHONE Edição Dubai", d: "Cor exclusiva do seu HOTPHONE. Só com Cappu Coins.", rs: null, coins: 2500, soCoins: true, img: IMG.hotphoneDubai },
 ];
 
