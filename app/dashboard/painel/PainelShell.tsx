@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { NOME_CARGO, PODE, useMembro, type Cargo } from "../../_components/membros/MemberContext";
 import { m } from "../../_components/membros/proto";
 import "../../_components/membros/painel.css";
+import AbasRolagem from "./AbasRolagem";
 
 type Aba = { href: string; t: string; pode: (c: Cargo | null) => boolean };
 
@@ -53,13 +53,7 @@ export default function PainelShell({ children }: { children: ReactNode }) {
         </div>
         <span className="hs-pn-role">{NOME_CARGO[cargo!]}</span>
       </div>
-      <nav className="hs-pn-tabs" aria-label="Seções do painel">
-        {abas.map((a) => (
-          <Link key={a.href} href={a.href} aria-current={pathname === a.href ? "page" : undefined}>
-            {a.t}
-          </Link>
-        ))}
-      </nav>
+      <AbasRolagem abas={abas} atual={pathname} />
       {permitida ? (
         children
       ) : (
