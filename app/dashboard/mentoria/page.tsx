@@ -1,139 +1,65 @@
 "use client";
 
-import AvisoExemplo from "../../_components/membros/AvisoExemplo";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import "../../_components/membros/painel.css";
-import { useState } from "react";
+import MentoriaChat from "../../_components/membros/MentoriaChat";
 import { Modal, toast } from "../../_components/membros/Toast";
 import { m } from "../../_components/membros/proto";
+import { postApi } from "../../_lib/api";
 import { IMG } from "../../_lib/demo";
+import { supabase } from "../../_lib/supabase";
 
-const ENCONTROS = [
-  { d: "21", q: "OUT · TER", t: "Hotseat: funil de 3 membros", h: "20h · ao vivo · 90 min", prox: true },
-  { d: "28", q: "OUT · TER", t: "Escala: time de chat", h: "20h · ao vivo" },
-];
-const PLANO = [
-  { t: "Ajustar bio e link da persona", q: "CAPPU · 07/10", ok: true },
-  { t: "Testar 2 preços de entrada por 7 dias", q: "ATÉ 18/10" },
-  { t: "Enviar números do funil antes do hotseat", q: "ATÉ 20/10" },
-];
-const GRAVACOES = [
-  ["Encontro 2 · Persona que vende", "1h32"],
-  ["Encontro 1 · Diagnóstico da operação", "1h48"],
-];
-const MATERIAIS = [
-  ["Planilha de metas da agência", "XLSX"],
-  ["Contrato modelo de parceria", "DOCX · revisar com advogado"],
-];
+type Encontro = { id: string; titulo: string; inicio: string; duracao_min: number; tipo: "grupo" | "individual"; gravacao_url: string | null };
+type Info = {
+  mentorado: boolean;
+  mentor: boolean;
+  eu?: string;
+  turma?: { id: string; nome: string } | null;
+  encontros?: Encontro[];
+};
+
+const TZ = "America/Sao_Paulo";
+const fDia = new Intl.DateTimeFormat("pt-BR", { timeZone: TZ, day: "2-digit" });
+const fMes = new Intl.DateTimeFormat("pt-BR", { timeZone: TZ, month: "short", weekday: "short" });
+const fHora = new Intl.DateTimeFormat("pt-BR", { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
+const fData = new Intl.DateTimeFormat("pt-BR", { timeZone: TZ, day: "2-digit", month: "2-digit" });
+
+const fim = (e: Encontro) => new Date(e.inicio).getTime() + e.duracao_min * 60e3;
+// A sala abre 15 min antes e fecha 1 h depois do fim.
+const salaAberta = (e: Encontro, agora = Date.now()) => agora >= new Date(e.inicio).getTime() - 15 * 60e3 && agora <= fim(e) + 3600e3;
 
 export default function MinhaMentoria() {
-  // Enquanto a mentoria não vem do Supabase, o alternador mostra as duas versões da tela.
-  const [mentorado, setMentorado] = useState(true);
+  const [info, setInfo] = useState<Info | null>(null);
   const [aplicar, setAplicar] = useState(false);
+  const [aba, setAba] = useState<"turma" | "dm">("turma");
+  const [agora, setAgora] = useState(() => Date.now());
 
-  return (
-    <section className={m("view")} aria-label="Minha Mentoria">
-      <AvisoExemplo>Tela de exemplo da mentoria High Ticket (liberada em Mônaco).</AvisoExemplo>
-      <div className={m("split")}>
-        <div className={m("seg")} role="group" aria-label="Visualização">
-          <button type="button" aria-pressed={mentorado} onClick={() => setMentorado(true)}>
-            Como mentorado
-          </button>
-          <button type="button" aria-pressed={!mentorado} onClick={() => setMentorado(false)}>
-            Sem mentoria
-          </button>
-        </div>
-        <span className={m("mono")} style={{ fontSize: 12, color: "var(--muted2)" }}>
-          Alternador de exemplo
-        </span>
-      </div>
+  useEffect(() => {
+    supabase.rpc("minha_mentoria").then(({ data, error }) => setInfo(error ? { mentorado: false, mentor: false } : (data as Info)));
+    const t = setInterval(() => setAgora(Date.now()), 30e3);
+    return () => clearInterval(t);
+  }, []);
 
-      {mentorado ? (
-        <div style={{ display: "grid", gap: 16 }}>
-          <div className={m("mhero")}>
-            <div style={{ display: "grid", gap: 12 }}>
-              <p className={m("eb")} style={{ color: "var(--ambar)" }}>
-                Mentoria High Ticket · Turma Novembro
-              </p>
-              <h1 className={m("stack")}>
-                <span className={m("s")}>Minha</span>
-                <span>Mentoria</span>
-              </h1>
-              <p className={m("sub")} style={{ color: "#C9CFDB" }}>
-                Encontro 3 de 8 · grupo de 12 · acompanhamento direto com o Cappu
-              </p>
-              <div className={m("row")}>
-                <button className={m("btn btn-p")} type="button" onClick={() => toast("O link da sala abre 15 min antes")}>
-                  Entrar no próximo encontro
-                </button>
-                <button className={m("btn btn-s")} type="button" onClick={() => toast("Canal direto abre no seu HOTPHONE")}>
-                  Canal direto
-                </button>
-              </div>
-            </div>
-            <span className={m("ph")} style={{ backgroundImage: `url(${IMG.cappu})` }} />
+  if (!info) {
+    return (
+      <section className={m("view")} aria-label="Minha Mentoria">
+        <p className={m("sub")}>Carregando…</p>
+      </section>
+    );
+  }
+
+  if (!info.mentorado) {
+    return (
+      <section className={m("view")} aria-label="Mentoria High Ticket">
+        {info.mentor && (
+          <div className={m("card")}>
+            <b>Você é mentor.</b>{" "}
+            <span className={m("sub")}>
+              Turmas, mentorados, encontros e conversas ficam no <Link href="/dashboard/painel/mentoria">Painel → Mentoria</Link>.
+            </span>
           </div>
-
-          <div className={m("grid g-2")}>
-            <div className={m("card")}>
-              <h2>Próximos encontros</h2>
-              <div style={{ display: "grid", gap: 8 }}>
-                {ENCONTROS.map((e) => (
-                  <div key={e.t} className={m("next")}>
-                    <span className={m("d")}>
-                      {e.d}
-                      <small>{e.q}</small>
-                    </span>
-                    <div>
-                      <b>{e.t}</b>
-                      <small style={{ display: "block", color: "var(--muted)", fontSize: 12.5 }}>{e.h}</small>
-                    </div>
-                    <span className={m("tag" + (e.prox ? " live" : ""))}>{e.prox ? "Próximo" : "Agendado"}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className={m("card")}>
-              <h2>Seu plano de ação</h2>
-              <ul className={m("plan-a")}>
-                {PLANO.map((p) => (
-                  <li key={p.t}>
-                    <label>
-                      <input type="checkbox" defaultChecked={p.ok} />
-                      <span>{p.t}</span>
-                      <small>{p.q}</small>
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          <div className={m("grid g-2")}>
-            <div className={m("card")}>
-              <h2>Gravações</h2>
-              <div className={m("recs")}>
-                {GRAVACOES.map(([t, d]) => (
-                  <div key={t}>
-                    <span>{t}</span>
-                    <small>{d}</small>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className={m("card")}>
-              <h2>Materiais exclusivos</h2>
-              <div className={m("recs")}>
-                {MATERIAIS.map(([t, d]) => (
-                  <div key={t}>
-                    <span>{t}</span>
-                    <small>{d}</small>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
+        )}
         <div className={m("mhero")}>
           <div style={{ display: "grid", gap: 12 }}>
             <p className={m("eb")} style={{ color: "var(--ambar)" }}>
@@ -144,25 +70,147 @@ export default function MinhaMentoria() {
               <span>Cappu</span>
             </h1>
             <p className={m("sub")} style={{ color: "#C9CFDB" }}>
-              8 encontros ao vivo, grupo de até 12, plano de ação individual e canal direto. Entrada por aplicação.
+              Encontros ao vivo em grupo, calls individuais e chat direto com o mentor, tudo aqui dentro. Entrada por aplicação.
             </p>
             <ul style={{ margin: 0, paddingLeft: 18, color: "#C9CFDB", fontSize: 14, display: "grid", gap: 4 }}>
               <li>Análise da sua operação</li>
               <li>Hotseats com o seu funil</li>
-              <li>Encontro presencial para quem carimbar Mônaco</li>
+              <li>Chat da turma e canal privado com o mentor</li>
             </ul>
             <div className={m("row")}>
               <button className={m("btn btn-p")} type="button" onClick={() => setAplicar(true)}>
                 Aplicar para a mentoria
               </button>
-              <span style={{ fontSize: 12, color: "var(--muted)" }}>Próxima turma: novembro · valor na aplicação</span>
+              <span style={{ fontSize: 12, color: "var(--muted)" }}>Valor e próxima turma na resposta da aplicação</span>
             </div>
           </div>
-          <span className={m("ph")} style={{ backgroundImage: `url(${IMG.cappu})` }} />
+          <span className={m("ph")} style={{ backgroundImage: `url(${IMG.mentoria})` }} />
         </div>
-      )}
+        {aplicar && <Aplicar onClose={() => setAplicar(false)} />}
+      </section>
+    );
+  }
 
-      {aplicar && <Aplicar onClose={() => setAplicar(false)} />}
+  const encontros = info.encontros ?? [];
+  const futuros = encontros.filter((e) => fim(e) + 3600e3 >= agora);
+  const gravacoes = encontros.filter((e) => fim(e) < agora && e.gravacao_url).reverse();
+  const prox = futuros[0];
+  const abaAtual = info.turma ? aba : "dm";
+  // Carregamento completo (não navegação interna): a página da sala libera câmera e microfone no cabeçalho.
+  const entrar = (e: Encontro) => window.location.assign(`/dashboard/mentoria/sala/${e.id}`);
+
+  return (
+    <section className={m("view")} aria-label="Minha Mentoria">
+      <div className={m("mhero")}>
+        <div style={{ display: "grid", gap: 12 }}>
+          <p className={m("eb")} style={{ color: "var(--ambar)" }}>
+            Mentoria High Ticket{info.turma ? ` · ${info.turma.nome}` : ""}
+          </p>
+          <h1 className={m("stack")}>
+            <span className={m("s")}>Minha</span>
+            <span>Mentoria</span>
+          </h1>
+          <p className={m("sub")} style={{ color: "#C9CFDB" }}>
+            {prox
+              ? `Próximo: ${prox.titulo} · ${fData.format(new Date(prox.inicio))} às ${fHora.format(new Date(prox.inicio))}`
+              : "Nenhum encontro marcado ainda. O mentor avisa por aqui."}
+          </p>
+          <div className={m("row")}>
+            {prox && (
+              <button className={m("btn btn-p")} type="button" disabled={!salaAberta(prox, agora)} onClick={() => entrar(prox)}>
+                {salaAberta(prox, agora) ? "Entrar na sala agora" : "Sala abre 15 min antes"}
+              </button>
+            )}
+            <button
+              className={m("btn btn-s")}
+              type="button"
+              onClick={() => {
+                setAba("dm");
+                document.getElementById("mentoria-chat")?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              Falar com o mentor
+            </button>
+          </div>
+        </div>
+        <span className={m("ph")} style={{ backgroundImage: `url(${IMG.mentoria})` }} />
+      </div>
+
+      <div className={m("grid g-2")}>
+        <div className={m("card")}>
+          <h2>Próximos encontros</h2>
+          <div style={{ display: "grid", gap: 8 }}>
+            {futuros.length === 0 && <p className={m("sub")}>Nada marcado por enquanto.</p>}
+            {futuros.map((e) => {
+              const d = new Date(e.inicio);
+              const aberta = salaAberta(e, agora);
+              return (
+                <div key={e.id} className={m("next")}>
+                  <span className={m("d")}>
+                    {fDia.format(d)}
+                    <small>{fMes.format(d).replace(/\./g, "").toUpperCase()}</small>
+                  </span>
+                  <div>
+                    <b>{e.titulo}</b>
+                    <small style={{ display: "block", color: "var(--muted)", fontSize: 12.5 }}>
+                      {fHora.format(d)} · {e.duracao_min} min · {e.tipo === "grupo" ? "em grupo" : "individual"}
+                    </small>
+                  </div>
+                  {aberta ? (
+                    <button type="button" className={m("btn btn-p")} onClick={() => entrar(e)}>
+                      Entrar
+                    </button>
+                  ) : (
+                    <span className={m("tag" + (e === prox ? " live" : ""))}>{e === prox ? "Próximo" : "Agendado"}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className={m("card")}>
+          <h2>Gravações</h2>
+          <div className={m("recs")}>
+            {gravacoes.length === 0 && <p className={m("sub")}>As gravações aparecem aqui depois de cada encontro.</p>}
+            {gravacoes.map((e) => (
+              <a key={e.id} href={e.gravacao_url!} target="_blank" rel="noopener noreferrer">
+                <span>{e.titulo}</span>
+                <small>{fData.format(new Date(e.inicio))}</small>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div id="mentoria-chat" style={{ display: "grid", gap: 10 }}>
+        {info.turma && (
+          <div className={m("seg")} role="group" aria-label="Conversas">
+            <button type="button" aria-pressed={abaAtual === "turma"} onClick={() => setAba("turma")}>
+              Chat da turma
+            </button>
+            <button type="button" aria-pressed={abaAtual === "dm"} onClick={() => setAba("dm")}>
+              Mentor (privado)
+            </button>
+          </div>
+        )}
+        {abaAtual === "turma" && info.turma ? (
+          <MentoriaChat
+            key="turma"
+            conversa={`turma:${info.turma.id}`}
+            titulo={`Chat da turma · ${info.turma.nome}`}
+            sub="Só mentorados desta turma e o mentor veem."
+            vazio="Ninguém falou ainda. Se apresente para a turma."
+          />
+        ) : (
+          <MentoriaChat
+            key="dm"
+            conversa={`dm:${info.eu}`}
+            titulo="Conversa privada com o mentor"
+            sub="Só você e o mentor veem. Resposta em até 48 h úteis."
+            vazio="Mande sua dúvida, número do funil ou print aqui."
+          />
+        )}
+      </div>
     </section>
   );
 }
@@ -179,10 +227,12 @@ function Aplicar({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             className={m("btn btn-p")}
-            onClick={() => {
-              if (!texto.trim()) return toast("Conta um pouco sobre você antes de enviar");
+            onClick={async () => {
+              if (texto.trim().length < 20) return toast("Conta um pouco mais sobre você antes de enviar");
+              const r = await postApi<{ protocolo: string }>("/api/suporte", { acao: "abrir", tema: "Mentoria", assunto: "Aplicação · Mentoria High Ticket", texto: texto.trim() });
+              if (r.erro) return toast(r.erro);
               onClose();
-              toast("Aplicação enviada. Resposta em até 48 h");
+              toast(`Aplicação enviada · ${r.protocolo}`);
             }}
           >
             Enviar aplicação
