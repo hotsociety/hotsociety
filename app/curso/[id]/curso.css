@@ -200,7 +200,7 @@
 
 .hs-curso-coverImg {
   background-size: cover;
-  background-position: center;
+  background-position: center 32%;
 }
 .hs-curso-coverImg::after {
   display: none;
