@@ -53,18 +53,32 @@ async function DetalhesDoCurso({ promessaParams }: { promessaParams: Params }) {
   }
 
   const comprar = `/login?callback=/curso/${curso.id}`;
+  const c = curso.conteudo;
+  const totalAulas = c?.modulos?.reduce((t, m) => t + (m.aulas ?? 0), 0) ?? 0;
 
   return (
     <main className={s.main}>
       <section className={s.hero}>
-        <div className={s.cover} aria-hidden="true">
-          <span>{curso.titulo.slice(0, 2).toUpperCase()}</span>
+        <div
+          className={`${s.cover} ${curso.capa_url ? s.coverImg : ""}`}
+          aria-hidden="true"
+          style={curso.capa_url ? { backgroundImage: `url(${curso.capa_url})` } : undefined}
+        >
+          {!curso.capa_url && <span>{curso.titulo.slice(0, 2).toUpperCase()}</span>}
         </div>
 
         <div className={s.info}>
           <p className={s.eyebrow}>Curso HOT SOCIETY</p>
           <h1 className={s.h1}>{curso.titulo}</h1>
-          {curso.descricao && <p className={s.desc}>{curso.descricao}</p>}
+          {curso.descricao && <p className={s.lead}>{curso.descricao}</p>}
+          {c?.intro && <p className={s.desc}>{c.intro}</p>}
+          {totalAulas > 0 && (
+            <p className={s.stats}>
+              <span>{totalAulas} aulas</span>
+              <span>{c!.modulos!.length} módulos</span>
+              <span>Acesso no celular e no PC</span>
+            </p>
+          )}
         </div>
 
         <aside className={s.buy} aria-label="Comprar curso">
@@ -83,6 +97,52 @@ async function DetalhesDoCurso({ promessaParams }: { promessaParams: Params }) {
           </p>
         </aside>
       </section>
+
+      {c?.modulos?.length ? (
+        <section className={s.sec} aria-labelledby="conteudo-curso">
+          <h2 id="conteudo-curso" className={s.h2}>
+            O que você vai aprender
+          </h2>
+          <ol className={s.mods}>
+            {c.modulos.map((m) => (
+              <li key={m.t}>
+                <div>
+                  <b>{m.t}</b>
+                  {m.d && <p>{m.d}</p>}
+                </div>
+                {m.aulas ? <span>{m.aulas} aulas</span> : null}
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
+
+      {c?.para_quem?.length || c?.extras?.length ? (
+        <section className={`${s.sec} ${s.duo}`}>
+          {c.para_quem?.length ? (
+            <div className={s.box}>
+              <h2 className={s.h2}>Para quem é</h2>
+              <ul className={s.perks}>
+                {c.para_quem.map((x) => (
+                  <li key={x}>{x}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {c.extras?.length ? (
+            <div className={s.box}>
+              <h2 className={s.h2}>Além das aulas</h2>
+              <ul className={s.perks}>
+                {c.extras.map((x) => (
+                  <li key={x}>{x}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      {c?.aviso && <p className={s.aviso}>{c.aviso}</p>}
     </main>
   );
 }

@@ -4,6 +4,17 @@ export type Curso = {
   titulo: string;
   descricao?: string | null;
   preco?: number | null;
+  capa_url?: string | null;
+  conteudo?: ConteudoCurso | null;
+};
+
+// Página de venda do curso (coluna `conteudo` em jsonb). Tudo opcional.
+export type ConteudoCurso = {
+  intro?: string;
+  modulos?: { t: string; d?: string; aulas?: number }[];
+  para_quem?: string[];
+  extras?: string[];
+  aviso?: string;
 };
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });

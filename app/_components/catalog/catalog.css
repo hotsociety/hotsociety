@@ -128,3 +128,7 @@
     background-position: -200% 0;
   }
 }
+
+.hs-cat-cover-img::after {
+  display: none;
+}

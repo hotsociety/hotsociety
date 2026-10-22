@@ -27,8 +27,12 @@ export default async function CourseGrid() {
     <div className={s.grid}>
       {cursos.map((curso) => (
         <article key={curso.id} className={s.card}>
-          <div className={s.cover} aria-hidden="true">
-            <span>{curso.titulo.slice(0, 2).toUpperCase()}</span>
+          <div
+            className={curso.capa_url ? `${s.cover} hs-cat-cover-img` : s.cover}
+            aria-hidden="true"
+            style={curso.capa_url ? { backgroundImage: `url(${curso.capa_url})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+          >
+            {!curso.capa_url && <span>{curso.titulo.slice(0, 2).toUpperCase()}</span>}
           </div>
           <div className={s.body}>
             <h3>{curso.titulo}</h3>

@@ -198,7 +198,111 @@
   }
 }
 
+.hs-curso-coverImg {
+  background-size: cover;
+  background-position: center;
+}
+.hs-curso-coverImg::after {
+  display: none;
+}
+.hs-curso-lead {
+  margin: 0;
+  color: var(--neve);
+  font-size: clamp(17px, 1.9vw, 20px);
+  line-height: 1.5;
+  font-weight: 600;
+  max-width: 56ch;
+}
+.hs-curso-stats {
+  margin: 4px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.hs-curso-stats span {
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--gold-lo);
+  color: var(--gold-t);
+  font: 700 12px/1 var(--f-m);
+  letter-spacing: 0.04em;
+}
+.hs-curso-sec {
+  margin-top: clamp(32px, 5vw, 56px);
+  display: grid;
+  gap: 16px;
+}
+.hs-curso-h2 {
+  margin: 0;
+  font: 900 clamp(22px, 3.4vw, 32px) / 1.05 var(--f-d);
+  font-stretch: 118%;
+  text-transform: uppercase;
+}
+.hs-curso-mods {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  counter-reset: mod;
+}
+.hs-curso-mods li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: var(--s1);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gold);
+}
+.hs-curso-mods b {
+  font-size: 15.5px;
+}
+.hs-curso-mods p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.hs-curso-mods span {
+  flex: none;
+  font: 700 12px/1 var(--f-m);
+  color: var(--gold-t);
+  padding-top: 3px;
+  white-space: nowrap;
+}
+.hs-curso-duo {
+  grid-template-columns: 1fr;
+}
+.hs-curso-box {
+  background: var(--s1);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+.hs-curso-box .hs-curso-perks {
+  color: #d4d1c9;
+  font-size: 15px;
+  gap: 10px;
+}
+.hs-curso-aviso {
+  margin: 28px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted2);
+  max-width: 80ch;
+}
+
 @media (min-width: 641px) {
+  .hs-curso-duo {
+    grid-template-columns: 1fr 1fr;
+  }
+
   .hs-curso-hero {
     grid-template-columns: 1fr 1fr;
   }
