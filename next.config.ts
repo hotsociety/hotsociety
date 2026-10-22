@@ -18,7 +18,14 @@ const SEGURANCA = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: SEGURANCA }];
+    return [
+      { source: "/:path*", headers: SEGURANCA },
+      // Sala de vídeo da mentoria: libera câmera, microfone e compartilhar tela só nesta página (para o Daily).
+      {
+        source: "/dashboard/mentoria/sala/:path*",
+        headers: [{ key: "Permissions-Policy", value: "camera=*, microphone=*, display-capture=*, fullscreen=*, geolocation=(), payment=(), usb=()" }],
+      },
+    ];
   },
   /* config options here */
   experimental: {
