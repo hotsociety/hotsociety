@@ -2,7 +2,7 @@
 // Precisa na Vercel: CRON_SECRET (senha longa inventada), SUPABASE_SERVICE_ROLE_KEY e RESEND_API_KEY.
 import { connection } from "next/server";
 import { admin } from "../../../_lib/pagamentos";
-import { SITE_URL, enviarEmail, esc, moldura } from "../../../_lib/email";
+import { SITE_URL, enviarEmail, enviarLote, esc, moldura } from "../../../_lib/email";
 import { PRICE } from "../../../_lib/site";
 
 type Linha = { user_id: string; email: string; nome: string | null; tipo: "vence_7d" | "vence_1d" | "venceu" | "pix_expirado"; ref: string; plano: string | null; valido_ate: string | null };
@@ -34,8 +34,8 @@ function texto(l: Linha) {
 
 // Boas-vindas dos alunos que vieram da Astron (versão 1). Vai aos poucos por causa do limite diário do Resend.
 type Novo = { user_id: string; email: string; nome: string | null; valido_ate: string | null };
-// Desligado até BOAS_VINDAS_POR_DIA existir na Vercel (ex.: 50). O Resend grátis manda 100 e-mails por dia no total.
-const BOAS_VINDAS_POR_DIA = Math.min(Number(process.env.BOAS_VINDAS_POR_DIA) || 0, 80);
+// Desligado até BOAS_VINDAS_POR_DIA existir na Vercel. No Resend Pro dá para mandar todos de uma vez (lotes de 100).
+const BOAS_VINDAS_POR_DIA = Math.min(Number(process.env.BOAS_VINDAS_POR_DIA) || 0, 1000);
 
 // Dá tempo de enviar o lote de boas-vindas sem passar do limite do Resend (2 por segundo).
 export const maxDuration = 60;
@@ -81,17 +81,22 @@ export async function GET(req: Request) {
   }
   // Boas-vindas da importação da Astron (no máximo BOAS_VINDAS_POR_DIA por execução).
   let boasVindasEnviadas = 0;
-  const { data: novos, error: erroNovos } = BOAS_VINDAS_POR_DIA
-    ? await sb.rpc("hs_boas_vindas_pendentes", { p_limite: BOAS_VINDAS_POR_DIA })
-    : { data: [], error: null };
-  if (erroNovos) console.error("boas-vindas:", erroNovos.message);
-  for (const n of (novos ?? []) as Novo[]) {
-    const m = boasVindas(n);
-    const ok = await enviarEmail({ para: n.email, assunto: m.assunto, html: m.html, chave: `boas-vindas-${n.user_id}` });
-    if (!ok) break; // provável limite do dia: tenta de novo amanhã
-    await sb.from("importacao_astron").update({ boas_vindas_em: new Date().toISOString() }).eq("user_id", n.user_id);
-    boasVindasEnviadas++;
-    await new Promise((r) => setTimeout(r, 600)); // Resend: até 2 por segundo
+  for (let rodada = 0; BOAS_VINDAS_POR_DIA && boasVindasEnviadas < BOAS_VINDAS_POR_DIA && rodada < 10; rodada++) {
+    const { data: novos, error: erroNovos } = await sb.rpc("hs_boas_vindas_pendentes", { p_limite: Math.min(100, BOAS_VINDAS_POR_DIA - boasVindasEnviadas) });
+    if (erroNovos) {
+      console.error("boas-vindas:", erroNovos.message);
+      break;
+    }
+    const lote = (novos ?? []) as Novo[];
+    if (!lote.length) break;
+    const ok = await enviarLote(
+      lote.map((n) => ({ para: n.email, ...boasVindas(n) })),
+      `boas-vindas-${lote.map((n) => n.user_id.slice(0, 8)).join("")}`.slice(0, 250),
+    );
+    if (!ok) break; // provável limite do plano: tenta de novo no próximo envio
+    await sb.from("importacao_astron").update({ boas_vindas_em: new Date().toISOString() }).in("user_id", lote.map((n) => n.user_id));
+    boasVindasEnviadas += lote.length;
+    await new Promise((r) => setTimeout(r, 600));
   }
 
   return Response.json({ ok: true, enviados, boasVindasEnviadas });
