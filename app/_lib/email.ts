@@ -43,6 +43,34 @@ export async function enviarEmail(m: { para: string | string[]; assunto: string;
   return !!r?.ok;
 }
 
+// Até 100 e-mails numa chamada só (API de lote do Resend). Conta como 1 requisição no limite por segundo.
+export async function enviarLote(msgs: { para: string; assunto: string; html: string }[], chave?: string) {
+  const api = process.env.RESEND_API_KEY;
+  if (!api || !msgs.length) return false;
+  const r = await fetch("https://api.resend.com/emails/batch", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${api}`,
+      "content-type": "application/json",
+      ...(chave ? { "Idempotency-Key": chave.slice(0, 250) } : {}),
+    },
+    body: JSON.stringify(
+      msgs.slice(0, 100).map((m) => ({
+        from: process.env.EMAIL_REMETENTE || "HOT SOCIETY <nao-responda@hotsociety.com.br>",
+        to: [m.para],
+        subject: m.assunto,
+        html: m.html,
+      })),
+    ),
+    signal: AbortSignal.timeout(20000),
+  }).catch((e) => {
+    console.error("e-mail lote:", (e as Error).message);
+    return null;
+  });
+  if (r && !r.ok) console.error("e-mail lote:", r.status, await r.text().catch(() => ""));
+  return !!r?.ok;
+}
+
 // Cliente do Supabase "como o usuário": as regras do banco valem igual ao navegador.
 export function clienteDoUsuario(req: Request) {
   const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
