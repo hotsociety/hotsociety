@@ -33,7 +33,7 @@ function Login() {
   const destino = caminhoSeguro(params.get("callback"), planoValido ? `/assinar?plano=${planoValido}` : "/dashboard");
 
   const [modo, setModo] = useState<Modo>(params.get("esqueci") ? "esqueci" : planoValido ? "criar" : "entrar");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => (params.get("email") ?? "").trim().slice(0, 120));
   const [senha, setSenha] = useState("");
   const [verSenha, setVerSenha] = useState(false);
   const [aviso, setAviso] = useState<Aviso>(null);

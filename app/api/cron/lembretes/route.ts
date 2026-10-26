@@ -32,6 +32,31 @@ function texto(l: Linha) {
   }
 }
 
+// Boas-vindas dos alunos que vieram da Astron (versão 1). Vai aos poucos por causa do limite diário do Resend.
+type Novo = { user_id: string; email: string; nome: string | null; valido_ate: string | null };
+// Desligado até BOAS_VINDAS_POR_DIA existir na Vercel (ex.: 50). O Resend grátis manda 100 e-mails por dia no total.
+const BOAS_VINDAS_POR_DIA = Math.min(Number(process.env.BOAS_VINDAS_POR_DIA) || 0, 80);
+
+// Dá tempo de enviar o lote de boas-vindas sem passar do limite do Resend (2 por segundo).
+export const maxDuration = 60;
+
+function boasVindas(n: Novo) {
+  const nome = n.nome ? esc(n.nome.split(" ")[0]) : "";
+  const ate = n.valido_ate ? DATA.format(new Date(n.valido_ate)) : "";
+  const link = `${SITE_URL}/login?esqueci=1&email=${encodeURIComponent(n.email)}`;
+  return {
+    assunto: "A Hot Academy mudou de casa: crie sua senha e entre",
+    html: moldura(
+      "Sua nova área de membros chegou",
+      `<p>Olá${nome ? ", " + nome : ""}!</p>
+<p>A Hot Academy saiu da Astron e agora mora na <b>HOT SOCIETY</b>, nossa plataforma própria: aulas, comunidade com lives, ferramentas, CappuIA, missões e placas de conquista, tudo no mesmo lugar.</p>
+<p>Sua conta já está pronta com este e-mail (<b>${esc(n.email)}</b>) e você ganhou <b>30 dias de acesso cortesia</b>${ate ? `, até <b>${ate}</b>` : ""}.</p>
+<p><b>Para entrar pela primeira vez:</b> clique no botão abaixo, confirme seu e-mail e você recebe na hora um link para criar sua senha.</p>`,
+      { t: "Criar minha senha", href: link },
+    ),
+  };
+}
+
 export async function GET(req: Request) {
   await connection();
   const segredo = process.env.CRON_SECRET;
@@ -54,5 +79,20 @@ export async function GET(req: Request) {
     await sb.from("lembretes_enviados").insert({ user_id: l.user_id, tipo: l.tipo, ref: l.ref });
     enviados++;
   }
-  return Response.json({ ok: true, enviados });
+  // Boas-vindas da importação da Astron (no máximo BOAS_VINDAS_POR_DIA por execução).
+  let boasVindasEnviadas = 0;
+  const { data: novos, error: erroNovos } = BOAS_VINDAS_POR_DIA
+    ? await sb.rpc("hs_boas_vindas_pendentes", { p_limite: BOAS_VINDAS_POR_DIA })
+    : { data: [], error: null };
+  if (erroNovos) console.error("boas-vindas:", erroNovos.message);
+  for (const n of (novos ?? []) as Novo[]) {
+    const m = boasVindas(n);
+    const ok = await enviarEmail({ para: n.email, assunto: m.assunto, html: m.html, chave: `boas-vindas-${n.user_id}` });
+    if (!ok) break; // provável limite do dia: tenta de novo amanhã
+    await sb.from("importacao_astron").update({ boas_vindas_em: new Date().toISOString() }).eq("user_id", n.user_id);
+    boasVindasEnviadas++;
+    await new Promise((r) => setTimeout(r, 600)); // Resend: até 2 por segundo
+  }
+
+  return Response.json({ ok: true, enviados, boasVindasEnviadas });
 }
