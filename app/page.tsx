@@ -112,7 +112,7 @@ export default function Home() {
               <div>
                 <p className={s.eyebrow}>Hot Academy</p>
                 <h2 id="mod-title" className={s.h2}>
-                  5 módulos, <span className={s.gold}>do zero à escala.</span>
+                  9 módulos, <span className={s.gold}>do zero à gringa.</span>
                 </h2>
               </div>
               <p className={s.secLead}>Aulas curtas, missão no fim de cada módulo e a CappuIA para tirar dúvida.</p>

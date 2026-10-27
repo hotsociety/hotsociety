@@ -39,7 +39,7 @@ export function nivelDe(xp: number) {
 }
 
 // Módulo travado até o aluno chegar nesta escala da rota (índice do ROUTE).
-const LIBERA_EM: Record<string, number> = { escala: 1 };
+const LIBERA_EM: Record<string, number> = {};
 
 // Junta o conteúdo dos módulos com as aulas que o aluno já assistiu.
 export function modulosDoAluno(feitas: ReadonlySet<string>, stopAtual: number): Modulo[] {

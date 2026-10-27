@@ -87,7 +87,7 @@ export const ROUTE: readonly { code: string; country: string; goal: string; rewa
 ];
 
 export const FEATURES = [
-  { t: "Hot Academy", d: "5 módulos, do primeiro passo à escala, com aulas curtas e missões." },
+  { t: "Hot Academy", d: "85 aulas em 9 módulos, do primeiro passo à gringa, com missões." },
   { t: "Feed da Society", d: "Stories, posts, enquetes e canais para trocar ideia com quem está no mesmo jogo." },
   { t: "CappuIA (beta)", d: "Assistente para tirar dúvidas rápidas sobre as aulas. Em evolução." },
   { t: "HOTPHONE", d: "Seu celular dentro da plataforma: CappuIA, cofre de anotações e feed das aulas." },
@@ -98,11 +98,15 @@ export const FEATURES = [
 ] as const;
 
 export const MODULES = [
-  { n: "01", t: "Comece aqui", img: "/img/modulo-01.jpg", lessons: 4 },
-  { n: "02", t: "Criando sua modelo IA", img: "/img/modulo-02.jpg", lessons: 8 },
-  { n: "03", t: "Operação com modelo real", img: "/img/modulo-03.jpg", lessons: 7 },
-  { n: "04", t: "Tráfego e funil", img: "/img/modulo-04.jpg", lessons: 9 },
-  { n: "05", t: "Escala", img: "/img/modulo-05.jpg", lessons: 6 },
+  { n: "00", t: "Introdução", img: "/img/modulo-01.jpg", lessons: 4 },
+  { n: "01", t: "Prospectando modelos white", img: "/img/modulo-03.jpg", lessons: 9 },
+  { n: "02", t: "A doce arte do X1", img: "/img/modulo-04.jpg", lessons: 9 },
+  { n: "03", t: "Modelos de IA", img: "/img/modulo-02.jpg", lessons: 18 },
+  { n: "04", t: "Operacional do zero", img: "/img/modulo-04.jpg", lessons: 14 },
+  { n: "05", t: "Modelo white", img: "/img/modulo-03.jpg", lessons: 13 },
+  { n: "06", t: "Tráfego pago", img: "/img/modulo-04.jpg", lessons: 3 },
+  { n: "07", t: "Abrindo uma agência OFM", img: "/img/modulo-05.jpg", lessons: 4 },
+  { n: "08", t: "Hot na gringa", img: "/img/modulo-05.jpg", lessons: 11 },
 ] as const;
 
 export const FAQ = [
