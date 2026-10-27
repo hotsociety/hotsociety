@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { supabase } from "../../../_lib/supabase";
 import { useMembro } from "../MemberContext";
+import { useProgresso } from "../Progresso";
 import {
   CATEGORIAS,
   COFRE_INICIAL,
@@ -13,6 +14,7 @@ import {
   RESPOSTAS,
   RESPOSTA_PADRAO,
   SUGESTOES_IA,
+  travaDaCor,
   type Cor,
   type Nota,
 } from "./dados";
@@ -192,7 +194,11 @@ export default function HotPhone() {
     return () => window.removeEventListener(EVENTO, abrir);
   }, [S.done]);
 
-  const cor = corDe(S.color);
+  // Cor só vale se estiver liberada (Dourado pede o Chile; Dubai pede o resgate na loja).
+  const { perfil } = useProgresso();
+  const trava = (k: string) => travaDaCor(corDe(k), perfil.stopAtual, dubai);
+  const corAtiva = corDe(S.color).k === S.color && !trava(S.color) ? S.color : CORES[0].k;
+  const cor = corDe(corAtiva);
   const atualizar = (p: Partial<Estado>) => setS((s) => ({ ...s, ...p }));
 
   function salvarNoPerfil(done: boolean, k: string) {
@@ -217,7 +223,8 @@ export default function HotPhone() {
       {!S.done && (
         <Presente
           primeiro={nome}
-          cor={S.color}
+          cor={corAtiva}
+          trava={trava}
           saindo={saindo}
           onCor={(k) => atualizar({ color: k })}
           onFim={concluir}
@@ -227,8 +234,8 @@ export default function HotPhone() {
         <div className={h("hpdock")} style={varsCor(cor)}>
           {aberto ? (
             <Celular
-              S={S}
-              dubai={dubai}
+              S={{ ...S, color: corAtiva }}
+              trava={trava}
               nome={nome}
               atualizar={atualizar}
               onCor={(k) => {
@@ -295,12 +302,14 @@ const PASSOS = ["ticket", "gift", "cor", "abrir"] as const;
 function Presente({
   primeiro,
   cor,
+  trava,
   saindo,
   onCor,
   onFim,
 }: {
   primeiro: string;
   cor: string;
+  trava: (k: string) => string | null;
   saindo: boolean;
   onCor: (k: string) => void;
   onFim: () => void;
@@ -447,21 +456,7 @@ function Presente({
           <h3 className={h("stk")} style={{ fontSize: 24 }}>
             {c.n}
           </h3>
-          <div className={h("colors")} role="radiogroup" aria-label="Cores">
-            {CORES.filter((x) => !x.premio).map((x) => (
-              <button
-                key={x.k}
-                type="button"
-                role="radio"
-                aria-label={x.n}
-                aria-checked={x.k === cor}
-                aria-pressed={x.k === cor}
-                onClick={() => onCor(x.k)}
-              >
-                <i style={{ background: x.sw }} />
-              </button>
-            ))}
-          </div>
+          <SeletorCor cor={cor} trava={trava} onCor={onCor} centro />
           <button className={h("sbtn")} type="button" onClick={() => setFrente((f) => !f)}>
             ↻ {frente ? "Ver o verso" : "Ver a frente"}
           </button>
@@ -588,7 +583,7 @@ function Icone({ k, onClick, rotulo = true }: { k: keyof typeof ICONES; onClick:
 
 function Celular({
   S,
-  dubai,
+  trava,
   nome,
   atualizar,
   onCor,
@@ -596,7 +591,7 @@ function Celular({
   onFechar,
 }: {
   S: Estado;
-  dubai: boolean;
+  trava: (k: string) => string | null;
   nome: string;
   atualizar: (p: Partial<Estado>) => void;
   onCor: (k: string) => void;
@@ -714,7 +709,7 @@ function Celular({
               {app === "cfg" && (
                 <AppAjustes
                   cor={S.color}
-                  dubai={dubai}
+                  trava={trava}
                   onCor={(k) => (onCor(k), toast(corDe(k).n))}
                   onMinimizar={onFechar}
                   onRever={onRever}
@@ -1186,14 +1181,14 @@ function AppLives({ lembretes, onLembrar }: { lembretes: Record<string, boolean>
 /* ---------- Ajustes ---------- */
 function AppAjustes({
   cor,
-  dubai,
+  trava,
   onCor,
   onMinimizar,
   onRever,
   onZerar,
 }: {
   cor: string;
-  dubai: boolean;
+  trava: (k: string) => string | null;
   onCor: (k: string) => void;
   onMinimizar: () => void;
   onRever: () => void;
@@ -1205,12 +1200,8 @@ function AppAjustes({
       <p className={h("note")} style={{ marginBottom: 8 }}>
         Cor do HOTPHONE
       </p>
-      <div className={h("colors")} style={{ justifyContent: "flex-start", marginBottom: 14 }}>
-        {CORES.filter((c) => !c.premio || dubai).map((c) => (
-          <button key={c.k} type="button" aria-label={c.n} aria-pressed={c.k === cor} onClick={() => onCor(c.k)}>
-            <i style={{ background: c.sw }} />
-          </button>
-        ))}
+      <div style={{ marginBottom: 14 }}>
+        <SeletorCor cor={cor} trava={trava} onCor={onCor} />
       </div>
       <div style={{ display: "grid", gap: 8 }}>
         <button className={h("ob")} type="button" onClick={onMinimizar}>
@@ -1233,6 +1224,55 @@ function AppAjustes({
       </div>
       <p className={h("note")} style={{ marginTop: 12 }}>
         HOTPHONE by Cappu · celular virtual da plataforma HOT SOCIETY.
+      </p>
+    </div>
+  );
+}
+
+/* ---------- Seletor de cor (com cadeado nas cores que pedem meta) ---------- */
+function SeletorCor({ cor, trava, onCor, centro }: { cor: string; trava: (k: string) => string | null; onCor: (k: string) => void; centro?: boolean }) {
+  const [aviso, setAviso] = useState<{ n: string; t: string } | null>(null);
+  return (
+    <div>
+      <div className={h("colors")} role="radiogroup" aria-label="Cores" style={centro ? undefined : { justifyContent: "flex-start" }}>
+        {CORES.map((x) => {
+          const motivo = trava(x.k);
+          return (
+            <button
+              key={x.k}
+              type="button"
+              role="radio"
+              aria-label={motivo ? `${x.n} (trancada)` : x.n}
+              aria-checked={x.k === cor}
+              aria-pressed={x.k === cor}
+              aria-disabled={motivo ? true : undefined}
+              title={motivo ? `${x.n}: ${motivo}` : x.n}
+              onClick={() => {
+                if (motivo) return setAviso({ n: x.n, t: motivo });
+                setAviso(null);
+                onCor(x.k);
+              }}
+            >
+              <i style={{ background: x.sw }} />
+              {motivo && (
+                <span className={h("clk")} aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 11h12v10H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3" />
+                  </svg>
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      <p className={h("chint")} aria-live="polite" style={centro ? undefined : { textAlign: "left" }}>
+        {aviso ? (
+          <>
+            <b>{aviso.n}</b> · {aviso.t}
+          </>
+        ) : (
+          "\u00a0"
+        )}
       </p>
     </div>
   );
