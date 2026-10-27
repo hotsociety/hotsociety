@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { m } from "./proto";
 
 type Item = { id: number; t: string; xp: boolean };
@@ -59,7 +60,13 @@ export function Modal({
     return () => document.removeEventListener("keydown", kd);
   }, []);
 
-  return (
+  // Renderiza direto no <body>: dentro das telas (que entram com animação de transform) o "position: fixed"
+  // passava a contar a partir da tela e não da janela, e o topo do modal ficava cortado.
+  const [montado, setMontado] = useState(false);
+  useEffect(() => setMontado(true), []);
+  if (!montado) return null;
+
+  return createPortal(
     <div
       className={m("mx")}
       role="dialog"
@@ -77,6 +84,7 @@ export function Modal({
         <div className={m("bd")}>{children}</div>
         {foot && <div className={m("ft")}>{foot}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
