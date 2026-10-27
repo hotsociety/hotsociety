@@ -72,7 +72,14 @@ export default function Aulas() {
 
       {mods.map((m) => (
         <div key={m.slug} className="hs-pn-tw">
-          <table className="hs-pn-t" style={{ minWidth: 640 }}>
+          {/* Larguras fixas: as colunas ficam alinhadas entre os módulos */}
+          <table className="hs-pn-t" style={{ minWidth: 640, tableLayout: "fixed", width: "100%" }}>
+            <colgroup>
+              <col />
+              <col style={{ width: 150 }} />
+              <col style={{ width: 110 }} />
+              <col style={{ width: 110 }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>
@@ -80,7 +87,7 @@ export default function Aulas() {
                 </th>
                 <th>Vídeo</th>
                 <th>Duração</th>
-                <th>
+                <th style={{ textAlign: "right" }}>
                   <button type="button" className="hs-pn-btn hs-pn-btn-sm" onClick={() => setNova(m.slug)}>
                     + Aula
                   </button>
@@ -106,7 +113,7 @@ export default function Aulas() {
                     </td>
                     <td className="hs-pn-mono">{x?.duracao ?? "—"}</td>
                     <td>
-                      <div className="hs-pn-acts">
+                      <div className="hs-pn-acts" style={{ justifyContent: "flex-end" }}>
                         <button type="button" className="hs-pn-btn hs-pn-btn-sm" onClick={() => setEdit({ aula: a, mod: `${m.n} · ${m.t}`, extra: ehExtra.has(a.id) })}>
                           Editar
                         </button>
