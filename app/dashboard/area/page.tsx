@@ -104,7 +104,7 @@ export default function AreaDeMembros() {
           <p className={m("eb")} style={{ color: "var(--red-t)" }}>
             Continue de onde parou
           </p>
-          <h2 className={m("stack")}>
+          <h2 className={m("stack")} style={proxima.t.length > 28 ? { fontSize: proxima.t.length > 48 ? "clamp(24px,2.6vw,34px)" : "clamp(28px,3.2vw,44px)" } : undefined}>
             <span className={m("s")}>
               Módulo {andamento.n} · Aula {iProx + 1}
             </span>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useMembro } from "../_components/membros/MemberContext";
+import Contador from "../_components/membros/Contador";
 import Icon from "../_components/membros/Icon";
 import { supabase } from "../_lib/supabase";
 import { formatPreco, type Curso } from "../_lib/cursos";
@@ -107,22 +108,22 @@ export default function Inicio() {
       <div className={s.stats}>
         <div className={s.stat}>
           <Icon name="fire" />
-          <b>{p.streak}</b>
+          <b><Contador valor={p.streak} /></b>
           <small>dias seguidos</small>
         </div>
         <div className={s.stat}>
           <Icon name="medal" />
-          <b>{NUM.format(p.xp)}</b>
+          <b><Contador valor={p.xp} formato={(n) => NUM.format(n)} /></b>
           <small>XP · nível {p.nivel}</small>
         </div>
         <div className={s.stat}>
           <Icon name="coin" />
-          <b>{p.coins}</b>
+          <b><Contador valor={p.coins} formato={(n) => NUM.format(n)} /></b>
           <small>Cappu Coins</small>
         </div>
         <div className={s.stat}>
           <Icon name="plane" />
-          <b>{BRL.format(p.faturado)}</b>
+          <b><Contador valor={p.faturado} formato={(n) => BRL.format(n)} /></b>
           <small>faturado verificado</small>
         </div>
       </div>

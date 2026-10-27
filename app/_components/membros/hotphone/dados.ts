@@ -42,11 +42,11 @@ export const RESPOSTA_PADRAO = "Me fala em qual módulo você está que eu te mo
 export const SUGESTOES_IA = ["Monta minha primeira semana", "Como crio a persona?", "Contrato com modelo real", "Orgânico ou pago?"];
 
 export const POSTS_HP: { img: string; sub: string; t: string; ir: string; aula?: boolean }[] = [
-  { img: "/img/modulo-02.jpg", sub: "Aula nova · Módulo 02", t: "Criando sua modelo IA: o rosto do zero, sem rosto real.", ir: "/dashboard/aulas/modelos-ia", aula: true },
+  { img: "/img/modulo-02.jpg", sub: "Aula · Módulo 03", t: "Modelos de IA: crie sua modelo do absoluto zero.", ir: "/dashboard/aulas/modelos-ia", aula: true },
   { img: "/img/feed/resultado.jpg", sub: "Resultado verificado", t: "Mais um aluno carimbou o Chile. Próxima escala: Lisboa.", ir: "/dashboard/feed" },
-  { img: "/img/modulo-03.jpg", sub: "Aula · Módulo 03", t: "Contrato e consentimento antes de qualquer foto.", ir: "/dashboard/aulas/modelo-white", aula: true },
+  { img: "/img/modulo-03.jpg", sub: "Aula · Módulo 05", t: "Modelo white: contratos e repasses antes de qualquer foto.", ir: "/dashboard/aulas/modelo-white", aula: true },
   { img: "/img/placas.jpg", sub: "Prêmios", t: "Cada meta da rota vira placa física na sua casa.", ir: "/dashboard/jornada" },
-  { img: "/img/modulo-04.jpg", sub: "Aula · Módulo 04", t: "Orgânico que vende: 3 ganchos que seguram o scroll.", ir: "/dashboard/aulas/trafego-pago", aula: true },
+  { img: "/img/modulo-04.jpg", sub: "Aula · Módulo 06", t: "Tráfego pago para o nicho HOT, do zero.", ir: "/dashboard/aulas/trafego-pago", aula: true },
   { img: "/img/hero-neve.jpg", sub: "Recado do Cappu", t: "Não existe nobreza na pobreza. Bora pra cima.", ir: "/dashboard/feed" },
 ];
 

@@ -1,0 +1,206 @@
+/* HOT SOCIETY · polimento da área de membros.
+   Camada por cima de shell.css / proto.css / ui.css: mais espaço em telas grandes,
+   entrada suave das telas, luz que segue o mouse nos cards, hover e foco consistentes.
+   Nada aqui muda função: só aparência e movimento (e respeita "reduzir movimento"). */
+
+/* ---------- espaço em telas grandes ---------- */
+.hs-shell-main {
+  max-width: 1360px;
+}
+
+/* ---------- entrada das telas ---------- */
+@keyframes hs-sobe {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hs-brilho {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hs-shell-main > * {
+    animation: hs-sobe 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .hs-m-view > *,
+  .hs-shell-main > section > *,
+  .hs-shell-main > div > section > * {
+    animation: hs-sobe 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .hs-m-view > *:nth-child(2),
+  .hs-shell-main > section > *:nth-child(2) {
+    animation-delay: 0.05s;
+  }
+  .hs-m-view > *:nth-child(3),
+  .hs-shell-main > section > *:nth-child(3) {
+    animation-delay: 0.1s;
+  }
+  .hs-m-view > *:nth-child(4),
+  .hs-shell-main > section > *:nth-child(4) {
+    animation-delay: 0.15s;
+  }
+  .hs-m-view > *:nth-child(5),
+  .hs-shell-main > section > *:nth-child(5) {
+    animation-delay: 0.2s;
+  }
+  .hs-m-view > *:nth-child(n + 6),
+  .hs-shell-main > section > *:nth-child(n + 6) {
+    animation-delay: 0.25s;
+  }
+
+  /* barras de progresso enchem com animação e têm um brilho passando */
+  .hs-shell-app .hs-m-prog i,
+  .hs-shell-app .hs-inicio-route i,
+  [role="progressbar"] > * {
+    transition: width 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .hs-shell-app .hs-m-prog i {
+    background-image: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.35) 50%, transparent 100%), linear-gradient(90deg, #9c7a33, #f1dc9a);
+    background-size: 200% 100%, 100% 100%;
+    animation: hs-brilho 2.8s linear infinite;
+  }
+}
+
+/* ---------- cliques e foco ---------- */
+.hs-shell-main :is(a, button, [role="button"]) {
+  -webkit-tap-highlight-color: transparent;
+}
+.hs-shell-main :is(a, button):not(:disabled):not([aria-disabled="true"]) {
+  transition:
+    transform 0.16s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease,
+    opacity 0.2s ease;
+}
+.hs-shell-main :is(a, button):not(:disabled):not([aria-disabled="true"]):active {
+  transform: scale(0.98);
+}
+.hs-shell-app :is(a, button, input, textarea, select, summary):focus-visible {
+  outline: 2px solid #d9b566;
+  outline-offset: 2px;
+}
+
+/* botões dourados ganham brilho no hover */
+.hs-shell-app .hs-m-btn-p:not(:disabled):hover,
+.hs-shell-main .bg-\[\#c9a24e\]:not(:disabled):hover {
+  box-shadow: 0 8px 24px -10px rgba(201, 162, 78, 0.65);
+}
+
+/* ---------- cards: luz que segue o mouse + borda acende ---------- */
+.hs-shell-app .hs-m-card,
+.hs-shell-app .hs-inicio-stat,
+.hs-shell-app .hs-inicio-mission,
+.hs-shell-app .hs-inicio-continue,
+.hs-shell-app .hs-inicio-course {
+  position: relative;
+  isolation: isolate;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.2s ease;
+}
+.hs-shell-app .hs-m-card::after,
+.hs-shell-app .hs-inicio-stat::after,
+.hs-shell-app .hs-inicio-continue::after,
+.hs-shell-app .hs-inicio-course::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(380px circle at var(--hs-mx, 50%) var(--hs-my, 0%), rgba(217, 181, 102, 0.09), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+@media (hover: hover) {
+  .hs-shell-app .hs-m-card:hover::after,
+  .hs-shell-app .hs-inicio-stat:hover::after,
+  .hs-shell-app .hs-inicio-continue:hover::after,
+  .hs-shell-app .hs-inicio-course:hover::after {
+    opacity: 1;
+  }
+  .hs-shell-app .hs-m-card:hover,
+  .hs-shell-app .hs-inicio-stat:hover,
+  .hs-shell-app .hs-inicio-continue:hover,
+  .hs-shell-app .hs-inicio-course:hover {
+    border-color: rgba(201, 162, 78, 0.35);
+  }
+  .hs-shell-app .hs-inicio-stat:hover,
+  .hs-shell-app .hs-inicio-continue:hover,
+  .hs-shell-app .hs-inicio-course:hover,
+  .hs-shell-app a.hs-m-card:hover,
+  .hs-shell-app button.hs-m-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px -22px rgba(0, 0, 0, 0.9);
+  }
+
+  /* pôsteres de módulo e capas: zoom suave da imagem */
+  .hs-shell-app .hs-m-mod,
+  .hs-shell-app .hs-m-am-c {
+    transition:
+      transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1),
+      box-shadow 0.25s ease,
+      border-color 0.25s ease;
+  }
+  .hs-shell-app .hs-m-mod img,
+  .hs-shell-app .hs-m-am-c img {
+    transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1), filter 0.4s ease;
+  }
+  .hs-shell-app .hs-m-mod:not(.hs-m-lock):hover,
+  .hs-shell-app .hs-m-am-c:not(.hs-m-lock):hover {
+    transform: translateY(-4px);
+    box-shadow: 0 22px 40px -24px rgba(201, 162, 78, 0.45);
+  }
+  .hs-shell-app .hs-m-mod:not(.hs-m-lock):hover img,
+  .hs-shell-app .hs-m-am-c:not(.hs-m-lock):hover img {
+    transform: scale(1.06);
+  }
+}
+
+/* números grandes com algarismos de mesma largura (não "pulam" na contagem) */
+.hs-shell-app .hs-inicio-stat b,
+.hs-shell-app .hs-m-chip i {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- barras de rolagem discretas ---------- */
+.hs-shell-app * {
+  scrollbar-width: thin;
+  scrollbar-color: #3f3f46 transparent;
+}
+.hs-shell-app *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.hs-shell-app *::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 99px;
+}
+.hs-shell-app *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------- carregando (esqueleto) ---------- */
+.hs-esq {
+  background: linear-gradient(90deg, #1a1a1d 0%, #26262b 50%, #1a1a1d 100%);
+  background-size: 200% 100%;
+  border-radius: 10px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hs-esq {
+    animation: hs-brilho 1.4s linear infinite;
+  }
+}
