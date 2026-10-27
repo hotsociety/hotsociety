@@ -35,6 +35,14 @@ const PATHS = {
   affiliate: "M9 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM3 20c.8-3.5 3-5.5 6-5.5s5.2 2 6 5.5M17 8v6M14 11h6",
   shield: "M12 3 4 6v6c0 4.5 3.3 8 8 9 4.7-1 8-4.5 8-9V6zM9 12l2 2 4-4",
   mentor: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c1-4 4-6 8-6s7 2 8 6",
+  bookmark: "M6 3h12v18l-6-4.5L6 21z",
+  note: "M5 3h10l4 4v14H5zM15 3v4h4M8 11h8M8 15h8M8 19h5",
+  up: "M12 19V5M6 11l6-6 6 6",
+  reply: "M9 7 4 12l5 5M4 12h10a6 6 0 0 1 6 6v1",
+  trash: "M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13",
+  link: "M14 4h6v6M20 4l-9 9M18 14v6H4V6h6",
+  chev: "M6 9l6 6 6-6",
+  next: "M9 5l7 7-7 7",
 } as const;
 
 export type IconName = keyof typeof PATHS;

@@ -158,7 +158,7 @@ function Editar({ aula, mod, atual, onClose, onFeito }: { aula: Aula; mod: strin
         </label>
         <label className="hs-pn-fld">
           Material de apoio (texto, links, prompts)
-          <textarea className="hs-pn-in" style={{ minHeight: 110, padding: 12, lineHeight: 1.45 }} value={material} onChange={(e) => setMaterial(e.target.value)} maxLength={8000} />
+          <textarea className="hs-pn-in" style={{ minHeight: 110, padding: 12, lineHeight: 1.45 }} value={material} onChange={(e) => setMaterial(e.target.value)} maxLength={8000} placeholder={"Uma linha por item. Link: Nome | https://…\nEx.: Mapa mental | https://miro.com/…"} />
         </label>
         {erro && <p className="hs-pn-erro">{erro}</p>}
         <div className="hs-pn-bar">
