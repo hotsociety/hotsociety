@@ -7,7 +7,7 @@
 .bx-caixa.grande{--w:clamp(220px,23vw,330px);--t:30px}
 .bx-caixa .f{position:absolute;left:0;top:0;backface-visibility:hidden}
 .bx-caixa .bx-fr{width:var(--w);height:var(--h);transform:translateZ(calc(var(--t) / 2));border-radius:10px;box-sizing:border-box;
-  display:grid;grid-template-rows:auto auto auto auto 1fr auto;gap:5px;padding:14% 9% 9%;text-align:left;
+  display:grid;grid-template-rows:auto auto auto auto minmax(0,1fr) auto;gap:5px;padding:13% 9% 9%;overflow:visible;text-align:left;
   background:
     radial-gradient(90% 55% at 100% 0%,color-mix(in oklab,var(--tomc) 16%,transparent),transparent 70%),
     repeating-linear-gradient(135deg,rgba(255,255,255,.02) 0 2px,transparent 2px 9px),
@@ -21,11 +21,11 @@
 .bx-caixa .bx-to{transform:rotateX(90deg) translateZ(calc(var(--h) / 2 - 1px))}
 .bx-caixa .bx-ba{transform:rotateX(-90deg) translateZ(calc(var(--h) / 2 - 1px));background:#121215}
 .bx-caixa .selo{font:700 9.5px/1 var(--f-m,monospace);letter-spacing:.16em;text-transform:uppercase;color:#9a99a4}
-.bx-caixa .num{font:900 calc(var(--w) * .34)/.8 var(--f-d);font-stretch:125%;color:transparent;margin-top:6px;
+.bx-caixa .num{font:900 calc(var(--w) * .3)/.8 var(--f-d);font-stretch:125%;color:transparent;margin-top:6px;
   -webkit-text-stroke:1.5px color-mix(in oklab,var(--tomc) 85%,#fff);filter:drop-shadow(0 0 8px color-mix(in oklab,var(--tomc) 55%,transparent))}
-.bx-caixa .tt{font:900 calc(var(--w) * .1)/.95 var(--f-d);font-stretch:118%;text-transform:uppercase;color:#f3f3f7;margin-top:4px}
+.bx-caixa .tt{font:900 calc(var(--w) * .092)/.98 var(--f-d);font-stretch:118%;text-transform:uppercase;color:#f3f3f7;margin-top:4px}
 .bx-caixa .sub{font:700 calc(var(--w) * .05)/1 var(--f-m,monospace);letter-spacing:.14em;text-transform:uppercase;color:var(--tomc)}
-.bx-caixa .desc{align-self:end;font:500 calc(var(--w) * .058)/1.42 var(--f-t);color:#a7a6b0;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.bx-caixa .desc{align-self:end;min-height:0;max-height:100%;font:500 calc(var(--w) * .056)/1.4 var(--f-t);color:#a7a6b0;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;margin-top:4px}
 .bx-caixa .st{justify-self:start;margin-top:6px;font:700 calc(var(--w) * .048)/1 var(--f-m,monospace);letter-spacing:.12em;text-transform:uppercase;padding:.6em .9em;border-radius:999px;
   color:var(--tomc);border:1px solid color-mix(in oklab,var(--tomc) 55%,transparent);background:color-mix(in oklab,var(--tomc) 10%,transparent)}
 .bx-caixa.preso .bx-fr>*:not(.hs-ct):not(.hs-vt-carimbo){opacity:.5}
