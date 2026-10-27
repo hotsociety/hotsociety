@@ -29,7 +29,11 @@ export default function Esteira({
   const medir = useCallback(() => {
     const el = trilho.current;
     if (!el) return;
-    setPontas({ esq: el.scrollLeft > 2, dir: el.scrollLeft + el.clientWidth < el.scrollWidth - 2 });
+    const esq = el.scrollLeft > 2;
+    const dir = el.scrollLeft + el.clientWidth < el.scrollWidth - 2;
+    // Só atualiza se mudou: um objeto novo a cada medida re-renderizava sem parar
+    // (o efeito abaixo mede a cada render) e travava a navegação para outras abas.
+    setPontas((p) => (p.esq === esq && p.dir === dir ? p : { esq, dir }));
   }, []);
 
   const deslizar = useCallback(
