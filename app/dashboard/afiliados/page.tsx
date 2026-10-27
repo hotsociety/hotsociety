@@ -1,21 +1,38 @@
 "use client";
 
-import AvisoExemplo from "../../_components/membros/AvisoExemplo";
 import "../../_components/membros/painel.css";
-import { useMemo, useState } from "react";
-import { useMembro } from "../../_components/membros/MemberContext";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal, toast } from "../../_components/membros/Toast";
 import { m } from "../../_components/membros/proto";
-import {
-  AFILIADO_DEMO,
-  CLIQUES_ORIGEM,
-  COMISSAO_MES,
-  IMG,
-  NIVEIS_AFILIADO,
-  VENDAS_AFILIADO,
-  type VendaAfiliado,
-} from "../../_lib/demo";
+import { IMG, NIVEIS_AFILIADO } from "../../_lib/demo";
+import { qrSvgPath } from "../../_lib/qrcode";
 import { PRICE } from "../../_lib/site";
+import { supabase } from "../../_lib/supabase";
+
+type VendaAfiliado = { data: string; cliente: string; plano: string; tipo: "primeira" | "renovacao"; status: "pago" | "garantia" | "reemb"; valor: number };
+type Dados = {
+  codigo: string;
+  nivel: { nivel: number; p1: number; pr: number; vendas: number };
+  cliques: number;
+  origens: Record<"ig" | "wa" | "tt" | "yt" | "direto", number>;
+  cadastros: number;
+  vendas: number;
+  ativos: number;
+  disponivel: number;
+  em_garantia: number;
+  recorrente: number;
+  saque_pendente: boolean;
+  meses: number[];
+  vendas_lista: VendaAfiliado[];
+};
+const ORIGENS: [keyof Dados["origens"], string][] = [
+  ["ig", "Instagram"],
+  ["wa", "WhatsApp"],
+  ["tt", "TikTok"],
+  ["yt", "YouTube"],
+  ["direto", "Link direto"],
+];
+const DATA = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit" });
 
 const MES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const brl = (v: number) => "R$ " + v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -54,27 +71,48 @@ const Qr = () => (
 );
 
 export default function Afiliados() {
-  const { nome } = useMembro();
-  const [demo, setDemo] = useState(true);
-  const [slug, setSlug] = useState(nome.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 24) || "seulink");
+  const [d, setD] = useState<Dados | null>(null);
+  const [erro, setErro] = useState(false);
+  const [slug, setSlug] = useState("");
+  const [salvandoSlug, setSalvandoSlug] = useState(false);
   const [origem, setOrigem] = useState("");
   const [meses, setMeses] = useState(6);
   const [filtro, setFiltro] = useState<"all" | VendaAfiliado["status"]>("all");
   const [modal, setModal] = useState<null | "saque" | "qr">(null);
 
-  const nivel = demo ? AFILIADO_DEMO.nivel : 0;
+  const carregar = useCallback(() => {
+    supabase.rpc("meu_afiliado").then(({ data, error }) => {
+      if (error) return setErro(true);
+      const x = data as Dados;
+      setD(x);
+      setSlug(x.codigo);
+    });
+  }, []);
+  useEffect(carregar, [carregar]);
+
+  const nivel = d?.nivel.nivel ?? 0;
   const T = NIVEIS_AFILIADO[nivel];
   const N = NIVEIS_AFILIADO[nivel + 1];
-  const S = demo
-    ? AFILIADO_DEMO
-    : { disponivel: 0, proximo: "—", cliques: 0, cadastros: 0, vendas: 0, ativos: 0, recorrente: 0, nivel: 0 };
+  const S = d ?? { disponivel: 0, cliques: 0, cadastros: 0, vendas: 0, ativos: 0, recorrente: 0, em_garantia: 0, saque_pendente: false };
+  const vendas = d?.vendas_lista ?? [];
+  const emGarantia = d?.em_garantia ?? 0;
+  const codigo = d?.codigo ?? "…";
+  const link = `hotsociety.com.br/r/${codigo}${origem ? `?o=${origem}` : ""}`;
+  const proximo = d?.saque_pendente ? "Em análise" : "Ao pedir";
 
-  // comissão de cada venda pelo preço atual dos planos e pela taxa do nível
-  const comissao = (v: VendaAfiliado) =>
-    v.status === "reemb" ? 0 : ((v.plano === "Anual" ? PRICE.anual : PRICE.mensal) * (v.tipo === "1ª venda" ? T.p1 : T.pr)) / 100;
-  const vendas = demo ? VENDAS_AFILIADO : [];
-  const emGarantia = vendas.filter((v) => v.status === "garantia").reduce((a, v) => a + comissao(v), 0);
-  const link = `hotsociety.com.br/r/${slug || "seulink"}${origem ? `?o=${origem}` : ""}`;
+  async function salvarSlug() {
+    if (!d || slug === d.codigo) return;
+    if (!/^[a-z0-9-]{3,24}$/.test(slug)) return toast("Use de 3 a 24 letras, números ou hífen");
+    setSalvandoSlug(true);
+    const { data, error } = await supabase.rpc("mudar_codigo_afiliado", { p_codigo: slug });
+    setSalvandoSlug(false);
+    if (error) {
+      setSlug(d.codigo);
+      return toast(/uso|reservado|letras/.test(error.message) ? error.message.charAt(0).toUpperCase() + error.message.slice(1) : "Não deu para trocar o link");
+    }
+    setD({ ...d, codigo: data as string });
+    toast("Link atualizado. O link antigo parou de funcionar.");
+  }
 
   const KIT: [string, string, string, string][] = [
     [IMG.hero, "Story 1", "Embarque no zero.", `Eu tava travado no digital até entrar na HOT SOCIETY. Aula, ferramenta, comunidade e a CappuIA tirando dúvida 24h.\n\nSe quiser conhecer, o link tá aqui: ${link}`],
@@ -84,18 +122,19 @@ export default function Afiliados() {
 
   return (
     <section className={m("view")} aria-label="Afiliados">
-      <AvisoExemplo>Programa em breve. Vendas, cliques e comissões abaixo são simulações, não valores reais.</AvisoExemplo>
       <div className={m("top")}>
         <div>
           <h1>Portal do Afiliado</h1>
           <p className={m("sub")}>Indique a Society e ganhe na primeira venda e em toda renovação.</p>
         </div>
-        <div className={m("chips")}>
-          <label className={m("af-sw")}>
-            <input type="checkbox" checked={demo} onChange={(e) => setDemo(e.target.checked)} /> <span>Dados de exemplo</span>
-          </label>
-        </div>
       </div>
+      {erro && (
+        <div className={m("card")}>
+          <p className={m("sub")} style={{ margin: 0 }}>
+            Não deu para carregar seus dados de afiliado agora. Atualize a página em instantes.
+          </p>
+        </div>
+      )}
 
       <div className={m("af-top")}>
         <div className={m("af-bal")}>
@@ -109,8 +148,8 @@ export default function Afiliados() {
             <button
               className={m("btn btn-p")}
               type="button"
-              disabled={S.disponivel < 50}
-              title={S.disponivel < 50 ? "Saque mínimo de R$ 50" : undefined}
+              disabled={S.disponivel < 50 || S.saque_pendente}
+              title={S.saque_pendente ? "Você já tem um saque em análise" : S.disponivel < 50 ? "Saque mínimo de R$ 50" : undefined}
               onClick={() => setModal("saque")}
             >
               Sacar via Pix
@@ -126,8 +165,8 @@ export default function Afiliados() {
               <b>{brl(S.recorrente)}</b>
             </div>
             <div>
-              <small>Próximo pagamento</small>
-              <b>{S.proximo}</b>
+              <small>Saque</small>
+              <b>{proximo}</b>
             </div>
           </div>
           {S.disponivel < 50 && (
@@ -178,7 +217,10 @@ export default function Afiliados() {
               value={slug}
               maxLength={24}
               aria-label="Personalizar link"
+              disabled={!d || salvandoSlug}
               onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 24))}
+              onBlur={salvarSlug}
+              onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
             />
           </div>
         </div>
@@ -229,11 +271,11 @@ export default function Afiliados() {
       <div className={m("af-kpis")}>
         {(
           [
-            ["Cliques", S.cliques.toLocaleString("pt-BR"), demo ? "+18% vs mês passado" : "—", true],
-            ["Cadastros", String(S.cadastros), demo ? "chegaram ao checkout" : "—", false],
-            ["Vendas", String(S.vendas), demo ? "+6 este mês" : "—", true],
+            ["Cliques", S.cliques.toLocaleString("pt-BR"), "1 por pessoa por dia", false],
+            ["Cadastros", String(S.cadastros), "entraram pelo seu link", false],
+            ["Vendas", String(S.vendas), "primeiras vendas", false],
             ["Conversão", (S.cliques ? (S.vendas / S.cliques) * 100 : 0).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%", "clique → venda", false],
-            ["Assinantes ativos", String(S.ativos), demo ? "pagando renovação" : "—", false],
+            ["Assinantes ativos", String(S.ativos), "pagando hoje", false],
           ] as [string, string, string, boolean][]
         ).map(([t, v, e, up]) => (
           <div key={t} className={m("af-k")}>
@@ -256,7 +298,7 @@ export default function Afiliados() {
               ))}
             </div>
           </div>
-          <Barras meses={meses} dados={demo ? COMISSAO_MES.slice(-meses) : []} />
+          <Barras meses={meses} dados={d && d.meses.some((v) => v > 0) ? d.meses.slice(-meses).map(Number) : []} />
         </div>
         <div className={m("card")}>
           <h2>Você ganha</h2>
@@ -309,7 +351,7 @@ export default function Afiliados() {
                 <b>{v.toLocaleString("pt-BR")}</b>
               </div>
             ))}
-            {demo ? (
+            {S.cliques > 0 && S.cadastros > 0 ? (
               <div className={m("cv")}>
                 {((S.cadastros / S.cliques) * 100).toFixed(1).replace(".", ",")}% dos cliques viram cadastro ·{" "}
                 {((S.vendas / S.cadastros) * 100).toFixed(1).replace(".", ",")}% dos cadastros compram
@@ -324,8 +366,9 @@ export default function Afiliados() {
         <div className={m("card")}>
           <h2>Cliques por origem</h2>
           <div className={m("af-orig")}>
-            {CLIQUES_ORIGEM.map(([o, n]) => {
-              const v = demo ? n : 0;
+            {ORIGENS.map(([k, o]) => {
+              const v = d?.origens[k] ?? 0;
+              const max = Math.max(1, ...ORIGENS.map(([x]) => d?.origens[x] ?? 0));
               return (
                 <div key={o} className={m("o")}>
                   <div className={m("split")}>
@@ -333,7 +376,7 @@ export default function Afiliados() {
                     <b>{v.toLocaleString("pt-BR")}</b>
                   </div>
                   <div className={m("prog")}>
-                    <i style={{ width: `${(v / CLIQUES_ORIGEM[0][1]) * 100}%` }} />
+                    <i style={{ width: `${(v / max) * 100}%` }} />
                   </div>
                 </div>
               );
@@ -378,21 +421,19 @@ export default function Afiliados() {
                 .map((v) => (
                   <tr key={v.data + v.cliente}>
                     <td className={m("mono")} style={{ fontSize: 12 }}>
-                      {v.data}
+                      {DATA.format(new Date(v.data))}
                     </td>
                     <td>{v.cliente}</td>
-                    <td>{v.plano}</td>
-                    <td style={{ color: "var(--muted)" }}>{v.tipo}</td>
+                    <td>{v.plano === "anual" ? "Anual" : "Mensal"}</td>
+                    <td style={{ color: "var(--muted)" }}>{v.tipo === "primeira" ? "1ª venda" : "Renovação"}</td>
                     <td>
                       <span className={m("stp " + v.status)}>{STATUS[v.status]}</span>
                     </td>
                     <td style={{ textAlign: "right", fontWeight: 700 }}>
                       {v.status === "reemb" ? (
-                        <span style={{ color: "var(--muted2)", textDecoration: "line-through" }}>
-                          {brl(((v.plano === "Anual" ? PRICE.anual : PRICE.mensal) * T.p1) / 100)}
-                        </span>
+                        <span style={{ color: "var(--muted2)", textDecoration: "line-through" }}>{brl(Number(v.valor))}</span>
                       ) : (
-                        brl(comissao(v))
+                        brl(Number(v.valor))
                       )}
                     </td>
                   </tr>
@@ -446,16 +487,24 @@ export default function Afiliados() {
         </ul>
       </div>
 
-      {modal === "saque" && <Saque valor={S.disponivel} onClose={() => setModal(null)} />}
+      {modal === "saque" && (
+        <Saque
+          valor={Number(S.disponivel)}
+          onClose={() => setModal(null)}
+          onFeito={() => {
+            carregar();
+          }}
+        />
+      )}
       {modal === "qr" && (
         <Modal title="QR code do seu link" onClose={() => setModal(null)}>
           <div className={m("qrbox")}>
-            <QrFake />
+            <QrLink texto={`https://${link}`} />
             <span className={m("mono")} style={{ fontSize: 12, color: "var(--muted)" }}>
               {link}
             </span>
-            <p className={m("demo")} style={{ margin: 0 }}>
-              Na versão final o QR é gerado com o seu link real.
+            <p className={m("sub")} style={{ margin: 0, fontSize: 13 }}>
+              Tire um print e use em stories, flyers ou no seu perfil.
             </p>
           </div>
         </Modal>
@@ -487,7 +536,7 @@ function Barras({ meses, dados }: { meses: number; dados: number[] }) {
       </div>
     );
 
-  const topo = Math.ceil(Math.max(...dados) / 1000) * 1000;
+  const topo = Math.max(100, Math.ceil(Math.max(...dados) / 100) * 100);
   const ticks = [0, topo / 2, topo];
   const pos = (t: number) => `calc(${t / topo} * (100% - 22px) + 22px)`;
 
@@ -530,7 +579,7 @@ function Barras({ meses, dados }: { meses: number; dados: number[] }) {
                   <div className={m("tip")} style={{ left: "50%", bottom: `${h}%`, transform: "translate(-50%,-14px)" }}>
                     <b>{brl(v)}</b>
                     {rotulos[i]}
-                    {i > 0 && ` · ${v >= dados[i - 1] ? "+" : ""}${Math.round(((v - dados[i - 1]) / dados[i - 1]) * 100)}% vs mês anterior`}
+                    {i > 0 && dados[i - 1] > 0 && ` · ${v >= dados[i - 1] ? "+" : ""}${Math.round(((v - dados[i - 1]) / dados[i - 1]) * 100)}% vs mês anterior`}
                   </div>
                 )}
               </div>
@@ -542,9 +591,21 @@ function Barras({ meses, dados }: { meses: number; dados: number[] }) {
   );
 }
 
-function Saque({ valor, onClose }: { valor: number; onClose: () => void }) {
+function Saque({ valor, onClose, onFeito }: { valor: number; onClose: () => void; onFeito: () => void }) {
   const [chave, setChave] = useState("");
   const [ok, setOk] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+
+  async function pedir() {
+    if (chave.trim().length < 5) return toast("Informe uma chave Pix válida");
+    setEnviando(true);
+    const { error } = await supabase.rpc("pedir_saque_afiliado", { p_valor: valor, p_chave: chave.trim() });
+    setEnviando(false);
+    if (error) return toast(/mínimo|insuficiente|análise/.test(error.message) ? error.message.charAt(0).toUpperCase() + error.message.slice(1) : "Não deu para pedir o saque");
+    setOk(true);
+    onFeito();
+  }
+
   return (
     <Modal
       title="Sacar via Pix"
@@ -557,12 +618,8 @@ function Saque({ valor, onClose }: { valor: number; onClose: () => void }) {
               Fechar
             </button>
           ) : (
-            <button
-              className={m("btn btn-p")}
-              type="button"
-              onClick={() => (chave.trim().length < 5 ? toast("Informe uma chave Pix válida") : setOk(true))}
-            >
-              Confirmar saque
+            <button className={m("btn btn-p")} type="button" disabled={enviando} onClick={pedir}>
+              {enviando ? "Enviando…" : "Confirmar saque"}
             </button>
           )}
         </>
@@ -585,11 +642,12 @@ function Saque({ valor, onClose }: { valor: number; onClose: () => void }) {
             <b style={{ font: "900 34px/1 var(--f-d)" }}>{brl(valor)}</b>
           </div>
           <label style={{ display: "grid", gap: 6 }}>
-            <span style={{ font: "600 13px/1 var(--f-t)" }}>Chave Pix (CPF, e-mail ou celular)</span>
+            <span style={{ font: "600 13px/1 var(--f-t)" }}>Chave Pix (CPF, e-mail, celular ou aleatória)</span>
             <input
               value={chave}
               onChange={(e) => setChave(e.target.value)}
               placeholder="sua chave Pix"
+              maxLength={120}
               style={{
                 minHeight: 46,
                 borderRadius: 8,
@@ -601,8 +659,8 @@ function Saque({ valor, onClose }: { valor: number; onClose: () => void }) {
               }}
             />
           </label>
-          <p className={m("demo")} style={{ margin: 0 }}>
-            Pagamento em até 2 dias úteis na chave informada. Nesta versão nada é transferido.
+          <p className={m("sub")} style={{ margin: 0, fontSize: 13 }}>
+            O valor todo disponível vai para análise e é pago em até 2 dias úteis nessa chave. A chave precisa estar no seu nome.
           </p>
         </>
       )}
@@ -610,28 +668,12 @@ function Saque({ valor, onClose }: { valor: number; onClose: () => void }) {
   );
 }
 
-function QrFake() {
-  const celulas = useMemo(() => {
-    const out: boolean[] = [];
-    let seed = 23;
-    for (let i = 0; i < 625; i++) {
-      const r = i % 25;
-      const c = (i / 25) | 0;
-      seed = (seed * 9301 + 49297) % 233280;
-      const canto = (x: number, y: number) => r >= x && r < x + 7 && c >= y && c < y + 7;
-      if (canto(0, 0) || canto(18, 0) || canto(0, 18)) {
-        const x = r < 7 ? r : r - 18;
-        const y = c < 7 ? c : c - 18;
-        out.push(x === 0 || x === 6 || y === 0 || y === 6 || (x >= 2 && x <= 4 && y >= 2 && y <= 4));
-      } else out.push(seed % 2 === 1);
-    }
-    return out;
-  }, []);
+function QrLink({ texto }: { texto: string }) {
+  const qr = useMemo(() => qrSvgPath(texto), [texto]);
   return (
-    <div className={m("q")} aria-label="QR code de exemplo">
-      {celulas.map((k, i) => (
-        <i key={i} className={k ? m("k") : undefined} />
-      ))}
-    </div>
+    <svg viewBox={`0 0 ${qr.tamanho} ${qr.tamanho}`} role="img" aria-label="QR code do seu link" shapeRendering="crispEdges" style={{ width: 220, height: 220, borderRadius: 12 }}>
+      <rect width={qr.tamanho} height={qr.tamanho} fill="#fff" />
+      <path d={qr.d} fill="#000" />
+    </svg>
   );
 }

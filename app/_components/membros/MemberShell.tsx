@@ -116,8 +116,15 @@ export default function MemberShell({ children }: { children: ReactNode }) {
     };
   }, [router]);
 
-  // Assinatura ativa ou cargo da equipe? Quem decide é o banco (função meu_acesso).
+  // Chegou pelo link de um afiliado? Registra a indicação (só a primeira vale; autoindicação não conta).
   const uid = user?.id;
+  useEffect(() => {
+    if (!uid) return;
+    const ref = document.cookie.match(/(?:^|; )hs_ref=([a-z0-9-]{3,24})/)?.[1];
+    if (ref) supabase.rpc("registrar_indicacao", { p_codigo: ref }).then(() => {});
+  }, [uid]);
+
+  // Assinatura ativa ou cargo da equipe? Quem decide é o banco (função meu_acesso).
   useEffect(() => {
     if (!uid) return;
     let vivo = true;

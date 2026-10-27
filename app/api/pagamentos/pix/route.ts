@@ -102,6 +102,14 @@ export async function POST(req: Request) {
     .gt("criado_em", new Date(Date.now() - 3600_000).toISOString());
   if ((count ?? 0) >= 8) return resp({ erro: "Muitas tentativas. Espere um pouco e tente de novo." }, 429);
 
+  // Afiliado do último clique (cookie de 30 dias do link /r/<codigo>). Autoindicação não conta.
+  const ref = req.headers.get("cookie")?.match(/(?:^|; )hs_ref=([a-z0-9-]{3,24})/)?.[1];
+  let refAfiliado: string | null = null;
+  if (ref) {
+    const { data: af } = await sb.from("afiliados").select("user_id").eq("codigo", ref).maybeSingle<{ user_id: string }>();
+    if (af && af.user_id !== user.id) refAfiliado = af.user_id;
+  }
+
   // Guarda quando e qual versão dos termos foi aceita (prova em caso de contestação).
   const { data: pedido, error } = await sb
     .from("pedidos")
@@ -117,6 +125,7 @@ export async function POST(req: Request) {
       aceite_termos_em: new Date().toISOString(),
       versao_termos: SITE.versaoTermos,
       utm: limparUtm(corpo.utm),
+      ref_afiliado: refAfiliado,
       ...(codigo ? { cupom: codigo, desconto_centavos: desconto } : {}),
     })
     .select("*")
