@@ -19,6 +19,7 @@ import {
   type Plano,
 } from "../../../_lib/pagamentos";
 import { SITE } from "../../../_lib/site";
+import { ITENS_PAGOS, itemPago } from "../../../_lib/loja";
 import { limparUtm } from "../../../_lib/utm";
 import { enviarUtmify } from "../../../_lib/utmify";
 
@@ -28,6 +29,7 @@ function publico(p: Pedido) {
   return {
     id: p.id,
     plano: p.plano,
+    item: p.item ?? null,
     metodo: p.metodo ?? "pix",
     valor: p.valor_centavos / 100,
     status: p.status,
@@ -47,18 +49,20 @@ export async function POST(req: Request) {
   const user = await usuarioDoPedido(req);
   if (!user) return resp({ erro: "Entre na sua conta para assinar." }, 401);
 
-  let corpo: { plano?: string; nome?: string; cpf?: string; telefone?: string; aceite?: boolean; cupom?: string; metodo?: string; utm?: unknown };
+  let corpo: { plano?: string; item?: string; nome?: string; cpf?: string; telefone?: string; aceite?: boolean; cupom?: string; metodo?: string; utm?: unknown };
   try {
     corpo = await req.json();
   } catch {
     return resp({ erro: "Pedido inválido." }, 400);
   }
-  const plano = corpo.plano === "anual" ? "anual" : corpo.plano === "mensal" ? "mensal" : null;
+  // Item da Hot Store (ex.: a call) ou plano de assinatura.
+  const item = itemPago(corpo.item);
+  const plano: Plano | null = item ? "loja" : corpo.plano === "anual" ? "anual" : corpo.plano === "mensal" ? "mensal" : null;
   const metodo: Metodo = corpo.metodo === "cartao" ? "cartao" : "pix";
   const nome = (corpo.nome ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
   const cpf = (corpo.cpf ?? "").replace(/\D/g, "");
   const telefone = (corpo.telefone ?? "").replace(/\D/g, "").slice(0, 13);
-  if (!plano) return resp({ erro: "Escolha um plano." }, 400);
+  if (!plano) return resp({ erro: corpo.item ? "Este item não está à venda." : "Escolha um plano." }, 400);
   if (metodo === "cartao" && !cfg.cartao) return resp({ erro: "Pagamento com cartão ainda não está disponível. Use o Pix." }, 400);
   if (nome.split(" ").length < 2) return resp({ erro: "Digite seu nome completo." }, 400);
   if (!cpfValido(cpf)) return resp({ erro: "CPF inválido. Confira os números." }, 400);
@@ -70,13 +74,14 @@ export async function POST(req: Request) {
   // Cupom de desconto (conferido no banco, nunca pelo navegador).
   const codigo = (corpo.cupom ?? "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20);
   let desconto = 0;
-  if (codigo) {
+  if (codigo && plano === "loja") return resp({ erro: "Cupom não vale para itens da loja." }, 400);
+  if (codigo && plano !== "loja") {
     const { data: c } = await sb.rpc("conferir_cupom", { p_codigo: codigo, p_plano: plano });
     const r = c as { ok: boolean; desconto?: number } | null;
     if (!r?.ok) return resp({ erro: "Cupom inválido, vencido ou esgotado." }, 400);
-    desconto = Math.round((VALOR_CENTAVOS[plano as Plano] * (r.desconto ?? 0)) / 100);
+    desconto = Math.round((VALOR_CENTAVOS[plano] * (r.desconto ?? 0)) / 100);
   }
-  const valor = VALOR_CENTAVOS[plano as Plano] - desconto;
+  const valor = item ? ITENS_PAGOS[item].preco * 100 : VALOR_CENTAVOS[plano as "mensal" | "anual"] - desconto;
 
   // Já existe uma cobrança igual ainda válida? Reaproveita.
   const { data: aberto } = await sb
@@ -84,6 +89,7 @@ export async function POST(req: Request) {
     .select("*")
     .eq("user_id", user.id)
     .eq("plano", plano)
+    .filter("item", item ? "eq" : "is", item ?? null)
     .eq("valor_centavos", valor)
     .eq("gateway", gateway)
     .eq("metodo", metodo)
@@ -118,6 +124,7 @@ export async function POST(req: Request) {
       email: user.email!,
       nome,
       plano,
+      item,
       valor_centavos: valor,
       gateway,
       metodo,

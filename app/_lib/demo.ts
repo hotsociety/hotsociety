@@ -554,20 +554,21 @@ export type Produto = {
   aplicacao?: boolean; // entra por aplicação, sem carrinho
   img?: string;
   gfx?: string; // grafismo dourado no lugar da foto
-  breve?: boolean; // aparece com cadeado e "Em breve", sem resgate
+  breve?: boolean; // aparece com cadeado e "Em breve", sem compra nem resgate
+  compra?: boolean; // à venda em reais: o botão leva direto ao pagamento (preço oficial em _lib/loja.ts)
   tag?: string;
 };
 
 export const PRODUTOS: Produto[] = [
-  { id: "pk", cat: "Digitais", t: "Pack 100 prompts de persona", d: "Personas, cenários e consistência de rosto, prontos para colar.", rs: 47, img: IMG.prompts, tag: "Mais vendido" },
-  { id: "fn", cat: "Digitais", t: "Templates de funil", d: "Páginas, sequências e roteiros de recorrência editáveis.", rs: 67, img: IMG.funil },
-  { id: "pl", cat: "Ferramentas", t: "Planilha de operação", d: "Metas, custos, ROI por canal e controle de modelos.", rs: 37, img: IMG.planilha },
-  { id: "ct", cat: "Ferramentas", t: "Kit contrato e consentimento", d: "Modelos revisáveis por advogado para operar com modelo real.", rs: 57, img: IMG.contrato },
-  { id: "cs", cat: "Mentoria", t: "Consultoria 1:1", d: "Uma call de 60 minutos com o time para destravar sua operação.", rs: 497, img: IMG.consultoria },
-  { id: "ht", cat: "Mentoria", t: "Mentoria High Ticket", d: "Acompanhamento direto com o Cappu, turma pequena. Por aplicação.", rs: null, img: IMG.mentoria, aplicacao: true },
+  { id: "pk", cat: "Digitais", t: "Pack 100 prompts de persona", d: "Personas, cenários e consistência de rosto, prontos para colar.", rs: 47, img: IMG.prompts, breve: true },
+  { id: "fn", cat: "Digitais", t: "Templates de funil", d: "Páginas, sequências e roteiros de recorrência editáveis.", rs: 67, img: IMG.funil, breve: true },
+  { id: "pl", cat: "Ferramentas", t: "Planilha de operação", d: "Metas, custos, ROI por canal e controle de modelos.", rs: 37, img: IMG.planilha, breve: true },
+  { id: "ct", cat: "Ferramentas", t: "Kit contrato e consentimento", d: "Modelos revisáveis por advogado para operar com modelo real.", rs: 57, img: IMG.contrato, breve: true },
+  { id: "cs", cat: "Mentoria", t: "Consultoria 1:1", d: "Uma call de 60 minutos com o time para destravar sua operação.", rs: 497, img: IMG.consultoria, compra: true, tag: "Disponível" },
+  { id: "ht", cat: "Mentoria", t: "Mentoria High Ticket", d: "Acompanhamento direto com o Cappu, turma pequena. Por aplicação.", rs: null, img: IMG.mentoria, aplicacao: true, breve: true },
   { id: "mo", cat: "Merch", t: "Moletom HOT SOCIETY", d: "Preto, bordado dourado, edição da temporada.", rs: 249, coins: 6000, img: IMG.moletom, breve: true },
   { id: "bn", cat: "Merch", t: "Boné HOT SOCIETY", d: "Aba curva, H bordado em dourado.", rs: 129, coins: 3000, img: IMG.bone, breve: true },
-  { id: "hp", cat: "Digitais", t: "HOTPHONE Edição Dubai", d: "Cor exclusiva do seu HOTPHONE. Só com Cappu Coins.", rs: null, coins: 2500, soCoins: true, img: IMG.hotphoneDubai },
+  { id: "hp", cat: "Digitais", t: "HOTPHONE Edição Dubai", d: "Cor exclusiva do seu HOTPHONE. Só com Cappu Coins.", rs: null, coins: 2500, soCoins: true, img: IMG.hotphoneDubai, breve: true },
 ];
 
 /* ===================== Games ===================== */

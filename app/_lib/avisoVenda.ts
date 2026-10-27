@@ -1,7 +1,7 @@
 // SÓ SERVIDOR. Avisa a equipe por e-mail a cada venda paga, reembolso ou contestação.
 // Destino: AVISO_VENDAS_EMAIL na Vercel (pode ter vários, separados por vírgula); sem ela, vai para o e-mail padrão abaixo.
 import { enviarEmail, esc, moldura, SITE_URL } from "./email";
-import { PRODUTO, type Pedido } from "./pagamentos";
+import { nomeProduto, type Pedido } from "./pagamentos";
 import { comissaoCentavos } from "./utmify";
 
 const PADRAO = "hotacademy0@gmail.com";
@@ -25,7 +25,7 @@ export async function avisarVenda(p: Pedido) {
   const origem = [u.utm_source, u.utm_campaign, u.utm_content].filter(Boolean).join(" · ");
   const linhas: [string, string][] = [
     ["Cliente", `${p.nome || "—"} (${p.email})`],
-    ["Plano", PRODUTO[p.plano]],
+    ["Produto", nomeProduto(p)],
     ["Forma", p.metodo === "cartao" ? "Cartão" : "Pix"],
     ["Valor", brl(p.valor_centavos)],
     ["Sua parte", `${brl(parte)}${p.metodo === "cartao" ? " (cartão: repasse manual)" : " (no seu Pix)"}`],
@@ -38,7 +38,7 @@ export async function avisarVenda(p: Pedido) {
     .join("")}</table>`;
   await enviarEmail({
     para,
-    assunto: `${t.emoji} ${t.titulo} · ${brl(p.valor_centavos)} · ${PRODUTO[p.plano]}`,
+    assunto: `${t.emoji} ${t.titulo} · ${brl(p.valor_centavos)} · ${nomeProduto(p)}`,
     html: moldura(`${t.emoji} ${t.titulo}`, corpo, { t: "Abrir o painel de vendas", href: `${SITE_URL}/dashboard/painel/vendas` }),
     chave: `aviso-${p.id}-${p.status}`,
   }).catch((e) => console.error("aviso de venda:", (e as Error).message));

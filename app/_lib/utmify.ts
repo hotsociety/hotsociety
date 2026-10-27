@@ -2,7 +2,7 @@
 // Só funciona com UTMIFY_API_TOKEN na Vercel; sem ela, nada é enviado e o resto segue normal.
 // Doc: https://docs.utmify.com.br/envio-de-vendas
 
-import { PRODUTO, type Pedido } from "./pagamentos";
+import { nomeProduto, type Pedido } from "./pagamentos";
 import type { Utm } from "./utm";
 
 const STATUS: Partial<Record<Pedido["status"], string>> = {
@@ -49,7 +49,7 @@ export async function enviarUtmify(p: Pedido & { utm?: Utm | null }, extra: Extr
       ...(extra.ip ? { ip: extra.ip } : {}),
     },
     products: [
-      { id: p.plano, name: PRODUTO[p.plano], planId: p.plano, planName: PRODUTO[p.plano], quantity: 1, priceInCents: p.valor_centavos },
+      { id: p.plano === "loja" ? `loja-${p.item}` : p.plano, name: nomeProduto(p), planId: p.plano, planName: nomeProduto(p), quantity: 1, priceInCents: p.valor_centavos },
     ],
     trackingParameters: {
       src: u.src ?? null,

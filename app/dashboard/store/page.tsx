@@ -3,10 +3,13 @@
 import "../../_components/membros/painel.css";
 import { useProgresso } from "../../_components/membros/Progresso";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Modal, toast } from "../../_components/membros/Toast";
 import { m } from "../../_components/membros/proto";
 import { postApi } from "../../_lib/api";
-import { IMG, PRODUTOS, type Produto } from "../../_lib/demo";
+import { PRODUTOS, type Produto } from "../../_lib/demo";
+import { ITENS_PAGOS, itemPago } from "../../_lib/loja";
 import { supabase } from "../../_lib/supabase";
 import Icon from "../../_components/membros/Icon";
 
@@ -16,9 +19,10 @@ const num = (v: number) => v.toLocaleString("pt-BR");
 const GFX_BG = "radial-gradient(90% 70% at 30% 20%,#2e2618,#0b0b0c 70%)";
 const FISICOS = ["mo", "bn"];
 type Resgate = { id: string; protocolo: string; item_id: string; titulo: string; coins: number; status: string; rastreio: string | null; criado_em: string };
-const ST_RESGATE: Record<string, string> = { recebido: "Separando", enviado: "Enviado", entregue: "Entregue", cancelado: "Cancelado (coins devolvidas)" };
+const CALL = PRODUTOS.find((p) => p.id === "cs");
 
 export default function HotStore() {
+  const router = useRouter();
   const [cat, setCat] = useState<(typeof CATS)[number]>("Tudo");
   const { perfil } = useProgresso();
   const [coins, setCoins] = useState(perfil.coins);
@@ -45,6 +49,12 @@ export default function HotStore() {
   }
 
   const lista = PRODUTOS.filter((p) => cat === "Tudo" || p.cat === cat);
+  // Itens à venda primeiro.
+  lista.sort((a, b) => Number(!!b.compra) - Number(!!a.compra));
+  const comprar = (p: Produto) => {
+    const id = itemPago(p.id);
+    if (id) router.push(`/assinar?item=${id}`);
+  };
 
   return (
     <section className={m("view")} aria-label="Hot Store">
@@ -57,29 +67,34 @@ export default function HotStore() {
           <span className={m("chip coin")}>
             <i className={m("num")}>{num(coins)}</i> Cappu Coins
           </span>
+          <Link href="/dashboard/inventario" className={m("btn btn-s")} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <Icon name="box" size={15} /> Meu inventário
+          </Link>
         </div>
       </div>
 
-      <div className={m("st-feat")} style={{ backgroundImage: `url(${IMG.hero})` }}>
-        <div className={m("in")}>
-          <p className={m("eb")} style={{ color: "var(--red-t)" }}>
-            Destaque · Mônaco
-          </p>
-          <h2 className={m("stack")}>
-            <span className={m("s")}>Mentoria</span>
-            <span>High</span>
-            <span style={{ color: "var(--red-t)" }}>Ticket.</span>
-          </h2>
-          <p className={m("sub")} style={{ margin: 0 }}>
-            Acompanhamento direto com o Cappu, turma pequena, por aplicação.
-          </p>
-          <div className={m("row")}>
-            <button className={m("btn btn-p")} type="button" onClick={() => setAberto("aplicar")}>
-              Aplicar agora
-            </button>
+      {CALL && (
+        <div className={m("st-feat")} style={{ backgroundImage: `url(${CALL.img})` }}>
+          <div className={m("in")}>
+            <p className={m("eb")} style={{ color: "var(--red-t)" }}>
+              Disponível agora
+            </p>
+            <h2 className={m("stack")}>
+              <span className={m("s")}>Consultoria</span>
+              <span>1:1 com</span>
+              <span style={{ color: "var(--red-t)" }}>o time.</span>
+            </h2>
+            <p className={m("sub")} style={{ margin: 0 }}>
+              Uma call de 60 minutos para destravar a sua operação. Depois do pagamento, você agenda pelo Inventário.
+            </p>
+            <div className={m("row")}>
+              <button className={m("btn btn-p")} type="button" onClick={() => comprar(CALL)}>
+                Comprar · {brl(ITENS_PAGOS.cs.preco)}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className={m("seg")} role="group" aria-label="Categorias" style={{ justifySelf: "start" }}>
         {CATS.map((c) => (
@@ -119,7 +134,13 @@ export default function HotStore() {
                 </div>
                 <div className={m("pr")}>
                   <div>
-                    {p.rs && !p.coins ? (
+                    {p.compra && itemPago(p.id) ? (
+                      <span className={m("rs")}>{brl(ITENS_PAGOS[itemPago(p.id)!].preco)}</span>
+                    ) : p.breve ? (
+                      <span className={m("rs")} style={{ fontSize: 15 }}>
+                        Em breve
+                      </span>
+                    ) : p.rs && !p.coins ? (
                       <span className={m("rs")} style={{ fontSize: 15 }}>
                         Em breve · {brl(p.rs)}
                       </span>
@@ -128,19 +149,23 @@ export default function HotStore() {
                         Por aplicação
                       </span>
                     ) : null}
-                    {p.coins && (
+                    {p.coins && !p.breve && (
                       <div className={m("cc")}>
                         {num(p.coins)} coins
                       </div>
                     )}
                   </div>
-                  {p.aplicacao ? (
-                    <button type="button" className={m("btn btn-s")} onClick={() => setAberto("aplicar")}>
-                      Aplicar
-                    </button>
-                  ) : p.breve ? (
+                  {p.breve ? (
                     <button type="button" className={m("btn btn-s")} disabled style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                       <Icon name="lock" size={15} /> Em breve
+                    </button>
+                  ) : p.compra ? (
+                    <button type="button" className={m("btn btn-p")} onClick={() => comprar(p)}>
+                      Comprar
+                    </button>
+                  ) : p.aplicacao ? (
+                    <button type="button" className={m("btn btn-s")} onClick={() => setAberto("aplicar")}>
+                      Aplicar
                     </button>
                   ) : p.coins ? (
                     <button type="button" className={m("btn btn-p")} disabled={temHp} onClick={() => setResgatar(p)}>
@@ -158,27 +183,9 @@ export default function HotStore() {
         })}
       </div>
 
-      {resgates.length > 0 && (
-        <div className="hs-st-res">
-          <h3>Meus resgates</h3>
-          {resgates.map((r) => (
-            <div key={r.id}>
-              <span>
-                <b>{r.titulo}</b>
-                <small>
-                  {r.protocolo} · {num(r.coins)} coins
-                  {r.rastreio && ` · rastreio ${r.rastreio}`}
-                </small>
-              </span>
-              <em>{ST_RESGATE[r.status] ?? r.status}</em>
-            </div>
-          ))}
-        </div>
-      )}
-
       <p className={m("demo")}>
-        Cappu Coins são pontos de fidelidade que você ganha nas aulas e missões. Não têm valor em dinheiro, não podem ser sacados nem transferidos. Os
-        produtos com preço em reais chegam em breve: toque em &ldquo;Avise-me&rdquo; para ser avisado.
+        Tudo o que você compra ou resgata aqui fica em <Link href="/dashboard/inventario">Meu inventário</Link>. Cappu Coins são pontos de fidelidade que
+        você ganha nas aulas e missões: não têm valor em dinheiro, não podem ser sacados nem transferidos. Os itens com cadeado chegam em breve.
       </p>
 
       {resgatar && (
@@ -252,7 +259,7 @@ function Resgatar({ p, coins, onClose, onFeito }: { p: Produto; coins: number; o
           </h3>
           <p className={m("sub")} style={{ margin: 0 }}>
             Protocolo {feito}.{" "}
-            {fisico ? "Enviamos em até 20 dias úteis, frete por nossa conta. O rastreio aparece em Meus resgates." : "A cor já está liberada nos Ajustes do seu HOTPHONE (recarregue a página)."}
+            {fisico ? "Enviamos em até 20 dias úteis, frete por nossa conta. O rastreio aparece no seu Inventário." : "A cor já está liberada nos Ajustes do seu HOTPHONE (recarregue a página)."}
           </p>
         </div>
       ) : (

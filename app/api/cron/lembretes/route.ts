@@ -73,6 +73,11 @@ export async function GET(req: Request) {
   }
   let enviados = 0;
   for (const l of (data ?? []) as Linha[]) {
+    // Pix expirado de item da Hot Store: não manda o e-mail de "gere outro Pix do plano" (só marca como visto).
+    if (l.tipo === "pix_expirado" && l.plano === "loja") {
+      await sb.from("lembretes_enviados").insert({ user_id: l.user_id, tipo: l.tipo, ref: l.ref });
+      continue;
+    }
     const m = texto(l);
     const ok = await enviarEmail({ para: l.email, assunto: m.assunto, html: m.html, chave: `lembrete-${l.user_id}-${l.tipo}-${l.ref}` });
     if (!ok) continue;
