@@ -388,6 +388,14 @@ export async function aplicarCobranca(sb: SupabaseClient, c: Cobranca): Promise<
     .single<Pedido>();
 
   if (atual && ["pago", "reembolsado", "chargeback", "falhou"].includes(novo)) await enviarUtmify(atual);
+  // Afiliados: pago gera a comissão de quem indicou; reembolso ou contestação cancela.
+  if (atual && novo === "pago") {
+    const { error } = await sb.rpc("hs_registrar_comissao", { p_pedido: atual.id });
+    if (error) console.error("comissão afiliado:", error.message);
+  } else if (atual && (novo === "reembolsado" || novo === "chargeback")) {
+    const { error } = await sb.rpc("hs_cancelar_comissao", { p_pedido: atual.id });
+    if (error) console.error("cancelar comissão:", error.message);
+  }
   if (atual && ["pago", "reembolsado", "chargeback"].includes(novo)) await avisarVenda(atual);
 
   if (novo === "pago" && p.status !== "chargeback") {
