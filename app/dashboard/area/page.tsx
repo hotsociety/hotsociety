@@ -31,7 +31,7 @@ function linhas(mods: Modulo[]): Linha[] {
     s: "3 ativos",
     largo: true,
     cards: [
-      { img: IMG.academy, t: "Hot Academy", s: `Curso completo · ${MODULOS.length} módulos`, tag: "Ativo", tagCor: "ok", ir: "/dashboard/aulas?produto=hot-academy", pct: pctAcademy },
+      { img: IMG.academy, t: "Hot Academy", s: `Curso completo · ${MODULOS.length} módulos`, tag: "Ativo", tagCor: "ok", ir: "/dashboard/aulas", pct: pctAcademy },
       { img: IMG.hotphone, t: "HOTPHONE", s: "CappuIA, Cofre e Feed no canto da tela", tag: "Ativo", tagCor: "ok", ir: "hotphone" },
       { img: IMG.comunidade, t: "Comunidade", s: "Feed, canais e lives", tag: "Ativo", tagCor: "ok", ir: "/dashboard/feed" },
     ],
@@ -46,7 +46,7 @@ function linhas(mods: Modulo[]): Linha[] {
         img: x.img,
         t: x.t,
         s: `Módulo ${x.n} · ${x.aulas.length} aulas`,
-        ir: lock ? "/dashboard/aulas?produto=hot-academy" : `/dashboard/aulas/${x.slug}`,
+        ir: lock ? "/dashboard/aulas" : `/dashboard/aulas/${x.slug}`,
         pct: lock ? undefined : pct,
         lock,
         tag: pct === 100 ? "Concluído" : pct > 0 ? "Em andamento" : undefined,

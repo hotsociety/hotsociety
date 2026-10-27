@@ -1,18 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useRef, useState } from "react";
 import Esteira from "../../_components/membros/Esteira";
-import { useMembro } from "../../_components/membros/MemberContext";
+import { abrirHotphone } from "../../_components/membros/hotphone/HotPhone";
 import { m } from "../../_components/membros/proto";
-import { BIBLIOTECA, CHAVE_QUEBRADO } from "../../_lib/biblioteca";
-import { type Modulo } from "../../_lib/demo";
+import { IMG, PRODUTOS, type Modulo } from "../../_lib/demo";
 import { ITENS_PAGOS, itemPago } from "../../_lib/loja";
 import { moduloAtual, proximaAula } from "../../_lib/progresso";
-import { supabase } from "../../_lib/supabase";
-import Vitrine from "./Vitrine";
-import Vitrine3D, { type Produto3D } from "./Vitrine3D";
 import { capaDoVideo } from "../../_lib/video";
 import { useProgresso } from "../../_components/membros/Progresso";
 import { useAulasInfo } from "../../_components/membros/useAulasInfo";
@@ -29,178 +25,89 @@ const PLAY = (
     <path fill="currentColor" d="M8 5v14l11-7z" />
   </svg>
 );
-// Brilho de fundo de cada módulo (tons quentes da marca + um contraste por parada).
-const TONS = ["#FFC83D", "#2FF3FF", "#FF3DD1", "#9D6BFF", "#3DFF9A", "#FF7A3D", "#4D8BFF", "#E8FF3D", "#FF4D6D"];
-const palavraDe = (t: string) => {
-  const p = (t.split(" · ")[0] || t).split(" ");
-  return (p[0].length <= 2 && p[1] ? `${p[0]} ${p[1]}` : p[0]).toUpperCase();
-};
 const brl = (v: number) => "R$ " + v.toLocaleString("pt-BR");
 
-export default function Pagina() {
+// "Introdução · Quem é o Cappu" → grande "Introdução", pequeno "Quem é o Cappu".
+function Titulo({ t }: { t: string }) {
+  const partes = t.includes(" · ") ? t.split(" · ") : t.split(" ");
+  const n = partes[0].length <= 2 && partes.length > 2 ? 2 : 1;
+  const a = partes.slice(0, n).join(" ");
+  const resto = partes.slice(n);
+  // Palavra longa encolhe para caber no pôster.
+  const tam = a.length > 8 ? { fontSize: `${Math.max(0.55, 8 / a.length)}em` } : undefined;
+  if (!resto.length)
+    return (
+      <span className={m("stack")}>
+        <span style={tam}>{a}</span>
+      </span>
+    );
+  const curto = resto.length === 1 && resto[0].length <= 8;
   return (
-    <Suspense fallback={null}>
-      <Roteador />
-    </Suspense>
+    <span className={m("stack")}>
+      <span style={tam}>{a}</span>
+      <span className={curto ? undefined : m("s")}>{resto.join(" ")}</span>
+    </span>
   );
 }
 
-// /dashboard/aulas → Biblioteca (produtos) · /dashboard/aulas?produto=hot-academy → módulos do curso
-function Roteador() {
-  const q = useSearchParams();
-  return q.get("produto") === "hot-academy" ? <CursoHotAcademy /> : <Biblioteca desbloqueado={q.get("desbloqueado")} demo={q.get("demo") === "corrente"} />;
-}
-
-/* ===================== Biblioteca de produtos ===================== */
-
-function Biblioteca({ desbloqueado, demo }: { desbloqueado: string | null; demo: boolean }) {
-  const { cargo } = useMembro();
-  const { modulos: MODULOS, feitas } = useProgresso();
-  const [comprados, setComprados] = useState<Set<string> | null>(null);
-  const [mentorado, setMentorado] = useState(false);
-  const [quebrados, setQuebrados] = useState<Set<string>>(new Set());
-  const [demoAtivo, setDemoAtivo] = useState(false);
-
-  useEffect(() => {
-    // O que já foi desbloqueado (compras pagas no inventário) e se é mentorado.
-    Promise.all([supabase.rpc("meu_inventario"), supabase.rpc("minha_mentoria")]).then(([inv, men]) => {
-      const lista = (inv.data ?? []) as { origem: string; item: string; status: string }[];
-      setComprados(new Set(lista.filter((i) => i.origem === "compra" && i.status === "pago").map((i) => i.item)));
-      setMentorado(!!(men.data as { mentorado?: boolean } | null)?.mentorado);
-    });
-    const ja = new Set<string>();
-    for (const p of BIBLIOTECA) {
-      try {
-        if (localStorage.getItem(CHAVE_QUEBRADO(p.id))) ja.add(p.id);
-      } catch {}
-    }
-    setQuebrados(ja);
-  }, []);
-
-  // Prévia da animação para a equipe: /dashboard/aulas?demo=corrente (não libera nada).
-  useEffect(() => {
-    if (demo && cargo) setDemoAtivo(true);
-  }, [demo, cargo]);
-
-  const onQuebrou = useCallback((id: string) => {
-    if (id === "p2" && demoAtivo) return setDemoAtivo(false);
-    try {
-      localStorage.setItem(CHAVE_QUEBRADO(id), "1");
-    } catch {}
-    setQuebrados((q) => new Set(q).add(id));
-  }, [demoAtivo]);
-
-  const atual = moduloAtual(MODULOS);
-  const iProx = proximaAula(atual, feitas);
-  const totalAulas = MODULOS.reduce((a, x) => a + x.aulas.length, 0);
-  const totalFeitas = MODULOS.reduce((a, x) => a + x.feitas, 0);
-  const pctCurso = Math.round((totalFeitas / Math.max(1, totalAulas)) * 100);
-
-  const produtos: Produto3D[] = BIBLIOTECA.map((p) => {
-    const acesso = !!p.incluso || (p.tipo === "mentoria" ? mentorado || !!comprados?.has(p.id) : !!comprados?.has(p.id));
-    const emDemo = demoAtivo && p.id === "p2";
-    const quebrar = emDemo || (acesso && !p.incluso && comprados !== null && !quebrados.has(p.id));
-    const preso = !acesso || quebrar;
-    const venda = itemPago(p.id);
-    const status = !preso ? "Liberado" : p.tipo === "mentoria" ? "Por aplicação" : venda ? "Disponível" : "Em breve";
-    const base = { key: p.id, no: p.no, titulo: p.titulo, sub: p.sub, desc: p.desc, tom: p.tom, status, preso, quebrar, destaques: p.destaques };
-
-    if (p.id === "hot-academy") {
-      return {
-        ...base,
-        estado: `Produto ${p.no} · incluso na assinatura · ${pctCurso}% feito`,
-        palavra: "ACADEMY",
-        cta: (
-          <>
-            <Link className="hs-vt-btn p" href="/dashboard/aulas?produto=hot-academy">
-              ▶ Acessar o curso
-            </Link>
-            <Link className="hs-vt-btn" href={`/dashboard/aulas/${atual.slug}?aula=${iProx + 1}`}>
-              {totalFeitas === 0 ? "Primeira aula" : `Continuar · Mod ${atual.n}`}
-            </Link>
-          </>
-        ),
-      };
-    }
-    if (p.tipo === "mentoria") {
-      return {
-        ...base,
-        estado: preso ? `Produto ${p.no} · bloqueado · por aplicação` : `Produto ${p.no} · você é mentorado`,
-        palavra: "MÔNACO",
-        cta: (
-          <Link className="hs-vt-btn p" href="/dashboard/mentoria">
-            {preso ? "Aplicar para a mentoria" : "▶ Acessar a mentoria"}
-          </Link>
-        ),
-      };
-    }
-    return {
-      ...base,
-      estado: preso ? `Produto ${p.no} · bloqueado` : `Produto ${p.no} · desbloqueado`,
-      palavra: preso ? "TRAVADO" : p.titulo,
-      cta: !preso ? (
-        <span className="hs-vt-btn" aria-disabled="true">
-          Conteúdo chegando em breve
-        </span>
-      ) : venda ? (
-        <Link className="hs-vt-btn p" href={`/assinar?item=${venda}`}>
-          🔓 Quebrar a corrente · {brl(ITENS_PAGOS[venda].preco)}
-        </Link>
-      ) : (
-        <span className="hs-vt-btn" aria-disabled="true">
-          🔒 Em breve
-        </span>
-      ),
-    };
-  });
-
-  const inicial = desbloqueado ? BIBLIOTECA.findIndex((p) => p.id === desbloqueado) : demoAtivo ? 1 : 0;
-  const liberados = produtos.filter((i) => !i.preso).length;
-
+function Selo({ mod }: { mod: Modulo }) {
+  if (mod.status === "bloqueado")
+    return (
+      <span className={m("st tag")}>
+        {LOCK} {mod.stop}
+      </span>
+    );
+  if (mod.status === "feito") return <span className={m("st tag ok")}>✓ Feito</span>;
+  if (mod.status === "novo") return <span className={m("st tag")}>Novo</span>;
   return (
-    <section className={m("view")} aria-label="Biblioteca">
-      <div className={m("top")}>
-        <div>
-          <h1>Biblioteca</h1>
-          <p className={m("sub")}>
-            {liberados} de {produtos.length} produtos liberados · arraste ou use as setas para trocar
-          </p>
-        </div>
-        <Link className={m("btn btn-p")} href={`/dashboard/aulas/${atual.slug}?aula=${iProx + 1}`}>
-          ▶ {totalFeitas === 0 ? "Começar a Hot Academy" : `Continuar · Mod ${atual.n}, aula ${iProx + 1}`}
-        </Link>
-      </div>
-      <Vitrine3D produtos={produtos} inicial={Math.max(0, inicial)} onQuebrou={onQuebrou} />
-    </section>
+    <span className={m("st tag")}>
+      {mod.feitas}/{mod.aulas.length}
+    </span>
   );
 }
 
-/* ===================== Curso: Hot Academy (módulos) ===================== */
+// Card de produto (mesmo visual da Área de Membros).
+type CardProduto = { t: string; s: string; img: string; tag?: string; tagCor?: "ok" | "am"; lock?: boolean; preco?: string; ir: () => void };
+function Produto({ c }: { c: CardProduto }) {
+  return (
+    <button type="button" className={m("am-c" + (c.lock ? " lock" : ""))} style={{ backgroundImage: `url(${c.img})` }} onClick={c.ir}>
+      {c.tag && <span className={m("tag tg " + (c.tagCor ?? ""))}>{c.tag}</span>}
+      {c.lock && (
+        <span className={m("lk")} aria-hidden="true">
+          🔒
+        </span>
+      )}
+      <span className={m("in")}>
+        <b>{c.t}</b>
+        <small>{c.s}</small>
+        {c.preco && <span className="hs-prd-preco">{c.preco}</span>}
+      </span>
+    </button>
+  );
+}
 
-function CursoHotAcademy() {
+export default function Modulos() {
+  const router = useRouter();
   const { modulos: MODULOS, feitas } = useProgresso();
   const info = useAulasInfo();
   const [filtro, setFiltro] = useState<Filtro>("all");
+  const [sel, setSel] = useState(() => Math.max(0, MODULOS.indexOf(moduloAtual(MODULOS))));
   const detalhe = useRef<HTMLDivElement>(null);
 
   const atual = moduloAtual(MODULOS);
   const iProx = proximaAula(atual, feitas);
+  const proxAula = atual.aulas[iProx];
   const totalAulas = MODULOS.reduce((a, x) => a + x.aulas.length, 0);
   const totalFeitas = MODULOS.reduce((a, x) => a + x.feitas, 0);
   const pctCurso = Math.round((totalFeitas / Math.max(1, totalAulas)) * 100);
 
-  const visiveis = MODULOS.map((x, i) => ({ mod: x, i })).filter(({ mod: x }) =>
-    filtro === "own" ? x.status !== "bloqueado" : filtro === "lock" ? x.status === "bloqueado" : true,
-  );
-  // Módulo no centro da vitrine (índice dentro de `visiveis`). A vitrine segue a rolagem, então começa no primeiro.
-  const [k, setK] = useState(0);
-  const kOk = Math.min(k, Math.max(0, visiveis.length - 1));
-  const mod = visiveis[kOk]?.mod ?? atual;
+  const mod = MODULOS[sel] ?? atual;
   const prox = proximaAula(mod, feitas);
   const travado = mod.status === "bloqueado";
 
-  const hrefDe = (x: Modulo) => `/dashboard/aulas/${x.slug}${x.status === "feito" ? "" : `?aula=${proximaAula(x, feitas) + 1}`}`;
-  const rotuloDe = (x: Modulo) => (x.feitas === 0 ? "Começar" : x.status === "feito" ? "Rever" : "Continuar");
+  const visiveis = MODULOS.map((x, i) => ({ x, i })).filter(({ x }) =>
+    filtro === "own" ? x.status !== "bloqueado" : filtro === "lock" ? x.status === "bloqueado" : true,
+  );
 
   // Próximas aulas na ordem do curso, a partir de onde o aluno está (as já vistas ficam de fora).
   const continuar = useMemo(() => {
@@ -215,154 +122,80 @@ function CursoHotAcademy() {
     return (ini > 0 ? lista.slice(ini) : lista).slice(0, 12);
   }, [MODULOS, feitas, atual, iProx]);
 
+  const abrirModulo = (i: number) => {
+    setSel(i);
+    requestAnimationFrame(() => detalhe.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
+
+  const meus: CardProduto[] = [
+    { img: IMG.academy, t: "Hot Academy", s: `${MODULOS.length} módulos · ${totalAulas} aulas`, tag: `${pctCurso}% feito`, tagCor: "ok", ir: () => router.push(`/dashboard/aulas/${atual.slug}?aula=${iProx + 1}`) },
+    { img: IMG.hotphone, t: "HOTPHONE", s: "CappuIA, Cofre e Feed no canto da tela", tag: "Ativo", tagCor: "ok", ir: () => abrirHotphone() },
+    { img: IMG.comunidade, t: "Comunidade", s: "Feed, canais e lives", tag: "Ativo", tagCor: "ok", ir: () => router.push("/dashboard/feed") },
+    { img: IMG.cappuia, t: "CappuIA", s: "Tire dúvidas das aulas com IA", tag: "Ativo", tagCor: "ok", ir: () => router.push("/dashboard/cappuia") },
+    { img: IMG.prompts, t: "Ferramentas", s: "Prompts, planilhas e funis", tag: "Bônus", tagCor: "am", ir: () => router.push("/dashboard/ferramentas") },
+    { img: IMG.lives, t: "Lives", s: "Agenda e gravações", tag: "Bônus", tagCor: "am", ir: () => router.push("/dashboard/feed") },
+  ];
+
+  // Vitrine da Hot Store: o que está à venda primeiro, o resto com cadeado.
+  const loja: CardProduto[] = [...PRODUTOS]
+    .filter((p) => p.img)
+    .sort((a, b) => Number(!!b.compra) - Number(!!a.compra))
+    .map((p) => {
+      const pago = p.compra ? itemPago(p.id) : null;
+      return {
+        img: p.img!,
+        t: p.t,
+        s: p.d,
+        tag: pago ? "Disponível" : "Em breve",
+        tagCor: pago ? ("ok" as const) : undefined,
+        lock: !pago,
+        preco: pago ? brl(ITENS_PAGOS[pago].preco) : undefined,
+        ir: () => router.push(pago ? `/assinar?item=${pago}` : "/dashboard/store"),
+      };
+    });
+
   return (
     <section className={m("view")} aria-label="Módulos">
-      <div className={m("top")}>
-        <div>
-          <Link href="/dashboard/aulas" className={m("sub")} style={{ display: "inline-block", marginBottom: 6, textDecoration: "none" }}>
-            ‹ Biblioteca · Produto 01
-          </Link>
-          <h1>Hot Academy</h1>
-          <p className={m("sub")}>
-            {MODULOS.length} módulos · {totalAulas} aulas · {pctCurso}% concluído
+      {/* Destaque: de onde o aluno parou */}
+      <div className={m("am-hero")} style={{ backgroundImage: `url(${atual.img})` }}>
+        <div className={m("in")}>
+          <p className={m("eb")} style={{ color: "var(--red-t)" }}>
+            {totalFeitas === 0 ? "Comece por aqui" : "Continue de onde parou"} · Hot Academy
           </p>
-        </div>
-        <div className={m("row")}>
-          <Link className={m("btn btn-p")} href={`/dashboard/aulas/${atual.slug}?aula=${iProx + 1}`}>
-            ▶ {totalFeitas === 0 ? "Começar o curso" : `Continuar · Mod ${atual.n}, aula ${iProx + 1}`}
-          </Link>
-        <div className={m("seg")} role="group" aria-label="Filtro">
-          {(
-            [
-              ["all", "Todos"],
-              ["own", "Meus"],
-              ["lock", "Para destravar"],
-            ] as [Filtro, string][]
-          ).map(([f, t]) => (
-            <button
-              key={f}
-              type="button"
-              aria-pressed={filtro === f}
-              onClick={() => {
-                setFiltro(f);
-                setK(0);
-              }}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-        </div>
-      </div>
-
-      {visiveis.length === 0 ? (
-        <div className={m("card")}>
-          <p className={m("sub")} style={{ margin: 0 }}>
-            {filtro === "lock" ? "Nenhum módulo travado: você já tem acesso a todos." : "Nenhum módulo aqui."}
-          </p>
-        </div>
-      ) : (
-        <Vitrine
-          rotulo="Módulos"
-          ativo={kOk}
-          onAtivo={setK}
-          itens={visiveis.map(({ mod: x }) => {
-            const pct = Math.round((x.feitas / x.aulas.length) * 100);
-            const lock = x.status === "bloqueado";
-            return {
-              key: x.slug,
-              no: x.n,
-              selo: `MOD ${x.n}`,
-              palavra: palavraDe(x.t),
-              titulo: x.t.split(" · ")[0],
-              sub: x.t.includes(" · ") ? x.t.split(" · ").slice(1).join(" · ") : undefined,
-              eyebrow: `Módulo ${x.n} · ${x.stop}${x.status === "feito" ? " · ✓ concluído" : x.status === "andamento" ? ` · ${pct}% feito` : ""}`,
-              desc: lock ? (x.trava ?? "") : x.desc,
-              img: x.img,
-              tom: TONS[Number(x.n) % TONS.length] ?? TONS[0],
-              apagado: lock,
-              pct,
-              nums: (
-                <>
-                  <span>
-                    <b>{x.aulas.length}</b> aulas
-                  </span>
-                  <span>
-                    <b>{x.feitas}</b> vistas
-                  </span>
-                </>
-              ),
-              acoes: (
-                <>
-                  {lock ? (
-                    <Link className="hs-vt-btn p" href="/dashboard/jornada">
-                      Ver requisitos
-                    </Link>
-                  ) : (
-                    <Link className="hs-vt-btn p" href={hrefDe(x)}>
-                      ▶ {rotuloDe(x)}
-                    </Link>
-                  )}
-                  <button type="button" className="hs-vt-btn" onClick={() => detalhe.current?.scrollIntoView({ behavior: "smooth", block: "start" })}>
-                    Ver aulas
-                  </button>
-                </>
-              ),
-            };
-          })}
-        />
-      )}
-
-      {/* Aulas do módulo que está no centro da vitrine */}
-      <div ref={detalhe} className={m("card") + " hs-mod-det"}>
-        <div className={m("split")} style={{ marginBottom: 12 }}>
-          <h2 style={{ margin: 0 }}>
-            Mod {mod.n} · {mod.t}
+          <h2 className={m("stack")} style={proxAula.t.length > 28 ? { fontSize: proxAula.t.length > 48 ? "clamp(24px,2.6vw,34px)" : "clamp(28px,3.2vw,44px)" } : undefined}>
+            <span className={m("s")}>
+              Módulo {atual.n} · Aula {iProx + 1}
+            </span>
+            <span>{proxAula.t}</span>
           </h2>
-          {travado ? (
-            <Link className={m("btn btn-s")} href="/dashboard/jornada">
-              Ver requisitos
+          <div className={m("pr")}>
+            <div className={m("prog")}>
+              <i style={{ width: `${pctCurso}%` }} />
+            </div>
+            {totalFeitas} de {totalAulas} aulas do curso
+          </div>
+          <div className={m("row")}>
+            <Link className={m("btn btn-p")} href={`/dashboard/aulas/${atual.slug}?aula=${iProx + 1}`}>
+              {totalFeitas === 0 ? "Começar agora" : "Continuar aula"}
             </Link>
-          ) : (
-            <Link className={m("btn btn-p")} href={hrefDe(mod)}>
-              {rotuloDe(mod)}
-            </Link>
-          )}
+            <button className={m("btn btn-s")} type="button" onClick={() => abrirModulo(MODULOS.indexOf(atual))}>
+              Ver aulas do módulo
+            </button>
+          </div>
         </div>
-        <ol className={m("lessons")}>
-          {mod.aulas.map((a, j) => {
-            const estado = travado ? "lk" : feitas.has(a.id) ? "done" : j === prox && mod.status === "andamento" ? "cur" : "";
-            const conteudo = (
-              <>
-                <span className={m("c")}>{estado === "done" ? "✓" : estado === "lk" ? LOCK : j + 1}</span>
-                <span className={m("n")}>
-                  {a.t}
-                  {estado === "lk" && <small>{mod.trava}</small>}
-                  {estado === "cur" && <small>Próxima aula</small>}
-                </span>
-                <span className={m("t")}>{travado ? "—" : (info?.get(a.id)?.duracao ?? "")}</span>
-              </>
-            );
-            return (
-              <li key={a.id} className={estado ? m(estado) : undefined}>
-                {travado ? conteudo : <Link href={`/dashboard/aulas/${mod.slug}?aula=${j + 1}`}>{conteudo}</Link>}
-              </li>
-            );
-          })}
-        </ol>
       </div>
 
       {/* Próximas aulas com a capa real do vídeo */}
       {continuar.length > 0 && (
         <Esteira titulo={totalFeitas === 0 ? "Comece por aqui" : "Continue assistindo"} sub={`${totalAulas - totalFeitas} aulas pela frente`} largo="aula">
-          {continuar.map(({ mod: x, i }, n) => {
+          {continuar.map(({ mod: x, i }, k) => {
             const a = x.aulas[i];
             const dados = info?.get(a.id);
             const capa = capaDoVideo(dados?.video_url) ?? x.img;
             return (
               <Link key={a.id} className="hs-aula-c" href={`/dashboard/aulas/${x.slug}?aula=${i + 1}`}>
                 <span className="cv" style={{ backgroundImage: `url(${capa})` }}>
-                  {n === 0 && <span className="tag">Próxima</span>}
+                  {k === 0 && <span className="tag">Próxima</span>}
                   <span className="play">{PLAY}</span>
                   {dados?.duracao && <span className="dur">{dados.duracao}</span>}
                 </span>
@@ -375,6 +208,131 @@ function CursoHotAcademy() {
           })}
         </Esteira>
       )}
+
+      {/* Módulos do curso */}
+      <Esteira
+        titulo="Hot Academy"
+        sub={`${MODULOS.length} módulos · ${pctCurso}% concluído`}
+        acao={
+          <div className={m("seg")} role="group" aria-label="Filtro">
+            {(
+              [
+                ["all", "Todos"],
+                ["own", "Meus"],
+                ["lock", "Para destravar"],
+              ] as [Filtro, string][]
+            ).map(([k, t]) => (
+              <button key={k} type="button" aria-pressed={filtro === k} onClick={() => setFiltro(k)}>
+                {t}
+              </button>
+            ))}
+          </div>
+        }
+      >
+        {visiveis.length === 0 ? (
+          <p className={m("sub")} style={{ margin: "30px 4px" }}>
+            {filtro === "lock" ? "Nenhum módulo travado: você já tem acesso a tudo." : "Nenhum módulo aqui."}
+          </p>
+        ) : (
+          visiveis.map(({ x, i }) => {
+            const pct = Math.round((x.feitas / x.aulas.length) * 100);
+            return (
+              <button
+                key={x.slug}
+                type="button"
+                className={m("mod" + (x.status === "bloqueado" ? " lock" : ""))}
+                aria-pressed={sel === i}
+                onClick={() => abrirModulo(i)}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={x.img} alt="" loading="lazy" />
+                <span className={m("no")}>
+                  MOD {x.n} · {x.stop}
+                </span>
+                <Selo mod={x} />
+                <span className={m("in")}>
+                  <Titulo t={x.t} />
+                  <span className={m("rule")} />
+                  {x.status === "bloqueado" ? (
+                    <span className={m("why")}>{x.trava}</span>
+                  ) : (
+                    <span className={m("meta")}>
+                      <span>{x.aulas.length} AULAS</span>
+                      <span>{pct}%</span>
+                    </span>
+                  )}
+                </span>
+                {x.status !== "bloqueado" && pct > 0 && (
+                  <span className="hs-mod-pct">
+                    <i style={{ width: `${pct}%` }} />
+                  </span>
+                )}
+              </button>
+            );
+          })
+        )}
+      </Esteira>
+
+      {/* Aulas do módulo escolhido */}
+      <div ref={detalhe} className={m("card") + " hs-mod-det"}>
+        <div className={m("split")} style={{ marginBottom: 12 }}>
+          <h2 style={{ margin: 0 }}>
+            Mod {mod.n} · {mod.t}
+          </h2>
+          {travado ? (
+            <Link className={m("btn btn-s")} href="/dashboard/jornada">
+              Ver requisitos
+            </Link>
+          ) : (
+            <Link className={m("btn btn-p")} href={`/dashboard/aulas/${mod.slug}${mod.status === "feito" ? "" : `?aula=${prox + 1}`}`}>
+              {mod.feitas === 0 ? "Começar" : mod.status === "feito" ? "Rever" : "Continuar"}
+            </Link>
+          )}
+        </div>
+        <ol className={m("lessons")}>
+          {mod.aulas.map((a, k) => {
+            const estado = travado ? "lk" : feitas.has(a.id) ? "done" : k === prox && mod.status === "andamento" ? "cur" : "";
+            const conteudo = (
+              <>
+                <span className={m("c")}>{estado === "done" ? "✓" : estado === "lk" ? LOCK : k + 1}</span>
+                <span className={m("n")}>
+                  {a.t}
+                  {estado === "lk" && <small>{mod.trava}</small>}
+                  {estado === "cur" && <small>Próxima aula</small>}
+                </span>
+                <span className={m("t")}>{travado ? "—" : (info?.get(a.id)?.duracao ?? "")}</span>
+              </>
+            );
+            return (
+              <li key={a.id} className={estado ? m(estado) : undefined}>
+                {travado ? conteudo : <Link href={`/dashboard/aulas/${mod.slug}?aula=${k + 1}`}>{conteudo}</Link>}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+
+      {/* Outros produtos */}
+      <Esteira titulo="Seus produtos" sub="Incluídos na assinatura" largo="wide">
+        {meus.map((c) => (
+          <Produto key={c.t} c={c} />
+        ))}
+      </Esteira>
+
+      <Esteira
+        titulo="Na Hot Store"
+        sub="Libere mais"
+        largo="wide"
+        acao={
+          <Link href="/dashboard/store" className={m("btn btn-s")}>
+            Ver loja
+          </Link>
+        }
+      >
+        {loja.map((c) => (
+          <Produto key={c.t} c={c} />
+        ))}
+      </Esteira>
     </section>
   );
 }
