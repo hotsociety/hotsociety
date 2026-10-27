@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../../_lib/supabase";
-import { MISSOES_PLANO, MODULOS, PERFIL_DEMO, type Modulo } from "../../_lib/demo";
+import { MISSOES_PLANO, MODULOS, PERFIL_DEMO, comExtras, type AulaExtra, type Modulo } from "../../_lib/demo";
 import { diasParaFimDoMes, doBanco, modulosDoAluno, nivelDe, type Perfil, type PerfilBanco } from "../../_lib/progresso";
 
 export type Progresso = {
@@ -48,6 +48,7 @@ export function ProgressoProvider({ user, fallback, children }: { user: User; fa
   const [feitas, setFeitas] = useState<ReadonlySet<string>>(() => new Set(DEMO_FEITAS));
   const [avancos, setAvancos] = useState<Record<string, number>>(DEMO_AVANCOS);
   const [temporadaFim, setTemporadaFim] = useState(PERFIL_DEMO.temporadaFim);
+  const [extras, setExtras] = useState<AulaExtra[]>([]);
 
   useEffect(() => {
     let vivo = true;
@@ -60,11 +61,13 @@ export function ProgressoProvider({ user, fallback, children }: { user: User; fa
         if (vivo) setCarregado(true);
         return;
       }
-      const [a, mi] = await Promise.all([
+      const [a, mi, ex] = await Promise.all([
         supabase.from("aulas_feitas").select("aula_id"),
         supabase.rpc("minhas_missoes"),
+        supabase.rpc("aulas_extras"), // aulas criadas pelo Painel → Aulas (sem acesso: erro, segue só com as fixas)
       ]);
       if (!vivo) return;
+      if (!ex.error && Array.isArray(ex.data)) setExtras(ex.data as AulaExtra[]);
       setPerfil(doBanco(p.data as PerfilBanco));
       setFeitas(new Set((a.data ?? []).map((r: { aula_id: string }) => r.aula_id)));
       setAvancos(Object.fromEntries(((mi.data ?? []) as { missao_id: string; feito: number }[]).map((r) => [r.missao_id, r.feito])));
@@ -130,13 +133,13 @@ export function ProgressoProvider({ user, fallback, children }: { user: User; fa
       nivel,
       xpProx,
       feitas,
-      modulos: modulosDoAluno(feitas, perfil.stopAtual),
+      modulos: modulosDoAluno(feitas, perfil.stopAtual, comExtras(MODULOS, extras)),
       avancos,
       temporadaFim,
       concluirAula,
       avancarMissao,
     };
-  }, [real, perfil, feitas, avancos, temporadaFim, concluirAula, avancarMissao]);
+  }, [real, perfil, feitas, avancos, temporadaFim, concluirAula, avancarMissao, extras]);
 
   // Evita mostrar números de exemplo piscando antes dos reais.
   if (!carregado) return <>{fallback}</>;

@@ -42,8 +42,8 @@ export function nivelDe(xp: number) {
 const LIBERA_EM: Record<string, number> = {};
 
 // Junta o conteúdo dos módulos com as aulas que o aluno já assistiu.
-export function modulosDoAluno(feitas: ReadonlySet<string>, stopAtual: number): Modulo[] {
-  return MODULOS.map((m) => {
+export function modulosDoAluno(feitas: ReadonlySet<string>, stopAtual: number, base: Modulo[] = MODULOS): Modulo[] {
+  return base.map((m) => {
     const trava = LIBERA_EM[m.slug];
     if (trava !== undefined && stopAtual < trava) return { ...m, status: "bloqueado", feitas: 0 };
     const n = m.aulas.filter((a) => feitas.has(a.id)).length;

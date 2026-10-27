@@ -43,6 +43,17 @@ export const MISSOES: Record<"diarias" | "semanais" | "mes", Missao[]> = {
   mes: [{ id: "m1", t: "Primeira venda comprovada", meta: "Carimba o Chile", xp: 1000 }],
 };
 
+// Aula criada pelo Painel → Aulas (vem do banco e entra no fim do módulo).
+export type AulaExtra = { aula_id: string; modulo: string; titulo: string };
+
+export function comExtras(mods: Modulo[], extras: readonly AulaExtra[]): Modulo[] {
+  if (!extras.length) return mods;
+  return mods.map((m) => {
+    const novas = extras.filter((x) => x.modulo === m.slug && !m.aulas.some((a) => a.id === x.aula_id));
+    return novas.length ? { ...m, aulas: [...m.aulas, ...novas.map((x) => ({ id: x.aula_id, t: x.titulo }))] } : m;
+  });
+}
+
 function aulas(prefix: string, titulos: string[]): Aula[] {
   return titulos.map((t, i) => ({ id: `${prefix}-${i + 1}`, t }));
 }

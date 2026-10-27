@@ -234,6 +234,21 @@ export default function Home() {
                 <p>Entrou e não era pra você? Peça o reembolso em até 7 dias e devolvemos 100%. Depois disso, cancele quando quiser, em 2 cliques.</p>
               </div>
             </div>
+            <div className={s.guarantee} style={{ marginTop: 12 }}>
+              <span className={s.guaranteeSeal} aria-hidden="true" style={{ fontSize: 19 }}>
+                MCM
+                <small>topo</small>
+              </span>
+              <div>
+                <h3>Mentoria High Ticket com o Cappu</h3>
+                <p>Encontros ao vivo, calls individuais e chat direto com o mentor. Entrada por aplicação.</p>
+                <p style={{ marginTop: 12 }}>
+                  <Link href="/mentoria" className={`${s.btn} ${s.btnGhost} ${s.btnSm}`}>
+                    Aplicar para a mentoria
+                  </Link>
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -283,6 +298,7 @@ export default function Home() {
             <Link href="/login">Entrar</Link>
             <a href="#planos">Planos</a>
             <a href="#faq">Dúvidas</a>
+            <Link href="/mentoria">Mentoria</Link>
             <Link href="/termos">Termos de uso</Link>
             <Link href="/privacidade">Privacidade</Link>
             <a href={`mailto:${SITE.supportEmail}`}>Suporte</a>
