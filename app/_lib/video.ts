@@ -36,3 +36,37 @@ export function embedDoVideo(url: string | null | undefined): string | null {
 }
 
 export const duracaoValida = (d: string) => /^\d{1,3}:[0-5]\d$/.test(d.trim());
+
+// Capa (miniatura) do vídeo. Panda: a capa automática fica no CDN com o mesmo id do player.
+export function capaDoVideo(url: string | null | undefined): string | null {
+  const e = embedDoVideo(url);
+  if (!e) return null;
+  const u = new URL(e);
+  const lib = u.hostname.match(/^player-(vz-[a-z0-9-]+)\.tv\.pandavideo\.com\.br$/i)?.[1];
+  const v = u.searchParams.get("v");
+  if (lib && v && /^[0-9a-f-]{36}$/i.test(v)) return `https://cdn.pandavideo.com/${lib}/${v}/thumbnail.jpg`;
+  const yt = u.hostname.endsWith("youtube-nocookie.com") || u.hostname.endsWith("youtube.com") ? u.pathname.match(/\/embed\/([\w-]{6,20})/)?.[1] : null;
+  return yt ? `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` : null;
+}
+
+// Material da aula: cada linha vira texto ou link ("Nome | https://…" ou só o endereço).
+export type ItemMaterial = { tipo: "link"; nome: string; url: string } | { tipo: "texto"; t: string };
+export function lerMaterial(m: string | null | undefined): ItemMaterial[] {
+  if (!m) return [];
+  return m
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((l): ItemMaterial => {
+      const achou = l.match(/https:\/\/[^\s<>"']+/);
+      if (!achou) return { tipo: "texto", t: l };
+      let url: URL;
+      try {
+        url = new URL(achou[0]);
+      } catch {
+        return { tipo: "texto", t: l };
+      }
+      const nome = l.replace(achou[0], "").replace(/[|:–—-]\s*$/, "").replace(/^\s*[|:–—-]/, "").trim();
+      return { tipo: "link", nome: nome || url.hostname.replace(/^www\./, ""), url: url.toString() };
+    });
+}
