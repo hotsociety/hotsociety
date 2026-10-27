@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Esteira from "../../_components/membros/Esteira";
+import PalcoProdutos from "../../_components/membros/PalcoProdutos";
 import { abrirHotphone } from "../../_components/membros/hotphone/HotPhone";
 import { m } from "../../_components/membros/proto";
 import { IMG, PRODUTOS, type Modulo } from "../../_lib/demo";
@@ -174,9 +175,10 @@ export default function Modulos() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pctCurso, mentorado, abrindo]);
 
-  const escolherProduto = (i: number) => {
+  // Clique no produto do centro (ou no botão do pedestal): desce até as aulas / próximos módulos.
+  const abrirProduto = (i: number) => {
     setProdSel(i);
-    if (i > 0) requestAnimationFrame(() => proximos.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    requestAnimationFrame(() => proximos.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
   const prodAtual = trilha[prodSel];
 
@@ -243,53 +245,39 @@ export default function Modulos() {
         </div>
       </div>
 
-      {/* Trilha de produtos: conclua um para liberar o próximo */}
-      <Esteira titulo="Seus produtos" sub="Conclua um para liberar o próximo" largo="wide">
-        {trilha.map((p) => {
+      {/* Trilha de produtos: palco com os produtos flutuando; conclua um para liberar o próximo */}
+      <PalcoProdutos
+        sel={prodSel}
+        onSel={setProdSel}
+        onAbrir={abrirProduto}
+        cadeado={(aberto) => <Cadeado aberto={aberto} />}
+        acao={prodSel === 0 ? (totalFeitas === 0 ? "Começar a Hot Academy" : "Ver minhas aulas") : liberado(prodSel) ? "Ver módulos" : prodAtual.tipo === "mentoria" ? "Ver a mentoria" : "Ver o que vem"}
+        itens={trilha.map((p) => {
           const lib = liberado(p.i);
           const ant = anterior(p.i);
-          const pct = p.i === 0 ? pctCurso : 0;
-          return (
-            <button
-              key={p.id}
-              type="button"
-              className={"hs-tp" + (lib ? "" : " trava") + (abrindo === p.id ? " abrindo" : "") + (prodSel === p.i ? " on" : "")}
-              aria-pressed={prodSel === p.i}
-              onClick={() => escolherProduto(p.i)}
-            >
-              <span className="hs-tp-topo">
-                <span className="hs-tp-no">{p.no}</span>
-                {lib && abrindo !== p.id ? (
-                  <span className="hs-tp-st ok">{p.i === 0 && pct === 100 ? "✓ Concluído" : "Liberado"}</span>
-                ) : (
-                  <Cadeado aberto={abrindo === p.id} />
-                )}
-              </span>
-              <span className="hs-tp-tt">{p.titulo}</span>
-              <span className="hs-tp-sub">{p.sub}</span>
-              <span className="hs-tp-desc">{p.desc}</span>
-              {lib ? (
-                p.i === 0 ? (
-                  <span className="hs-tp-req">
-                    <span className="hs-tp-barra">
-                      <i style={{ width: `${pct}%` }} />
-                    </span>
-                    {pct}% concluído
-                  </span>
-                ) : (
-                  <span className="hs-tp-req">{p.tipo === "mentoria" ? "Você é mentorado" : "Conteúdo chegando em breve"}</span>
-                )
-              ) : (
-                <span className="hs-tp-req">
-                  {p.tipo === "mentoria" ? `Conclua o ${ant.titulo} ou aplique` : `Conclua o ${ant.titulo} para liberar`}
-                </span>
-              )}
-              {abrindo === p.id && <span className="hs-tp-selo">Liberado</span>}
-            </button>
-          );
+          return {
+            id: p.id,
+            no: p.no,
+            titulo: p.titulo,
+            rotulo: p.tipo === "mentoria" ? "High Ticket" : undefined,
+            sub: p.sub,
+            desc: p.desc,
+            lib: lib && abrindo !== p.id,
+            abrindo: abrindo === p.id,
+            pct: p.i === 0 ? pctCurso : undefined,
+            tema: p.i === 0 ? "ouro" : p.tipo === "mentoria" ? "monaco" : "grafite",
+            req: lib
+              ? p.i === 0
+                ? pctCurso === 100 ? "✓ Concluído" : `Liberado · ${pctCurso}% concluído`
+                : p.tipo === "mentoria" ? "Liberado · você é mentorado" : "Liberado · conteúdo chegando em breve"
+              : p.tipo === "mentoria"
+                ? `Travado · conclua o ${ant.titulo} ou aplique`
+                : `Travado · conclua o ${ant.titulo} para liberar`,
+          };
         })}
-      </Esteira>
+      />
 
+      <div ref={proximos} style={{ scrollMarginTop: 80 }}>
       {prodSel === 0 ? (
         <>
       {/* Próximas aulas com a capa real do vídeo */}
@@ -421,7 +409,7 @@ export default function Modulos() {
         </>
       ) : (
         /* Próximos módulos do produto escolhido (travados até liberar) */
-        <div ref={proximos} className="hs-tp-prox">
+        <div className="hs-tp-prox">
           <div className={m("card") + " hs-tp-aviso"}>
             <span className="hs-tp-aviso-cad">
               <Cadeado aberto={liberado(prodSel)} />
@@ -465,6 +453,7 @@ export default function Modulos() {
           </Esteira>
         </div>
       )}
+      </div>
 
       {/* Outros produtos */}
       <Esteira titulo="Incluídos na assinatura" sub="Ferramentas e bônus" largo="wide">
