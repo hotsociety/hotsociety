@@ -70,3 +70,12 @@ export function lerMaterial(m: string | null | undefined): ItemMaterial[] {
       return { tipo: "link", nome: nome || url.hostname.replace(/^www\./, ""), url: url.toString() };
     });
 }
+
+// Põe a marca d'água do aluno no player do Panda (token assinado pela rota /api/aulas/marca).
+export function comMarca(embed: string | null, token: string | null | undefined): string | null {
+  if (!embed || !token) return embed;
+  const u = new URL(embed);
+  if (!u.hostname.endsWith(".tv.pandavideo.com.br") && u.hostname !== "player.pandavideo.com.br") return embed;
+  u.searchParams.set("watermark", token);
+  return u.toString();
+}

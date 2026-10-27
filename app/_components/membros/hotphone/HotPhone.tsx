@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { supabase } from "../../../_lib/supabase";
 import { useMembro } from "../MemberContext";
 import { useProgresso } from "../Progresso";
+import { perguntarCappuIA, TextoIA } from "../cappuia";
 import {
   CATEGORIAS,
   COFRE_INICIAL,
@@ -796,15 +797,17 @@ function AppIA({ nome, onSalvar, onCompleta }: { nome: string; onSalvar: (x: str
     if (el) el.scrollTop = el.scrollHeight;
   }, [msgs.length, ocupado]);
 
-  function enviar(t: string) {
+  async function enviar(t: string) {
     t = t.trim();
     if (!t || ocupado) return;
+    // Histórico para a IA: sem a saudação inicial.
+    const historico = [...msgs.slice(1), { u: true, t }].map((m) => ({ de: m.u ? ("eu" as const) : ("ia" as const), t: m.t }));
     setMsgs((m) => [...m, { u: true, t }]);
     setOcupado(true);
-    setTimeout(() => {
-      setMsgs((m) => [...m, { t: responder(t) }]);
-      setOcupado(false);
-    }, 700);
+    const r = await perguntarCappuIA("tutor", historico);
+    // IA ainda desligada: cai na resposta rápida por palavra-chave.
+    setMsgs((m) => [...m, { t: r.texto ?? (r.desligada ? responder(t) : (r.erro ?? "Não consegui responder agora.")) }]);
+    setOcupado(false);
   }
 
   return (
@@ -813,7 +816,7 @@ function AppIA({ nome, onSalvar, onCompleta }: { nome: string; onSalvar: (x: str
         <div className={h("hpmsgs")}>
           {msgs.map((m, i) => (
             <div key={i} className={h("bub " + (m.u ? "u" : "b"))}>
-              {m.t}
+              {m.u ? m.t : <TextoIA t={m.t} />}
               {!m.u && i > 0 && (
                 <button
                   className={h("sv")}

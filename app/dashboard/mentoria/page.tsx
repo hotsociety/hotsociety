@@ -81,7 +81,7 @@ export default function MinhaMentoria() {
               <button className={m("btn btn-p")} type="button" onClick={() => setAplicar(true)}>
                 Aplicar para a mentoria
               </button>
-              <span style={{ fontSize: 12, color: "var(--muted)" }}>Valor e próxima turma na resposta da aplicação</span>
+              <span style={{ fontSize: 12, color: "var(--muted)" }}>Valor sob consulta: a equipe responde a aplicação e combina tudo na call</span>
             </div>
           </div>
           <span className={m("ph")} style={{ backgroundImage: `url(${IMG.mentoria})` }} />
