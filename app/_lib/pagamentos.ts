@@ -19,12 +19,23 @@ import type { Utm } from "./utm";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { PRICE } from "./site";
+import { ITENS_PAGOS, itemPago } from "./loja";
 
-export type Plano = "mensal" | "anual";
+export type PlanoAssinatura = "mensal" | "anual";
+export type Plano = PlanoAssinatura | "loja"; // "loja" = item avulso da Hot Store (não mexe no acesso)
 export type Metodo = "pix" | "cartao";
 export type Gateway = "novus" | "transfeer";
-export const VALOR_CENTAVOS: Record<Plano, number> = { mensal: PRICE.mensal * 100, anual: PRICE.anual * 100 };
-export const PRODUTO: Record<Plano, string> = { mensal: "HOT SOCIETY Mensal", anual: "HOT SOCIETY Anual" };
+export const VALOR_CENTAVOS: Record<PlanoAssinatura, number> = { mensal: PRICE.mensal * 100, anual: PRICE.anual * 100 };
+export const PRODUTO: Record<PlanoAssinatura, string> = { mensal: "HOT SOCIETY Mensal", anual: "HOT SOCIETY Anual" };
+
+/** Nome do que foi vendido (plano ou item da loja). */
+export function nomeProduto(p: { plano: Plano; item?: string | null }) {
+  if (p.plano === "loja") {
+    const it = itemPago(p.item);
+    return it ? ITENS_PAGOS[it].titulo : "Hot Store";
+  }
+  return PRODUTO[p.plano];
+}
 export const SITE = (process.env.SITE_URL || "https://hotsociety.com.br").replace(/\/$/, "");
 
 export type Pedido = {
@@ -33,6 +44,7 @@ export type Pedido = {
   email: string;
   nome: string | null;
   plano: Plano;
+  item?: string | null; // id do item quando plano = "loja"
   valor_centavos: number;
   status: "pendente" | "pago" | "expirado" | "cancelado" | "falhou" | "reembolsado" | "chargeback";
   gateway?: string | null;
@@ -222,7 +234,7 @@ async function novusCriarPix(p: Pedido, c: Cliente): Promise<Cobranca> {
       external_id: p.id,
       postback_url: `${SITE}/api/pagamentos/novus`,
       payer: { name: c.nome, cpf_cnpj: c.cpf, email: c.email, ...(c.telefone ? { phone: c.telefone } : {}) },
-      items: [{ name: PRODUTO[p.plano], unit_price: p.valor_centavos, quantity: 1 }],
+      items: [{ name: nomeProduto(p), unit_price: p.valor_centavos, quantity: 1 }],
       ...(split ? { splits: [{ ...split.corpo, external_id: `${p.id}-socio` }] } : {}),
     }),
   });
@@ -237,11 +249,11 @@ async function novusCriarCartao(p: Pedido, c: Cliente): Promise<Cobranca> {
     method: "POST",
     chave: process.env.NOVUS_API_KEY!,
     body: JSON.stringify({
-      items: [{ title: PRODUTO[p.plano], unitPrice: p.valor_centavos, quantity: 1 }],
+      items: [{ title: nomeProduto(p), unitPrice: p.valor_centavos, quantity: 1 }],
       currency: "BRL",
       maxInstallments: 12,
-      successUrl: `${SITE}/assinar?pedido=${p.id}`,
-      cancelUrl: `${SITE}/assinar?plano=${p.plano}`,
+      successUrl: `${SITE}/assinar?${p.plano === "loja" ? `item=${p.item}&` : ""}pedido=${p.id}`,
+      cancelUrl: `${SITE}/assinar?${p.plano === "loja" ? `item=${p.item}` : `plano=${p.plano}`}`,
       postbackUrl: `${SITE}/api/pagamentos/novus`,
       externalRef: p.id,
       metadata: JSON.stringify({ pedido: p.id }),
@@ -315,7 +327,7 @@ async function transfeerCriarPix(p: Pedido, c: Cliente) {
     body: JSON.stringify({
       amount: p.valor_centavos,
       method: "pix",
-      description: PRODUTO[p.plano],
+      description: nomeProduto(p),
       reference: p.id,
       expires_in: 3600,
       customer: { name: c.nome, email: c.email, document: c.cpf, ...(c.telefone ? { phone: c.telefone } : {}) },
@@ -389,7 +401,10 @@ export async function aplicarCobranca(sb: SupabaseClient, c: Cobranca): Promise<
 
   if (atual && ["pago", "reembolsado", "chargeback", "falhou"].includes(novo)) await enviarUtmify(atual);
   // Afiliados: pago gera a comissão de quem indicou; reembolso ou contestação cancela.
-  if (atual && novo === "pago") {
+  // Itens da loja não geram comissão de afiliado.
+  if (atual && p.plano === "loja") {
+    // nada
+  } else if (atual && novo === "pago") {
     const { error } = await sb.rpc("hs_registrar_comissao", { p_pedido: atual.id });
     if (error) console.error("comissão afiliado:", error.message);
   } else if (atual && (novo === "reembolsado" || novo === "chargeback")) {
@@ -409,7 +424,7 @@ export async function aplicarCobranca(sb: SupabaseClient, c: Cobranca): Promise<
       p: {
         pedido: c.id,
         plataforma: c.gateway,
-        produto: PRODUTO[p.plano],
+        produto: nomeProduto(p),
         plano: p.plano,
         cliente_nome: p.nome,
         cliente_email: p.email,
@@ -434,17 +449,18 @@ async function enviarRecibo(p: Pedido, c: Cobranca) {
   const data = new Date(c.pago_em ?? Date.now()).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
   const esc = (t: string) => t.replace(/[&<>"]/g, (x) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[x]!);
   const meio = p.metodo === "cartao" ? "Cartão" : "Pix";
+  const loja = p.plano === "loja";
   const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#141416">
   <h2 style="margin:0 0 12px">Pagamento aprovado ✈️</h2>
-  <p>Olá${p.nome ? ", " + esc(p.nome.split(" ")[0]) : ""}! Seu passaporte HOT SOCIETY está ativo.</p>
+  <p>Olá${p.nome ? ", " + esc(p.nome.split(" ")[0]) : ""}! ${loja ? "Sua compra já está no seu Inventário." : "Seu passaporte HOT SOCIETY está ativo."}</p>
   <table style="width:100%;border-collapse:collapse;font-size:14px">
-    <tr><td style="padding:6px 0;color:#666">Produto</td><td>${PRODUTO[p.plano]}</td></tr>
+    <tr><td style="padding:6px 0;color:#666">Produto</td><td>${nomeProduto(p)}</td></tr>
     <tr><td style="padding:6px 0;color:#666">Valor</td><td>${valor} (${meio})</td></tr>
     <tr><td style="padding:6px 0;color:#666">Data</td><td>${data}</td></tr>
     <tr><td style="padding:6px 0;color:#666">Pedido</td><td>${esc(c.id)}</td></tr>
   </table>
-  <p><a href="${SITE}/dashboard" style="display:inline-block;background:#C9A24E;color:#141416;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold">Entrar na área de membros</a></p>
-  <p style="font-size:12px;color:#666">Garantia de 7 dias: se se arrepender, peça o reembolso integral em Perfil → Acesso e compras. Não há renovação automática.</p>
+  <p><a href="${SITE}${loja ? "/dashboard/inventario" : "/dashboard"}" style="display:inline-block;background:#C9A24E;color:#141416;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold">${loja ? "Abrir meu Inventário" : "Entrar na área de membros"}</a></p>
+  <p style="font-size:12px;color:#666">${loja ? "No Inventário você agenda a sua call. " : ""}Garantia de 7 dias: se se arrepender, peça o reembolso integral em Perfil → Acesso e compras.${loja ? "" : " Não há renovação automática."}</p>
 </div>`;
   await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -452,7 +468,7 @@ async function enviarRecibo(p: Pedido, c: Cobranca) {
     body: JSON.stringify({
       from: process.env.EMAIL_REMETENTE || "HOT SOCIETY <nao-responda@hotsociety.com.br>",
       to: [p.email],
-      subject: `Pagamento aprovado · ${PRODUTO[p.plano]}`,
+      subject: `Pagamento aprovado · ${nomeProduto(p)}`,
       html,
     }),
     signal: AbortSignal.timeout(8000),

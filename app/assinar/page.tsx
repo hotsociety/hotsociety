@@ -8,12 +8,13 @@ import { supabase } from "../_lib/supabase";
 import { DADOS_EMPRESA, PRICE, SITE } from "../_lib/site";
 import { qrSvgPath } from "../_lib/qrcode";
 import { lerUtm } from "../_lib/utm";
+import { ITENS_PAGOS, itemPago } from "../_lib/loja";
 import "../login/login.css";
 import s from "../login/login.styles";
 import "./assinar.css";
 
 type Plano = "mensal" | "anual";
-type Pedido = { id: string; plano: Plano; metodo?: "pix" | "cartao"; valor: number; status: string; br_code: string | null; checkout_url?: string | null; expira_em: string | null };
+type Pedido = { id: string; plano: Plano | "loja"; item?: string | null; metodo?: "pix" | "cartao"; valor: number; status: string; br_code: string | null; checkout_url?: string | null; expira_em: string | null };
 type Etapa = "carregando" | "form" | "pix" | "cartao" | "pago" | "expirado";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -44,6 +45,9 @@ function Assinar() {
   const router = useRouter();
   const params = useSearchParams();
   const inicial: Plano = params.get("plano") === "mensal" ? "mensal" : "anual";
+  // Compra de item da Hot Store (ex.: /assinar?item=cs): mesmo checkout, sem escolha de plano nem cupom.
+  const item = itemPago(params.get("item"));
+  const loja = item ? ITENS_PAGOS[item] : null;
 
   const [etapa, setEtapa] = useState<Etapa>("carregando");
   const [token, setToken] = useState("");
@@ -75,7 +79,7 @@ function Assinar() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!vivo) return;
       if (!session) {
-        const volta = `/assinar?plano=${inicial}`;
+        const volta = item ? `/assinar?item=${item}` : `/assinar?plano=${inicial}`;
         router.replace(`/login?plano=${inicial}&callback=${encodeURIComponent(volta)}`);
         return;
       }
@@ -85,7 +89,7 @@ function Assinar() {
       setNome(meta?.full_name || meta?.name || "");
       const { data } = await supabase.rpc("meu_acesso");
       const a = data as { ativo?: boolean; cargo?: string | null; valido_ate?: string | null } | null;
-      if (vivo && a?.ativo && !a.cargo) setJaAtivo(a.valido_ate ?? "sem prazo");
+      if (vivo && a?.ativo && !a.cargo && !item) setJaAtivo(a.valido_ate ?? "sem prazo");
       fetch("/api/pagamentos/pix", { cache: "no-store" })
         .then((r) => r.json())
         .then((c: { cartao?: boolean }) => vivo && setTemCartao(!!c.cartao))
@@ -104,7 +108,7 @@ function Assinar() {
       vivo = false;
       sub.subscription.unsubscribe();
     };
-  }, [inicial]);
+  }, [inicial, item]);
 
   // Relógio para o tempo do Pix.
   useEffect(() => {
@@ -153,7 +157,11 @@ function Assinar() {
       const r = await fetch("/api/pagamentos/pix", {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
-        body: JSON.stringify({ plano, metodo, nome: n, cpf, telefone: tel, aceite, cupom: cupom?.plano === plano ? cupom.codigo : undefined, utm: lerUtm() }),
+        body: JSON.stringify(
+          item
+            ? { item, metodo, nome: n, cpf, telefone: tel, aceite, utm: lerUtm() }
+            : { plano, metodo, nome: n, cpf, telefone: tel, aceite, cupom: cupom?.plano === plano ? cupom.codigo : undefined, utm: lerUtm() },
+        ),
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) return setErro((j as { erro?: string }).erro || "Não deu para gerar o pagamento. Tente de novo.");
@@ -185,7 +193,7 @@ function Assinar() {
 
   // Cupom vindo do link (?cupom=CODIGO): confere sozinho quando o formulário abre e quando troca o plano.
   useEffect(() => {
-    if (etapa === "form" && abrirCupom && cupomTxt && (!cupom || cupom.plano !== plano)) aplicarCupom();
+    if (!item && etapa === "form" && abrirCupom && cupomTxt && (!cupom || cupom.plano !== plano)) aplicarCupom();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [etapa, plano]);
 
@@ -202,6 +210,8 @@ function Assinar() {
     setCupom({ codigo: r.codigo!, desconto: r.desconto!, plano });
   }
   const precoCom = (k: Plano) => (cupom && cupom.plano === k ? Math.round(PLANOS[k].preco * (100 - cupom.desconto)) / 100 : PLANOS[k].preco);
+  const precoFinal = loja ? loja.preco : precoCom(plano);
+  const nomePedido = (p: Pedido) => (p.plano === "loja" ? (loja?.titulo ?? "Hot Store") : PLANOS[p.plano].t);
 
   const mm = String(Math.floor(restante / 60000)).padStart(2, "0");
   const ss = String(Math.floor((restante % 60000) / 1000)).padStart(2, "0");
@@ -228,8 +238,8 @@ function Assinar() {
           {etapa === "form" && (
             <>
               <h1 className={s.title}>
-                <span>Emita seu</span>
-                <span className={s.gold}>passaporte.</span>
+                <span>{loja ? "Finalize sua" : "Emita seu"}</span>
+                <span className={s.gold}>{loja ? "compra." : "passaporte."}</span>
               </h1>
               {jaAtivo && (
                 <p className={s.ok}>
@@ -238,6 +248,15 @@ function Assinar() {
                 </p>
               )}
               <form className={s.form} onSubmit={gerar} noValidate>
+                {loja ? (
+                  <div className="hs-as-planos">
+                    <div className="hs-as-plano" aria-checked="true" role="radio">
+                      <b>{loja.titulo}</b>
+                      <small>Hot Store · fica no seu Inventário</small>
+                      <strong>{BRL.format(loja.preco)}</strong>
+                    </div>
+                  </div>
+                ) : (
                 <div className="hs-as-planos" role="radiogroup" aria-label="Plano">
                   {(Object.keys(PLANOS) as Plano[]).map((k) => (
                     <button key={k} type="button" role="radio" aria-checked={plano === k} className="hs-as-plano" onClick={() => setPlano(k)}>
@@ -250,6 +269,7 @@ function Assinar() {
                     </button>
                   ))}
                 </div>
+                )}
                 <label className={s.field}>
                   <span>Nome completo</span>
                   <input value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="name" maxLength={120} required />
@@ -262,7 +282,7 @@ function Assinar() {
                   <span>Celular (opcional)</span>
                   <input value={tel} onChange={(e) => setTel(mascaraTel(e.target.value))} inputMode="tel" autoComplete="tel" placeholder="(11) 99999-9999" />
                 </label>
-                {abrirCupom ? (
+                {loja ? null : abrirCupom ? (
                   <div className="hs-as-cupom">
                     <input
                       value={cupomTxt}
@@ -291,7 +311,7 @@ function Assinar() {
                   </p>
                 )}
                 <p className="hs-as-conta">
-                  O acesso será liberado na conta <b>{email}</b>.
+                  {loja ? "A compra fica registrada na conta" : "O acesso será liberado na conta"} <b>{email}</b>.
                 </p>
                 <label className="hs-as-aceite">
                   <input type="checkbox" checked={aceite} onChange={(e) => setAceite(e.target.checked)} />
@@ -304,7 +324,7 @@ function Assinar() {
                     <a href="/privacidade" target="_blank" rel="noopener">
                       Política de privacidade
                     </a>
-                    . Sei que não há renovação automática e que posso pedir reembolso integral em até 7 dias.
+                    .{loja ? " Sei que posso pedir reembolso integral em até 7 dias." : " Sei que não há renovação automática e que posso pedir reembolso integral em até 7 dias."}
                   </span>
                 </label>
                 {temCartao && (
@@ -330,8 +350,8 @@ function Assinar() {
                       ? "Abrindo pagamento…"
                       : "Gerando Pix…"
                     : metodo === "cartao"
-                      ? `Pagar ${BRL.format(precoCom(plano))} no cartão`
-                      : `Pagar ${BRL.format(precoCom(plano))} com Pix`}
+                      ? `Pagar ${BRL.format(precoFinal)} no cartão`
+                      : `Pagar ${BRL.format(precoFinal)} com Pix`}
                 </button>
                 {metodo === "cartao" && <p className="hs-as-conta">Você vai para a página segura de pagamento e escolhe as parcelas lá. O número do cartão não passa pelo nosso site.</p>}
                 <p className="hs-as-selos">
@@ -353,7 +373,7 @@ function Assinar() {
               </h1>
               <div className={s.form}>
                 <p className="hs-as-resumo">
-                  {PLANOS[pedido.plano].t} · <b>{BRL.format(pedido.valor)}</b>
+                  {nomePedido(pedido)} · <b>{BRL.format(pedido.valor)}</b>
                 </p>
                 <div className="hs-as-qr">
                   <svg viewBox={`0 0 ${qr.tamanho} ${qr.tamanho}`} role="img" aria-label="QR Code do Pix" shapeRendering="crispEdges">
@@ -412,10 +432,10 @@ function Assinar() {
               </h1>
               <div className={s.form}>
                 <p className={s.ok} role="status">
-                  Seu passaporte está ativo. Boa viagem!
+                  {loja ? "Sua compra já está no seu Inventário. É por lá que você agenda a call." : "Seu passaporte está ativo. Boa viagem!"}
                 </p>
-                <a href="/dashboard" className={s.primary} style={{ display: "grid", placeItems: "center", textDecoration: "none" }}>
-                  Entrar na área de membros
+                <a href={loja ? "/dashboard/inventario" : "/dashboard"} className={s.primary} style={{ display: "grid", placeItems: "center", textDecoration: "none" }}>
+                  {loja ? "Abrir meu Inventário" : "Entrar na área de membros"}
                 </a>
               </div>
             </>

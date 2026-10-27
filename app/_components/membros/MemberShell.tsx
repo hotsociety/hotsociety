@@ -51,6 +51,7 @@ export const GRUPOS: Grupo[] = [
     g: "Extras",
     itens: [
       { href: "/dashboard/store", t: "Hot Store", icon: "bag" },
+      { href: "/dashboard/inventario", t: "Inventário", icon: "box" },
       { href: "/dashboard/games", t: "Games", icon: "pad" },
     ],
   },
