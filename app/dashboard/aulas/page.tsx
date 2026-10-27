@@ -18,12 +18,18 @@ const LOCK = (
 
 // "Criando sua modelo IA" → grande "Criando", pequeno "sua modelo IA".
 function Titulo({ t }: { t: string }) {
-  const [a, ...resto] = t.split(" ");
-  if (!resto.length) return <span className={m("stack")}><span>{a}</span></span>;
-  const curto = resto.length === 1;
+  // "Introdução · Quem é o Cappu" → grande "Introdução", pequeno "Quem é o Cappu".
+  const partes = t.includes(" · ") ? t.split(" · ") : t.split(" ");
+  const n = partes[0].length <= 2 && partes.length > 2 ? 2 : 1;
+  const a = partes.slice(0, n).join(" ");
+  const resto = partes.slice(n);
+  // Palavra longa encolhe para caber no pôster.
+  const tam = a.length > 8 ? { fontSize: `${Math.max(0.55, 8 / a.length)}em` } : undefined;
+  if (!resto.length) return <span className={m("stack")}><span style={tam}>{a}</span></span>;
+  const curto = resto.length === 1 && resto[0].length <= 8;
   return (
     <span className={m("stack")}>
-      <span>{a}</span>
+      <span style={tam}>{a}</span>
       <span className={curto ? undefined : m("s")}>{resto.join(" ")}</span>
     </span>
   );
