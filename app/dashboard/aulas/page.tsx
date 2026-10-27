@@ -29,7 +29,7 @@ const PLAY = (
   </svg>
 );
 // Brilho de fundo de cada módulo (tons quentes da marca + um contraste por parada).
-const TONS = ["#C9A24E", "#D98A3D", "#B5523B", "#8E2F45", "#3E7C86", "#6C8FB8", "#C9A24E", "#4E8F6A", "#B8784E"];
+const TONS = ["#FFC83D", "#2FF3FF", "#FF3DD1", "#9D6BFF", "#3DFF9A", "#FF7A3D", "#4D8BFF", "#E8FF3D", "#FF4D6D"];
 const palavraDe = (t: string) => {
   const p = (t.split(" · ")[0] || t).split(" ");
   return (p[0].length <= 2 && p[1] ? `${p[0]} ${p[1]}` : p[0]).toUpperCase();
@@ -102,7 +102,9 @@ function Biblioteca({ desbloqueado, demo }: { desbloqueado: string | null; demo:
     const quebrar = emDemo || (acesso && !p.incluso && comprados !== null && !quebrados.has(p.id));
     const preso = !acesso || quebrar;
     const venda = itemPago(p.id);
-    const base = { key: p.id, no: p.no, selo: `Produto ${p.no}`, img: p.img, tom: p.tom, sub: p.sub, desc: p.desc, corrente: preso, quebrar };
+    // Card cinza padrão da plataforma (sem capa), com a descrição e o status.
+    const status = p.incluso ? "Liberado" : preso ? (p.tipo === "mentoria" ? "Por aplicação" : venda ? "Disponível" : "Em breve") : "Liberado";
+    const base = { key: p.id, no: p.no, selo: `Produto ${p.no}`, tom: p.tom, sub: p.sub, desc: p.desc, corrente: preso, quebrar, status };
 
     if (p.id === "hot-academy") {
       return {
