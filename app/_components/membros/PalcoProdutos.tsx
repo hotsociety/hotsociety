@@ -155,7 +155,7 @@ function Rotulo({ txt }: { txt: string }) {
   const pal = txt.toUpperCase().split(/\s+/);
   const linhas = txt.length <= 6 || pal.length < 2 ? [pal.join(" ")] : [pal.slice(0, Math.ceil(pal.length / 2)).join(" "), pal.slice(Math.ceil(pal.length / 2)).join(" ")];
   const maior = Math.max(...linhas.map((l) => l.length));
-  const tam = Math.min(0.24, 1.4 / maior);
+  const tam = Math.min(0.24, 1.2 / maior);
   return (
     <span className="hs-pc-nome" style={{ fontSize: `calc(var(--lw) * ${tam.toFixed(3)})` }}>
       {linhas.map((l) => (

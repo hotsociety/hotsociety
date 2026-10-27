@@ -41,7 +41,7 @@
 .hs-pc-marca{position:relative;z-index:1;margin-top:15%;font:800 calc(var(--lw)*.075)/1 var(--f-d,inherit);letter-spacing:.2em;color:var(--tx);opacity:.75}
 .hs-pc-no{position:relative;z-index:1;margin-top:5%;font:900 calc(var(--lw)*.3)/1 var(--f-d,inherit);color:transparent;-webkit-text-stroke:1.4px var(--ac)}
 .hs-pc-nome{position:relative;z-index:1;flex:1;margin:6% 0 14%;writing-mode:vertical-rl;transform:rotate(180deg);text-align:center;
-  font:900 calc(var(--lw)*.24)/.95 var(--f-d,inherit);font-stretch:115%;letter-spacing:.02em;text-transform:uppercase;color:var(--tx);
+  font:900 calc(var(--lw)*.24)/.95 var(--f-d,inherit);font-stretch:100%;letter-spacing:.02em;text-transform:uppercase;color:var(--tx);
   text-shadow:0 2px 0 rgba(0,0,0,.35);white-space:nowrap;display:flex;flex-direction:column;justify-content:center}
 .hs-pc-nome>span{display:block}
 .hs-pc-fx{position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:inherit;
