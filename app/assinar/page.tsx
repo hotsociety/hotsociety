@@ -9,6 +9,7 @@ import { DADOS_EMPRESA, PRICE, SITE } from "../_lib/site";
 import { qrSvgPath } from "../_lib/qrcode";
 import { lerUtm } from "../_lib/utm";
 import { ITENS_PAGOS, itemPago } from "../_lib/loja";
+import { BIBLIOTECA } from "../_lib/biblioteca";
 import "../login/login.css";
 import s from "../login/login.styles";
 import "./assinar.css";
@@ -48,6 +49,8 @@ function Assinar() {
   // Compra de item da Hot Store (ex.: /assinar?item=cs): mesmo checkout, sem escolha de plano nem cupom.
   const item = itemPago(params.get("item"));
   const loja = item ? ITENS_PAGOS[item] : null;
+  // Produto da Biblioteca (curso novo): depois de pagar, volta para ver a corrente quebrar.
+  const daBiblioteca = !!item && BIBLIOTECA.some((p) => p.id === item);
 
   const [etapa, setEtapa] = useState<Etapa>("carregando");
   const [token, setToken] = useState("");
@@ -432,10 +435,18 @@ function Assinar() {
               </h1>
               <div className={s.form}>
                 <p className={s.ok} role="status">
-                  {loja ? "Sua compra já está no seu Inventário. É por lá que você agenda a call." : "Seu passaporte está ativo. Boa viagem!"}
+                  {daBiblioteca
+                    ? "Acesso liberado. Vamos quebrar essa corrente?"
+                    : loja
+                      ? "Sua compra já está no seu Inventário. É por lá que você agenda a call."
+                      : "Seu passaporte está ativo. Boa viagem!"}
                 </p>
-                <a href={loja ? "/dashboard/inventario" : "/dashboard"} className={s.primary} style={{ display: "grid", placeItems: "center", textDecoration: "none" }}>
-                  {loja ? "Abrir meu Inventário" : "Entrar na área de membros"}
+                <a
+                  href={daBiblioteca ? `/dashboard/aulas?desbloqueado=${item}` : loja ? "/dashboard/inventario" : "/dashboard"}
+                  className={s.primary}
+                  style={{ display: "grid", placeItems: "center", textDecoration: "none" }}
+                >
+                  {daBiblioteca ? "🔓 Quebrar a corrente" : loja ? "Abrir meu Inventário" : "Entrar na área de membros"}
                 </a>
               </div>
             </>

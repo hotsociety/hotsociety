@@ -35,7 +35,7 @@ export const GRUPOS: Grupo[] = [
     g: "Conteúdo",
     itens: [
       { href: "/dashboard/area", t: "Área de Membros", icon: "grid" },
-      { href: "/dashboard/aulas", t: "Módulos", icon: "modules" },
+      { href: "/dashboard/aulas", t: "Biblioteca", icon: "modules" },
       { href: "/dashboard/ferramentas", t: "Ferramentas", icon: "tool" },
       { href: "/dashboard/cappuia", t: "Assistente CappuIA", icon: "bot" },
     ],

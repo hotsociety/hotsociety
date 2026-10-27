@@ -1,12 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Esteira from "../../_components/membros/Esteira";
+import { useMembro } from "../../_components/membros/MemberContext";
 import { m } from "../../_components/membros/proto";
+import { BIBLIOTECA, CHAVE_QUEBRADO } from "../../_lib/biblioteca";
 import { type Modulo } from "../../_lib/demo";
+import { ITENS_PAGOS, itemPago } from "../../_lib/loja";
 import { moduloAtual, proximaAula } from "../../_lib/progresso";
-import Vitrine from "./Vitrine";
+import { supabase } from "../../_lib/supabase";
+import Vitrine, { type ItemVitrine } from "./Vitrine";
 import { capaDoVideo } from "../../_lib/video";
 import { useProgresso } from "../../_components/membros/Progresso";
 import { useAulasInfo } from "../../_components/membros/useAulasInfo";
@@ -23,7 +28,170 @@ const PLAY = (
     <path fill="currentColor" d="M8 5v14l11-7z" />
   </svg>
 );
-export default function Modulos() {
+// Brilho de fundo de cada módulo (tons quentes da marca + um contraste por parada).
+const TONS = ["#C9A24E", "#D98A3D", "#B5523B", "#8E2F45", "#3E7C86", "#6C8FB8", "#C9A24E", "#4E8F6A", "#B8784E"];
+const palavraDe = (t: string) => {
+  const p = (t.split(" · ")[0] || t).split(" ");
+  return (p[0].length <= 2 && p[1] ? `${p[0]} ${p[1]}` : p[0]).toUpperCase();
+};
+const brl = (v: number) => "R$ " + v.toLocaleString("pt-BR");
+
+export default function Pagina() {
+  return (
+    <Suspense fallback={null}>
+      <Roteador />
+    </Suspense>
+  );
+}
+
+// /dashboard/aulas → Biblioteca (produtos) · /dashboard/aulas?produto=hot-academy → módulos do curso
+function Roteador() {
+  const q = useSearchParams();
+  return q.get("produto") === "hot-academy" ? <CursoHotAcademy /> : <Biblioteca desbloqueado={q.get("desbloqueado")} demo={q.get("demo") === "corrente"} />;
+}
+
+/* ===================== Biblioteca de produtos ===================== */
+
+function Biblioteca({ desbloqueado, demo }: { desbloqueado: string | null; demo: boolean }) {
+  const { cargo } = useMembro();
+  const { modulos: MODULOS, feitas } = useProgresso();
+  const [comprados, setComprados] = useState<Set<string> | null>(null);
+  const [mentorado, setMentorado] = useState(false);
+  const [quebrados, setQuebrados] = useState<Set<string>>(new Set());
+  const [demoAtivo, setDemoAtivo] = useState(false);
+  const [k, setK] = useState(0);
+
+  useEffect(() => {
+    // O que já foi desbloqueado (compras pagas no inventário) e se é mentorado.
+    Promise.all([supabase.rpc("meu_inventario"), supabase.rpc("minha_mentoria")]).then(([inv, men]) => {
+      const lista = (inv.data ?? []) as { origem: string; item: string; status: string }[];
+      setComprados(new Set(lista.filter((i) => i.origem === "compra" && i.status === "pago").map((i) => i.item)));
+      setMentorado(!!(men.data as { mentorado?: boolean } | null)?.mentorado);
+    });
+    const ja = new Set<string>();
+    for (const p of BIBLIOTECA) {
+      try {
+        if (localStorage.getItem(CHAVE_QUEBRADO(p.id))) ja.add(p.id);
+      } catch {}
+    }
+    setQuebrados(ja);
+  }, []);
+
+  // Prévia da animação para a equipe: /dashboard/aulas?demo=corrente (não libera nada).
+  useEffect(() => {
+    if (demo && cargo) setDemoAtivo(true);
+  }, [demo, cargo]);
+
+  const onQuebrou = useCallback((id: string) => {
+    if (id === "p2" && demoAtivo) return setDemoAtivo(false);
+    try {
+      localStorage.setItem(CHAVE_QUEBRADO(id), "1");
+    } catch {}
+    setQuebrados((q) => new Set(q).add(id));
+  }, [demoAtivo]);
+
+  const atual = moduloAtual(MODULOS);
+  const iProx = proximaAula(atual, feitas);
+  const totalAulas = MODULOS.reduce((a, x) => a + x.aulas.length, 0);
+  const totalFeitas = MODULOS.reduce((a, x) => a + x.feitas, 0);
+  const pctCurso = Math.round((totalFeitas / Math.max(1, totalAulas)) * 100);
+
+  const itens: ItemVitrine[] = BIBLIOTECA.map((p) => {
+    const acesso = !!p.incluso || (p.tipo === "mentoria" ? mentorado || !!comprados?.has(p.id) : !!comprados?.has(p.id));
+    const emDemo = demoAtivo && p.id === "p2";
+    const quebrar = emDemo || (acesso && !p.incluso && comprados !== null && !quebrados.has(p.id));
+    const preso = !acesso || quebrar;
+    const venda = itemPago(p.id);
+    const base = { key: p.id, no: p.no, selo: `Produto ${p.no}`, img: p.img, tom: p.tom, sub: p.sub, desc: p.desc, corrente: preso, quebrar };
+
+    if (p.id === "hot-academy") {
+      return {
+        ...base,
+        titulo: p.titulo,
+        palavra: "ACADEMY",
+        eyebrow: `Produto ${p.no} · incluso na sua assinatura`,
+        pct: pctCurso,
+        nums: (
+          <>
+            <span>
+              <b>{MODULOS.length}</b> módulos
+            </span>
+            <span>
+              <b>{totalAulas}</b> aulas
+            </span>
+          </>
+        ),
+        acoes: (
+          <>
+            <Link className="hs-vt-btn p" href="/dashboard/aulas?produto=hot-academy">
+              ▶ Acessar o curso
+            </Link>
+            <Link className="hs-vt-btn" href={`/dashboard/aulas/${atual.slug}?aula=${iProx + 1}`}>
+              {totalFeitas === 0 ? "Primeira aula" : `Continuar · Mod ${atual.n}`}
+            </Link>
+          </>
+        ),
+      };
+    }
+    if (p.tipo === "mentoria") {
+      return {
+        ...base,
+        titulo: p.titulo,
+        palavra: "MÔNACO",
+        eyebrow: preso ? `Produto ${p.no} · bloqueado · por aplicação` : `Produto ${p.no} · você é mentorado`,
+        acoes: (
+          <Link className="hs-vt-btn p" href="/dashboard/mentoria">
+            {preso ? "Aplicar para a mentoria" : "▶ Acessar a mentoria"}
+          </Link>
+        ),
+      };
+    }
+    // Produtos 2, 3 e 4
+    return {
+      ...base,
+      titulo: p.titulo,
+      palavra: preso ? "TRAVADO" : p.titulo.toUpperCase(),
+      eyebrow: preso ? `Produto ${p.no} · bloqueado` : `Produto ${p.no} · desbloqueado`,
+      acoes: !preso ? (
+        <span className="hs-vt-btn" aria-disabled="true">
+          Conteúdo chegando em breve
+        </span>
+      ) : venda ? (
+        <Link className="hs-vt-btn p" href={`/assinar?item=${venda}`}>
+          🔓 Quebrar a corrente · {brl(ITENS_PAGOS[venda].preco)}
+        </Link>
+      ) : (
+        <span className="hs-vt-btn" aria-disabled="true">
+          🔒 Em breve
+        </span>
+      ),
+    };
+  });
+
+  const inicial = desbloqueado ? BIBLIOTECA.findIndex((p) => p.id === desbloqueado) : demoAtivo ? 1 : -1;
+  const liberados = itens.filter((i) => !i.corrente).length;
+
+  return (
+    <section className={m("view")} aria-label="Biblioteca">
+      <div className={m("top")}>
+        <div>
+          <h1>Biblioteca</h1>
+          <p className={m("sub")}>
+            {liberados} de {itens.length} produtos liberados · role para ver cada um
+          </p>
+        </div>
+        <Link className={m("btn btn-p")} href={`/dashboard/aulas/${atual.slug}?aula=${iProx + 1}`}>
+          ▶ {totalFeitas === 0 ? "Começar a Hot Academy" : `Continuar · Mod ${atual.n}, aula ${iProx + 1}`}
+        </Link>
+      </div>
+      <Vitrine itens={itens} ativo={Math.min(k, itens.length - 1)} onAtivo={setK} onQuebrou={onQuebrou} rotulo="Produtos" inicial={inicial > 0 ? inicial : undefined} />
+    </section>
+  );
+}
+
+/* ===================== Curso: Hot Academy (módulos) ===================== */
+
+function CursoHotAcademy() {
   const { modulos: MODULOS, feitas } = useProgresso();
   const info = useAulasInfo();
   const [filtro, setFiltro] = useState<Filtro>("all");
@@ -65,6 +233,9 @@ export default function Modulos() {
     <section className={m("view")} aria-label="Módulos">
       <div className={m("top")}>
         <div>
+          <Link href="/dashboard/aulas" className={m("sub")} style={{ display: "inline-block", marginBottom: 6, textDecoration: "none" }}>
+            ‹ Biblioteca · Produto 01
+          </Link>
           <h1>Hot Academy</h1>
           <p className={m("sub")}>
             {MODULOS.length} módulos · {totalAulas} aulas · {pctCurso}% concluído
@@ -106,12 +277,53 @@ export default function Modulos() {
         </div>
       ) : (
         <Vitrine
-          itens={visiveis}
+          rotulo="Módulos"
           ativo={kOk}
           onAtivo={setK}
-          onVerAulas={() => detalhe.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-          hrefDe={hrefDe}
-          rotuloDe={rotuloDe}
+          itens={visiveis.map(({ mod: x }) => {
+            const pct = Math.round((x.feitas / x.aulas.length) * 100);
+            const lock = x.status === "bloqueado";
+            return {
+              key: x.slug,
+              no: x.n,
+              selo: `MOD ${x.n}`,
+              palavra: palavraDe(x.t),
+              titulo: x.t.split(" · ")[0],
+              sub: x.t.includes(" · ") ? x.t.split(" · ").slice(1).join(" · ") : undefined,
+              eyebrow: `Módulo ${x.n} · ${x.stop}${x.status === "feito" ? " · ✓ concluído" : x.status === "andamento" ? ` · ${pct}% feito` : ""}`,
+              desc: lock ? (x.trava ?? "") : x.desc,
+              img: x.img,
+              tom: TONS[Number(x.n) % TONS.length] ?? TONS[0],
+              apagado: lock,
+              pct,
+              nums: (
+                <>
+                  <span>
+                    <b>{x.aulas.length}</b> aulas
+                  </span>
+                  <span>
+                    <b>{x.feitas}</b> vistas
+                  </span>
+                </>
+              ),
+              acoes: (
+                <>
+                  {lock ? (
+                    <Link className="hs-vt-btn p" href="/dashboard/jornada">
+                      Ver requisitos
+                    </Link>
+                  ) : (
+                    <Link className="hs-vt-btn p" href={hrefDe(x)}>
+                      ▶ {rotuloDe(x)}
+                    </Link>
+                  )}
+                  <button type="button" className="hs-vt-btn" onClick={() => detalhe.current?.scrollIntoView({ behavior: "smooth", block: "start" })}>
+                    Ver aulas
+                  </button>
+                </>
+              ),
+            };
+          })}
         />
       )}
 
