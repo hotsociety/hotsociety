@@ -11,7 +11,8 @@ import { type Modulo } from "../../_lib/demo";
 import { ITENS_PAGOS, itemPago } from "../../_lib/loja";
 import { moduloAtual, proximaAula } from "../../_lib/progresso";
 import { supabase } from "../../_lib/supabase";
-import Vitrine, { type ItemVitrine } from "./Vitrine";
+import Vitrine from "./Vitrine";
+import Vitrine3D, { type Produto3D } from "./Vitrine3D";
 import { capaDoVideo } from "../../_lib/video";
 import { useProgresso } from "../../_components/membros/Progresso";
 import { useAulasInfo } from "../../_components/membros/useAulasInfo";
@@ -59,7 +60,6 @@ function Biblioteca({ desbloqueado, demo }: { desbloqueado: string | null; demo:
   const [mentorado, setMentorado] = useState(false);
   const [quebrados, setQuebrados] = useState<Set<string>>(new Set());
   const [demoAtivo, setDemoAtivo] = useState(false);
-  const [k, setK] = useState(0);
 
   useEffect(() => {
     // O que já foi desbloqueado (compras pagas no inventário) e se é mentorado.
@@ -96,34 +96,21 @@ function Biblioteca({ desbloqueado, demo }: { desbloqueado: string | null; demo:
   const totalFeitas = MODULOS.reduce((a, x) => a + x.feitas, 0);
   const pctCurso = Math.round((totalFeitas / Math.max(1, totalAulas)) * 100);
 
-  const itens: ItemVitrine[] = BIBLIOTECA.map((p) => {
+  const produtos: Produto3D[] = BIBLIOTECA.map((p) => {
     const acesso = !!p.incluso || (p.tipo === "mentoria" ? mentorado || !!comprados?.has(p.id) : !!comprados?.has(p.id));
     const emDemo = demoAtivo && p.id === "p2";
     const quebrar = emDemo || (acesso && !p.incluso && comprados !== null && !quebrados.has(p.id));
     const preso = !acesso || quebrar;
     const venda = itemPago(p.id);
-    // Card cinza padrão da plataforma (sem capa), com a descrição e o status.
-    const status = p.incluso ? "Liberado" : preso ? (p.tipo === "mentoria" ? "Por aplicação" : venda ? "Disponível" : "Em breve") : "Liberado";
-    const base = { key: p.id, no: p.no, selo: `Produto ${p.no}`, tom: p.tom, sub: p.sub, desc: p.desc, corrente: preso, quebrar, status };
+    const status = !preso ? "Liberado" : p.tipo === "mentoria" ? "Por aplicação" : venda ? "Disponível" : "Em breve";
+    const base = { key: p.id, no: p.no, titulo: p.titulo, sub: p.sub, desc: p.desc, tom: p.tom, status, preso, quebrar, destaques: p.destaques };
 
     if (p.id === "hot-academy") {
       return {
         ...base,
-        titulo: p.titulo,
+        estado: `Produto ${p.no} · incluso na assinatura · ${pctCurso}% feito`,
         palavra: "ACADEMY",
-        eyebrow: `Produto ${p.no} · incluso na sua assinatura`,
-        pct: pctCurso,
-        nums: (
-          <>
-            <span>
-              <b>{MODULOS.length}</b> módulos
-            </span>
-            <span>
-              <b>{totalAulas}</b> aulas
-            </span>
-          </>
-        ),
-        acoes: (
+        cta: (
           <>
             <Link className="hs-vt-btn p" href="/dashboard/aulas?produto=hot-academy">
               ▶ Acessar o curso
@@ -138,23 +125,20 @@ function Biblioteca({ desbloqueado, demo }: { desbloqueado: string | null; demo:
     if (p.tipo === "mentoria") {
       return {
         ...base,
-        titulo: p.titulo,
+        estado: preso ? `Produto ${p.no} · bloqueado · por aplicação` : `Produto ${p.no} · você é mentorado`,
         palavra: "MÔNACO",
-        eyebrow: preso ? `Produto ${p.no} · bloqueado · por aplicação` : `Produto ${p.no} · você é mentorado`,
-        acoes: (
+        cta: (
           <Link className="hs-vt-btn p" href="/dashboard/mentoria">
             {preso ? "Aplicar para a mentoria" : "▶ Acessar a mentoria"}
           </Link>
         ),
       };
     }
-    // Produtos 2, 3 e 4
     return {
       ...base,
-      titulo: p.titulo,
-      palavra: preso ? "TRAVADO" : p.titulo.toUpperCase(),
-      eyebrow: preso ? `Produto ${p.no} · bloqueado` : `Produto ${p.no} · desbloqueado`,
-      acoes: !preso ? (
+      estado: preso ? `Produto ${p.no} · bloqueado` : `Produto ${p.no} · desbloqueado`,
+      palavra: preso ? "TRAVADO" : p.titulo,
+      cta: !preso ? (
         <span className="hs-vt-btn" aria-disabled="true">
           Conteúdo chegando em breve
         </span>
@@ -170,8 +154,8 @@ function Biblioteca({ desbloqueado, demo }: { desbloqueado: string | null; demo:
     };
   });
 
-  const inicial = desbloqueado ? BIBLIOTECA.findIndex((p) => p.id === desbloqueado) : demoAtivo ? 1 : -1;
-  const liberados = itens.filter((i) => !i.corrente).length;
+  const inicial = desbloqueado ? BIBLIOTECA.findIndex((p) => p.id === desbloqueado) : demoAtivo ? 1 : 0;
+  const liberados = produtos.filter((i) => !i.preso).length;
 
   return (
     <section className={m("view")} aria-label="Biblioteca">
@@ -179,14 +163,14 @@ function Biblioteca({ desbloqueado, demo }: { desbloqueado: string | null; demo:
         <div>
           <h1>Biblioteca</h1>
           <p className={m("sub")}>
-            {liberados} de {itens.length} produtos liberados · role para ver cada um
+            {liberados} de {produtos.length} produtos liberados · arraste ou use as setas para trocar
           </p>
         </div>
         <Link className={m("btn btn-p")} href={`/dashboard/aulas/${atual.slug}?aula=${iProx + 1}`}>
           ▶ {totalFeitas === 0 ? "Começar a Hot Academy" : `Continuar · Mod ${atual.n}, aula ${iProx + 1}`}
         </Link>
       </div>
-      <Vitrine itens={itens} ativo={Math.min(k, itens.length - 1)} onAtivo={setK} onQuebrou={onQuebrou} rotulo="Produtos" inicial={inicial > 0 ? inicial : undefined} />
+      <Vitrine3D produtos={produtos} inicial={Math.max(0, inicial)} onQuebrou={onQuebrou} />
     </section>
   );
 }

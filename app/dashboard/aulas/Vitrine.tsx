@@ -49,6 +49,7 @@ export default function Vitrine({
   const secao = useRef<HTMLElement>(null);
   const palco = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState(0); // posição contínua (0 … n-1)
+  const [assentado, setAssentado] = useState(false); // a vitrine parou de se mexer
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [quebrando, setQuebrando] = useState<string | null>(null);
   const n = itens.length;
@@ -86,10 +87,15 @@ export default function Vitrine({
       const k = Math.round(atual);
       if (k !== ref.current.ativo) ref.current.onAtivo(k);
       raf = Math.abs(alvo - atual) > 0.0005 ? requestAnimationFrame(quadro) : 0;
-      if (!raf) antes = 0;
+      if (!raf) {
+        antes = 0;
+        setAssentado(true);
+      }
     };
     const pedir = () => {
-      if (!raf) raf = requestAnimationFrame(quadro);
+      if (raf) return;
+      setAssentado(false);
+      raf = requestAnimationFrame(quadro);
     };
     window.addEventListener("scroll", pedir, { passive: true });
     window.addEventListener("resize", pedir);
@@ -126,7 +132,7 @@ export default function Vitrine({
 
   // Quebra da corrente: quando o item pago fica parado no centro.
   const atualItem = itens[lim(ativo, 0, Math.max(0, n - 1))];
-  const parado = Math.abs(pos - ativo) < 0.04;
+  const parado = assentado && Math.abs(pos - ativo) < 0.3;
   const chaveQuebrar = atualItem?.quebrar && parado ? atualItem.key : null;
   useEffect(() => {
     if (!chaveQuebrar || quebrando) return;
@@ -337,7 +343,7 @@ function Elo({ i, lado }: { i: number; lado: "a" | "b" }) {
   );
 }
 
-const Corrente = memo(function Corrente({ quebrando }: { quebrando: boolean }) {
+export const Corrente = memo(function Corrente({ quebrando }: { quebrando: boolean }) {
   return (
     <span className={"hs-ct" + (quebrando ? " quebra" : "")} aria-hidden="true">
       {(["a", "b"] as const).map((lado) => (
