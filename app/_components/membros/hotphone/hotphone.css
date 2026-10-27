@@ -74,6 +74,13 @@
 .hs-hp-colors button{appearance:none;width:46px;height:46px;border-radius:50%;border:2px solid transparent;padding:4px;background:none;cursor:pointer}
 .hs-hp-colors button i{display:block;width:100%;height:100%;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
 .hs-hp-colors button[aria-pressed="true"]{border-color:#F1DC9A}
+.hs-hp-colors button{position:relative;transition:transform .18s ease,border-color .18s ease}
+.hs-hp-colors button:hover{transform:translateY(-2px)}
+.hs-hp-colors button[aria-disabled="true"]{cursor:not-allowed}
+.hs-hp-colors button[aria-disabled="true"] i{filter:grayscale(.55) brightness(.5)}
+.hs-hp-clk{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#F1DC9A;pointer-events:none}
+.hs-hp-chint{margin:8px 0 0;min-height:16px;font-size:11.5px;line-height:1.35;color:#a1a1aa;text-align:center}
+.hs-hp-chint b{color:#F1DC9A;font-weight:700}
 .hs-hp-flipper{perspective:1200px}
 .hs-hp-flip{position:relative;transform-style:preserve-3d;transition:transform 1s cubic-bezier(.3,.7,.2,1);animation:hs-hp-float 4s ease-in-out infinite}
 @keyframes hs-hp-float{50%{translate:0 -8px}}
