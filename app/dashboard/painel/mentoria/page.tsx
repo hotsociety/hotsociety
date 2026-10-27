@@ -22,6 +22,34 @@ type Encontro = {
 };
 type Conversa = { conversa: string; nome: string; email: string; ultima: string; ultima_em: string; do_mentor: boolean };
 type Dados = { turmas: Turma[]; mentorados: Mentorado[]; encontros: Encontro[]; conversas: Conversa[] };
+type StatusApl = "novo" | "contato" | "aprovado" | "recusado";
+type Aplic = {
+  id: string;
+  criado_em: string;
+  origem: "insta_cappu" | "plataforma";
+  comentario: string;
+  nome: string;
+  instagram: string;
+  whatsapp: string;
+  trabalho: string;
+  momento: string | null;
+  operacao: string | null;
+  trava: string;
+  invest: string | null;
+  pc: string | null;
+  tempo: string | null;
+  email: string | null;
+  status: StatusApl;
+  notas: string | null;
+};
+const STATUS_APL: Record<StatusApl, { t: string; cls: string }> = {
+  novo: { t: "Novo", cls: "pendente" },
+  contato: { t: "Em contato", cls: "ativo" },
+  aprovado: { t: "Aprovado", cls: "pago" },
+  recusado: { t: "Recusado", cls: "recusado" },
+};
+const linkIg = (ig: string) => `https://instagram.com/${ig.replace(/^@+/, "")}`;
+const linkWpp = (n: string) => `https://wa.me/${n.length <= 11 ? "55" + n : n}`;
 
 const H2 = { margin: "8px 0 0", font: "800 18px/1.2 var(--f-d)" } as const;
 const TZ = "America/Sao_Paulo";
@@ -49,6 +77,9 @@ export default function PainelMentoria() {
   const [editM, setEditM] = useState<Mentorado | "novo" | null>(null);
   const [editE, setEditE] = useState<Encontro | "novo" | null>(null);
   const [conversa, setConversa] = useState<{ id: string; titulo: string } | null>(null);
+  const [apl, setApl] = useState<Aplic[] | null>(null);
+  const [filtroApl, setFiltroApl] = useState<"todas" | "insta_cappu" | "plataforma" | StatusApl>("todas");
+  const [verApl, setVerApl] = useState<Aplic | null>(null);
   const recarregar = () => setN((x) => x + 1);
 
   useEffect(() => {
@@ -58,6 +89,11 @@ export default function PainelMentoria() {
       if (!vivo) return;
       if (error) setErro(erroAmigavel(error));
       setD((data as Dados) ?? { turmas: [], mentorados: [], encontros: [], conversas: [] });
+    });
+    supabase.rpc("painel_aplicacoes").then(({ data, error }) => {
+      if (!vivo) return;
+      if (error) console.warn("aplicações:", error.message);
+      setApl((data as Aplic[]) ?? []);
     });
     return () => {
       vivo = false;
@@ -136,6 +172,77 @@ export default function PainelMentoria() {
     <>
       {erro && <p className="hs-pn-erro">{erro}</p>}
       {!d && <p className="hs-pn-vazio">Carregando…</p>}
+
+      {apl && (
+        <>
+          <div className="hs-pn-bar" style={{ justifyContent: "space-between" }}>
+            <h2 style={H2}>
+              Aplicações {apl.filter((a) => a.status === "novo").length > 0 && <span className="hs-pn-st pendente">· {apl.filter((a) => a.status === "novo").length} novas</span>}
+            </h2>
+            <select className="hs-pn-sel" value={filtroApl} onChange={(e) => setFiltroApl(e.target.value as typeof filtroApl)} aria-label="Filtrar aplicações">
+              <option value="todas">Todas ({apl.length})</option>
+              <option value="insta_cappu">Lead insta cappu ({apl.filter((a) => a.origem === "insta_cappu").length})</option>
+              <option value="plataforma">Lead plataforma ({apl.filter((a) => a.origem === "plataforma").length})</option>
+              {(Object.keys(STATUS_APL) as StatusApl[]).map((k) => (
+                <option key={k} value={k}>
+                  {STATUS_APL[k].t} ({apl.filter((a) => a.status === k).length})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="hs-pn-tw">
+            <table className="hs-pn-t" style={{ minWidth: 760 }}>
+              <thead>
+                <tr>
+                  <th>Lead</th>
+                  <th>Comentário</th>
+                  <th>Momento · investimento</th>
+                  <th>Status</th>
+                  <th>Quando</th>
+                  <th aria-label="Ações" />
+                </tr>
+              </thead>
+              <tbody>
+                {apl
+                  .filter((a) => filtroApl === "todas" || a.origem === filtroApl || a.status === filtroApl)
+                  .map((a) => (
+                    <tr key={a.id}>
+                      <td style={{ overflowWrap: "anywhere" }}>
+                        <b>{a.nome}</b>
+                        <small>
+                          <a href={linkIg(a.instagram)} target="_blank" rel="noopener noreferrer">
+                            {a.instagram}
+                          </a>{" "}
+                          ·{" "}
+                          <a href={linkWpp(a.whatsapp)} target="_blank" rel="noopener noreferrer">
+                            WhatsApp
+                          </a>
+                        </small>
+                      </td>
+                      <td>
+                        <span className={"hs-pn-st " + (a.origem === "insta_cappu" ? "pendente" : "ativo")}>{a.comentario}</span>
+                      </td>
+                      <td style={{ maxWidth: 220 }}>
+                        {a.momento ?? "—"}
+                        <small>{a.invest ?? ""}</small>
+                      </td>
+                      <td>
+                        <span className={"hs-pn-st " + STATUS_APL[a.status].cls}>{STATUS_APL[a.status].t}</span>
+                      </td>
+                      <td className="nw">{dataHora(a.criado_em)}</td>
+                      <td>
+                        <button type="button" className="hs-pn-btn hs-pn-btn-sm" onClick={() => setVerApl(a)}>
+                          Ver
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+            {apl.length === 0 && <p className="hs-pn-vazio">Nenhuma aplicação ainda. Chegam aqui as do site do Cappu (lead insta cappu) e as da plataforma (lead plataforma).</p>}
+          </div>
+        </>
+      )}
 
       {d && (
         <>
@@ -300,6 +407,7 @@ export default function PainelMentoria() {
           onFeito={() => (setEditE(null), recarregar())}
         />
       )}
+      {verApl && <VerAplicacao a={verApl} onClose={() => setVerApl(null)} onFeito={() => (setVerApl(null), recarregar())} />}
       {conversa && (
         <Modal title={conversa.titulo} onClose={() => (setConversa(null), recarregar())}>
           <MentoriaChat conversa={conversa.id} titulo={conversa.id.startsWith("dm:") ? "Conversa privada" : "Chat da turma"} sub="Você responde como Mentor." />
@@ -517,6 +625,78 @@ function EditarEncontro({
         <label className="hs-pn-fld">
           Link da gravação (opcional, depois do encontro)
           <input className="hs-pn-in" value={gravacao} onChange={(x) => setGravacao(x.target.value)} placeholder="https://" />
+        </label>
+        {erro && <p className="hs-pn-erro">{erro}</p>}
+        <Rodape salvando={salvando} onClose={onClose} />
+      </form>
+    </Modal>
+  );
+}
+
+function VerAplicacao({ a, onClose, onFeito }: { a: Aplic; onClose: () => void; onFeito: () => void }) {
+  const [status, setStatus] = useState<StatusApl>(a.status);
+  const [notas, setNotas] = useState(a.notas ?? "");
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
+  const linhas: [string, string | null][] = [
+    ["Comentário", a.comentario],
+    ["Instagram", a.instagram],
+    ["WhatsApp", a.whatsapp],
+    ["E-mail da conta", a.email],
+    ["Trabalha com", a.trabalho],
+    ["Momento", a.momento],
+    ["Operação", a.operacao],
+    ["Maior trava", a.trava],
+    ["Investimento", a.invest],
+    ["Computador", a.pc],
+    ["Tempo", a.tempo],
+    ["Enviada em", dataHora(a.criado_em)],
+  ];
+
+  async function salvar(e: React.FormEvent) {
+    e.preventDefault();
+    setSalvando(true);
+    const { error } = await supabase.rpc("mentoria_aplicacao_atualizar", { p_id: a.id, p_status: status, p_notas: notas });
+    setSalvando(false);
+    if (error) return setErro(erroAmigavel(error));
+    toast("Aplicação atualizada");
+    onFeito();
+  }
+
+  return (
+    <Modal title={`Aplicação · ${a.nome}`} onClose={onClose}>
+      <form className="hs-pn-form" onSubmit={salvar}>
+        <dl style={{ display: "grid", gridTemplateColumns: "max-content 1fr", gap: "6px 14px", margin: 0, fontSize: 14 }}>
+          {linhas
+            .filter(([, v]) => v)
+            .map(([k, v]) => (
+              <div key={k} style={{ display: "contents" }}>
+                <dt style={{ color: "var(--muted)" }}>{k}</dt>
+                <dd style={{ margin: 0, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{v}</dd>
+              </div>
+            ))}
+        </dl>
+        <div className="hs-pn-bar">
+          <a className="hs-pn-btn hs-pn-btn-sm" href={linkWpp(a.whatsapp)} target="_blank" rel="noopener noreferrer">
+            Chamar no WhatsApp
+          </a>
+          <a className="hs-pn-btn hs-pn-btn-sm" href={linkIg(a.instagram)} target="_blank" rel="noopener noreferrer">
+            Abrir Instagram
+          </a>
+        </div>
+        <label className="hs-pn-fld">
+          Status
+          <select className="hs-pn-sel" value={status} onChange={(e) => setStatus(e.target.value as StatusApl)}>
+            {(Object.keys(STATUS_APL) as StatusApl[]).map((k) => (
+              <option key={k} value={k}>
+                {STATUS_APL[k].t}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="hs-pn-fld">
+          Notas da equipe
+          <textarea className="hs-pn-in" style={{ minHeight: 90, padding: 12, lineHeight: 1.45 }} value={notas} onChange={(e) => setNotas(e.target.value)} maxLength={2000} placeholder="Ex.: call marcada dia 30, mandou proposta…" />
         </label>
         {erro && <p className="hs-pn-erro">{erro}</p>}
         <Rodape salvando={salvando} onClose={onClose} />

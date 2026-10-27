@@ -6,7 +6,7 @@ import "../../_components/membros/painel.css";
 import MentoriaChat from "../../_components/membros/MentoriaChat";
 import { Modal, toast } from "../../_components/membros/Toast";
 import { m } from "../../_components/membros/proto";
-import { postApi } from "../../_lib/api";
+import FormAplicacao from "../../_components/FormAplicacao";
 import { IMG } from "../../_lib/demo";
 import { supabase } from "../../_lib/supabase";
 
@@ -216,40 +216,12 @@ export default function MinhaMentoria() {
 }
 
 function Aplicar({ onClose }: { onClose: () => void }) {
-  const [texto, setTexto] = useState("");
   return (
-    <Modal
-      title="Aplicação · Mentoria High Ticket"
-      onClose={onClose}
-      foot={
-        <>
-          <span style={{ flex: 1 }} />
-          <button
-            type="button"
-            className={m("btn btn-p")}
-            onClick={async () => {
-              if (texto.trim().length < 20) return toast("Conta um pouco mais sobre você antes de enviar");
-              const r = await postApi<{ protocolo: string }>("/api/suporte", { acao: "abrir", tema: "Mentoria", assunto: "Aplicação · Mentoria High Ticket", texto: texto.trim() });
-              if (r.erro) return toast(r.erro);
-              onClose();
-              toast(`Aplicação enviada · ${r.protocolo}`);
-            }}
-          >
-            Enviar aplicação
-          </button>
-        </>
-      }
-    >
+    <Modal title="Aplicação · Mentoria High Ticket" onClose={onClose}>
       <p className={m("sub")} style={{ margin: 0 }}>
-        Conta rapidinho onde você está. O time responde em até 48 h.
+        Leva 2 minutos. A equipe do Cappu analisa e chama você no WhatsApp em até 48 h úteis.
       </p>
-      <textarea
-        value={texto}
-        onChange={(e) => setTexto(e.target.value)}
-        aria-label="Sua aplicação"
-        placeholder="Hoje eu faturo… minha maior trava é…"
-        maxLength={600}
-      />
+      <FormAplicacao compacto onEnviado={() => toast("Aplicação enviada ✓")} />
     </Modal>
   );
 }

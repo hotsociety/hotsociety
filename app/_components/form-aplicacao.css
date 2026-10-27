@@ -1,0 +1,31 @@
+/* Formulário de aplicação da Mentoria High Ticket (plataforma e página pública /mentoria). */
+.hs-apl{display:grid;gap:16px;color:#f4f1ea;font-size:14px}
+.hs-apl-g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.hs-apl.compacto .hs-apl-g2{grid-template-columns:1fr}
+.hs-apl-fld{display:grid;gap:6px;font-weight:600;font-size:13px;color:rgba(244,241,234,.85)}
+.hs-apl-fld input,.hs-apl-fld textarea{width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);
+  color:#f4f1ea;font-family:inherit;font-size:15px;line-height:1.4;outline:none;transition:border-color .2s,background .2s}
+.hs-apl-fld textarea{min-height:96px;resize:vertical}
+.hs-apl-fld input:focus,.hs-apl-fld textarea:focus{border-color:#c9a24e;background:rgba(201,162,78,.06)}
+.hs-apl-fld input::placeholder,.hs-apl-fld textarea::placeholder{color:rgba(244,241,234,.35)}
+.hs-apl-esc{margin:0;padding:0;border:0;display:grid;gap:8px;min-width:0}
+.hs-apl-esc legend{padding:0;margin-bottom:8px;font-weight:600;font-size:13px;color:rgba(244,241,234,.85)}
+.hs-apl-esc>div{display:flex;flex-wrap:wrap;gap:8px}
+.hs-apl-esc label{position:relative;padding:9px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);cursor:pointer;font-size:13.5px;
+  transition:border-color .2s,background .2s,color .2s}
+.hs-apl-esc label:hover{border-color:rgba(201,162,78,.6)}
+.hs-apl-esc label.on{border-color:#c9a24e;background:rgba(201,162,78,.16);color:#f6e4a6}
+.hs-apl-esc input{position:absolute;opacity:0;width:1px;height:1px}
+.hs-apl-esc label:has(input:focus-visible){outline:2px solid #c9a24e;outline-offset:2px}
+.hs-apl-check{display:flex;gap:10px;align-items:center;font-size:13.5px;color:rgba(244,241,234,.8);cursor:pointer}
+.hs-apl-check input{width:18px;height:18px;accent-color:#c9a24e}
+.hs-apl-isca{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.hs-apl-erro{margin:0;padding:10px 12px;border-radius:10px;background:rgba(220,70,70,.12);border:1px solid rgba(220,70,70,.35);color:#ffb4b4;font-size:13.5px}
+.hs-apl-btn{justify-self:start;padding:14px 26px;border:0;border-radius:999px;background:linear-gradient(180deg,#f1dc9a,#c9a24e);color:#141210;font-family:inherit;font-weight:800;font-size:15px;line-height:1;cursor:pointer;
+  transition:transform .15s,box-shadow .2s,opacity .2s}
+.hs-apl-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 26px rgba(201,162,78,.35)}
+.hs-apl-btn:disabled{opacity:.6;cursor:default}
+.hs-apl-ok{display:grid;gap:6px;padding:20px;border-radius:14px;border:1px solid rgba(127,214,154,.35);background:rgba(127,214,154,.08);color:#f4f1ea}
+.hs-apl-ok b{font-size:17px;color:#9fe3b4}
+.hs-apl-ok p{margin:0;color:rgba(244,241,234,.75)}
+@media (max-width:640px){.hs-apl-g2{grid-template-columns:1fr}.hs-apl-btn{justify-self:stretch}}
