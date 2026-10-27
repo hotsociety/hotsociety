@@ -15,6 +15,7 @@ import Toaster from "./Toast";
 import HotPhone from "./hotphone/HotPhone";
 import "./shell.css";
 import "./proto.css";
+import "./polish.css";
 import s from "./shell.styles";
 
 type Item = { href: string; t: string; icon: IconName; badge?: string; soon?: boolean };
@@ -97,6 +98,20 @@ export default function MemberShell({ children }: { children: ReactNode }) {
   const [mais, setMais] = useState(false);
   const [acesso, setAcesso] = useState<Acesso | null>(null);
   const [tentativa, setTentativa] = useState(0);
+
+  // Luz que segue o mouse nos cards (polish.css usa --hs-mx / --hs-my).
+  useEffect(() => {
+    if (!window.matchMedia("(hover: hover)").matches) return;
+    const mover = (e: PointerEvent) => {
+      const el = (e.target as Element | null)?.closest?.(".hs-m-card, .hs-inicio-stat, .hs-inicio-continue, .hs-inicio-course") as HTMLElement | null;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      el.style.setProperty("--hs-mx", `${e.clientX - r.left}px`);
+      el.style.setProperty("--hs-my", `${e.clientY - r.top}px`);
+    };
+    document.addEventListener("pointermove", mover, { passive: true });
+    return () => document.removeEventListener("pointermove", mover);
+  }, []);
 
   // Proteção da área: sem sessão volta para o login.
   useEffect(() => {

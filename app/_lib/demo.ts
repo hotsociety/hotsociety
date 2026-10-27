@@ -32,7 +32,7 @@ export const PERFIL_DEMO = {
 
 export const MISSOES: Record<"diarias" | "semanais" | "mes", Missao[]> = {
   diarias: [
-    { id: "d1", t: "Publicar 3 prévias no funil", meta: "15 min · Módulo 04", xp: 120 },
+    { id: "d1", t: "Publicar 3 prévias no funil", meta: "15 min · Módulo 04 › Operacional", xp: 120 },
     { id: "d2", t: "Responder 10 conversas com o script novo", meta: "20 min · Ferramentas", xp: 80 },
     { id: "d3", t: "Assistir à próxima aula", meta: "12 min · Hot Academy", xp: 40 },
   ],
@@ -312,7 +312,7 @@ export const IA_SUGESTOES: Record<(typeof IA_MODOS)[number]["id"], string[]> = {
 };
 
 export const IA_RESPOSTA =
-  "Regra prática do método: a prévia mostra o contexto e corta antes do ponto alto. Ela vende a curiosidade; o conteúdo fechado entrega.\n\n• Prévia sempre sem nudez: só sugestão e personalidade.\n• Uma chamada clara para assinar em toda prévia.\n• Nunca repita a prévia dentro do conteúdo fechado.\n\nReferência: Módulo 02 · aula 05.";
+  "Regra prática do método: a prévia mostra o contexto e corta antes do ponto alto. Ela vende a curiosidade; o conteúdo fechado entrega.\n\n• Prévia sempre sem nudez: só sugestão e personalidade.\n• Uma chamada clara para assinar em toda prévia.\n• Nunca repita a prévia dentro do conteúdo fechado.\n\nReferência: Módulo 02 · A doce arte do X1.";
 
 export type Ferramenta = { id: string; t: string; texto: string };
 export const FERRAMENTAS: { id: string; n: string; t: string; d: string; qtd: string; itens: Ferramenta[] }[] = [
@@ -426,11 +426,11 @@ export const STORIES: Story[] = [
   },
   {
     k: "missao", nome: "Missão do dia", simbolo: true, autor: "hotsociety", quando: "hoje",
-    slides: [{ h: "Missão do dia:", dest: "+150 XP", p: "Assista à aula 3 do Módulo 02 e comente o que vai aplicar.", acao: ["Aceitar missão", "missao"] }],
+    slides: [{ h: "Missão do dia:", dest: "+150 XP", p: "Assista à aula 3 do Módulo 03 e comente o que vai aplicar.", acao: ["Aceitar missão", "missao"] }],
   },
   {
     k: "aula", nome: "Aula nova", img: IMG.m2, autor: "hotsociety", quando: "1 h",
-    slides: [{ img: IMG.m2, h: "Aula nova no", dest: "Módulo 02", p: "Como criar o rosto da sua modelo do zero.", acao: ["Assistir aula", "/dashboard/aulas/modelos-ia"] }],
+    slides: [{ img: IMG.m2, h: "Aula nova no", dest: "Módulo 03", p: "Crie sua modelo de IA do absoluto zero.", acao: ["Assistir aula", "/dashboard/aulas/modelos-ia"] }],
   },
   {
     k: "res", nome: "Resultados", img: IMG.resultado, autor: "hotsociety", quando: "5 h",
@@ -466,7 +466,7 @@ export type Post = {
 };
 
 export const POSTS: Post[] = [
-  { id: "p1", u: "hotsociety", verificado: true, sub: "Aula nova · Módulo 02", tipo: "aula", img: IMG.m2, tag: "Aula 3 · Módulo 02", dur: "12:40", likes: 1284, com: 86, legenda: "O rosto da sua modelo do zero: persona, estilo e os primeiros prompts. Sem rosto real, sem deepfake.", quando: "há 1 hora", abrir: "/dashboard/aulas/modelos-ia" },
+  { id: "p1", u: "hotsociety", verificado: true, sub: "Aula nova · Módulo 03", tipo: "aula", img: IMG.m2, tag: "Aula 1 · Módulo 03", dur: "12:40", likes: 1284, com: 86, legenda: "O rosto da sua modelo do zero: persona, estilo e os primeiros prompts. Sem rosto real, sem deepfake.", quando: "há 1 hora", abrir: "/dashboard/aulas/modelos-ia" },
   { id: "p2", u: "hotsociety", verificado: true, sub: "Missão do dia", tipo: "missao", likes: 980, com: 44, quando: "há 2 horas" },
   { id: "p3", u: "gui.moraes", sub: "Conquista · Chile · SCL", tipo: "img", img: IMG.resultado, quadrado: true, tag: "Carimbo do Chile", likes: 642, com: 41, legenda: "Bati os 10K verificados. Placa a caminho, próxima escala Lisboa. Valeu pela call de quinta, Cappu.", quando: "há 3 horas", seguir: true },
   { id: "p4", u: "hotsociety", verificado: true, sub: "Carrossel · Ferramentas", tipo: "carrossel", likes: 2310, com: 120, legenda: "Salva esse pra quando for criar a persona. Completo em Ferramentas › Prompts de modelo IA.", quando: "há 5 horas" },
@@ -515,14 +515,14 @@ export type MissaoPlano = { id: string; t: string; meta: string; feito: number; 
 export const MISSOES_PLANO: Record<"d" | "s" | "m", MissaoPlano[]> = {
   d: [
     { id: "01", t: "Responder 10 conversas com o script novo", meta: "20 min · Ferramentas › Abordagens", feito: 0, total: 1, xp: 80, porque: "Seu gargalo hoje é conversa → venda." },
-    { id: "02", t: "Publicar 3 prévias no funil", meta: "15 min · Módulo 04 › aula 05", feito: 2, total: 3, xp: 120 },
-    { id: "03", t: "Assistir à próxima aula", meta: "12 min · Módulo 02 › aula 04", feito: 1, total: 1, xp: 40 },
+    { id: "02", t: "Publicar 3 prévias no funil", meta: "15 min · Módulo 04 › Operacional", feito: 2, total: 3, xp: 120 },
+    { id: "03", t: "Assistir à próxima aula", meta: "Hot Academy › continue de onde parou", feito: 1, total: 1, xp: 40 },
     { id: "04", t: "Responder uma dúvida no # dúvidas", meta: "5 min · Feed › Canais", feito: 0, total: 1, xp: 30, porque: "Ajudar também dá XP." },
   ],
   s: [
     { id: "S1", t: "Postar 5 Reels de 7 segundos", meta: "Ferramentas › Tráfego orgânico", feito: 3, total: 5, xp: 400 },
     { id: "S2", t: "Fazer 50 abordagens no total", meta: "Ferramentas › Abordagens", feito: 22, total: 50, xp: 500 },
-    { id: "S3", t: "Concluir o Módulo 04 até a aula 04", meta: "Tráfego e funil", feito: 1, total: 4, xp: 300 },
+    { id: "S3", t: "Concluir o Módulo 04 até a aula 04", meta: "Operacional do zero", feito: 1, total: 4, xp: 300 },
   ],
   m: [
     { id: "M", t: "Desafio do mês: primeira venda em 30 dias", meta: "Carimbo exclusivo do mês + 1.000 XP", feito: 0, total: 1, xp: 1000, porque: "Só existe neste mês. Não volta." },
