@@ -25,7 +25,7 @@ function ModuloContent() {
   if (!m || m.status === "bloqueado") {
     return (
       <div className="p-6 max-w-4xl mx-auto">
-        <Link href="/dashboard/aulas?produto=hot-academy" className="inline-flex items-center gap-2 text-zinc-400 hover:text-white mb-6 transition-colors">
+        <Link href="/dashboard/aulas" className="inline-flex items-center gap-2 text-zinc-400 hover:text-white mb-6 transition-colors">
           <Icon name="back" size={16} /> Voltar aos módulos
         </Link>
         <div className="bg-[#141416] border border-[#2e2e33] rounded-2xl p-8 text-center">
@@ -165,7 +165,7 @@ function Player({ slug }: { slug: string }) {
 
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto">
-      <Link href="/dashboard/aulas?produto=hot-academy" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white mb-5 transition-colors">
+      <Link href="/dashboard/aulas" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white mb-5 transition-colors">
         <Icon name="back" size={16} /> Voltar aos módulos
       </Link>
 
