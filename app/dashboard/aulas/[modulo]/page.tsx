@@ -8,13 +8,14 @@ import Icon from "@/app/_components/membros/Icon";
 import { useProgresso } from "@/app/_components/membros/Progresso";
 import { toast } from "@/app/_components/membros/Toast";
 import { useAulasInfo } from "@/app/_components/membros/useAulasInfo";
+import { useMarcaDagua } from "@/app/_components/membros/useMarcaDagua";
 import Discussao from "@/app/_components/membros/aula/Discussao";
 import Notas from "@/app/_components/membros/aula/Notas";
 import Trilha from "@/app/_components/membros/aula/Trilha";
 import { IMG } from "@/app/_lib/demo";
 import { proximaAula } from "@/app/_lib/progresso";
 import { supabase } from "@/app/_lib/supabase";
-import { embedDoVideo, lerMaterial } from "@/app/_lib/video";
+import { comMarca, embedDoVideo, lerMaterial } from "@/app/_lib/video";
 
 function ModuloContent() {
   const { modulo } = useParams<{ modulo: string }>();
@@ -98,6 +99,7 @@ function Player({ slug }: { slug: string }) {
   const busca = useSearchParams();
   const { modulos, feitas, concluirAula } = useProgresso();
   const info = useAulasInfo();
+  const marca = useMarcaDagua();
   const { notas, salvas, salvarNota, alternarSalva } = useMeusExtras();
   const m = modulos.find((x) => x.slug === slug)!;
   const idx = modulos.indexOf(m);
@@ -112,7 +114,8 @@ function Player({ slug }: { slug: string }) {
   const aula = m.aulas[atual];
   const concluida = feitas.has(aula.id);
   const extra = info?.get(aula.id);
-  const video = embedDoVideo(extra?.video_url);
+  // Espera o passe da marca d'água antes de abrir o player (senão o vídeo carregaria duas vezes).
+  const video = marca === undefined ? null : comMarca(embedDoVideo(extra?.video_url), marca);
   const material = lerMaterial(extra?.material);
   const pctModulo = Math.round((m.aulas.filter((a) => feitas.has(a.id)).length / m.aulas.length) * 100);
 
@@ -200,7 +203,7 @@ function Player({ slug }: { slug: string }) {
               <>
                 <Image src={m.img} alt="" fill className="object-cover opacity-40" sizes="(max-width: 1280px) 100vw, 900px" />
                 <span className="relative z-10 bg-black/70 backdrop-blur-md px-4 py-2 rounded-lg text-sm text-zinc-200">
-                  {info === null ? "Carregando vídeo…" : "Vídeo desta aula em breve"}
+                  {info === null || (marca === undefined && embedDoVideo(extra?.video_url)) ? "Carregando vídeo…" : "Vídeo desta aula em breve"}
                 </span>
               </>
             )}

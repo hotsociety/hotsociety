@@ -4,16 +4,16 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import Icon from "../../_components/membros/Icon";
 import { useMembro } from "../../_components/membros/MemberContext";
-import { IA_MODOS, IA_RESPOSTA, IA_SUGESTOES } from "../../_lib/demo";
+import { IA_MODOS, IA_SUGESTOES } from "../../_lib/demo";
+import { perguntarCappuIA, saldoCappuIA, TextoIA, type Saldo } from "../../_components/membros/cappuia";
+import { toast } from "../../_components/membros/Toast";
 import "../../_components/membros/ui.css";
 import ui from "../../_components/membros/ui.styles";
 import "./cappuia.css";
 import s from "./cappuia.styles";
 
 type Modo = (typeof IA_MODOS)[number]["id"];
-type Fala = { id: number; de: "eu" | "ia"; t: string };
-
-const LIMITE = 100;
+type Fala = { id: number; de: "eu" | "ia"; t: string; erro?: boolean };
 
 export default function CappuIA() {
   const { nome } = useMembro();
@@ -21,31 +21,39 @@ export default function CappuIA() {
   const [falas, setFalas] = useState<Fala[]>([]);
   const [texto, setTexto] = useState("");
   const [pensando, setPensando] = useState(false);
-  const [usados, setUsados] = useState(28);
+  const [saldo, setSaldo] = useState<Saldo | null>(null);
   const caixa = useRef<HTMLDivElement>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    saldoCappuIA().then(setSaldo);
+  }, []);
 
   useEffect(() => {
     const el = caixa.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [falas.length, pensando]);
 
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current);
-  }, []);
+  const limite = saldo?.limite ?? 100;
+  const usados = saldo?.usadas ?? 0;
+  const acabou = !!saldo && !saldo.ilimitado && usados >= limite;
 
-  function perguntar(t: string) {
+  async function perguntar(t: string) {
     const q = t.trim();
-    if (!q || pensando || usados >= LIMITE) return;
-    setFalas((f) => [...f, { id: f.length, de: "eu", t: q }]);
+    if (!q || pensando) return;
+    if (acabou) return toast("Você usou as perguntas deste mês. Elas voltam no dia 1º.");
+    const nova: Fala = { id: Date.now(), de: "eu", t: q };
+    const historico = [...falas.filter((f) => !f.erro), nova].map((f) => ({ de: f.de, t: f.t }));
+    setFalas((f) => [...f, nova]);
     setTexto("");
     setPensando(true);
-    setUsados((u) => u + 1);
-    // DEMO: troque por uma chamada à sua rota de IA (ex.: /api/cappuia).
-    timer.current = setTimeout(() => {
-      setFalas((f) => [...f, { id: f.length, de: "ia", t: IA_RESPOSTA }]);
-      setPensando(false);
-    }, 900);
+    const r = await perguntarCappuIA(modo, historico);
+    setPensando(false);
+    if (r.texto) {
+      setFalas((f) => [...f, { id: Date.now() + 1, de: "ia", t: r.texto! }]);
+      setSaldo((s) => (s ? { ...s, usadas: s.usadas + 1 } : s));
+    } else {
+      setFalas((f) => [...f, { id: Date.now() + 1, de: "ia", t: r.erro ?? "Não consegui responder agora.", erro: true }]);
+    }
   }
 
   const modoAtual = IA_MODOS.find((m) => m.id === modo)!;
@@ -80,13 +88,14 @@ export default function CappuIA() {
           <div className={`${ui.card} ${s.credits}`}>
             <div className={ui.rowBetween}>
               <h2 className={ui.h2}>Créditos do mês</h2>
-              <span className={s.creditN}>
-                {usados}/{LIMITE}
-              </span>
+              <span className={s.creditN}>{saldo?.ilimitado ? "∞" : saldo ? `${usados}/${limite}` : "…"}</span>
             </div>
             <div className={ui.bar}>
-              <i style={{ width: `${(usados / LIMITE) * 100}%` }} />
+              <i style={{ width: saldo?.ilimitado ? "100%" : `${Math.min(100, (usados / limite) * 100)}%` }} />
             </div>
+            <small style={{ color: "var(--muted)", fontSize: 11.5 }}>
+              {saldo?.ilimitado ? "Equipe: sem limite." : `${Math.max(0, limite - usados)} perguntas restantes. Renova todo dia 1º.`}
+            </small>
           </div>
         </aside>
 
@@ -114,8 +123,8 @@ export default function CappuIA() {
               </div>
             )}
             {falas.map((f) => (
-              <div key={f.id} className={f.de === "eu" ? s.me : s.ia}>
-                {f.t}
+              <div key={f.id} className={f.de === "eu" ? s.me : s.ia} style={f.erro ? { borderColor: "rgba(239,68,68,.45)", color: "#fca5a5" } : undefined}>
+                {f.de === "ia" && !f.erro ? <TextoIA t={f.t} /> : f.t}
               </div>
             ))}
             {pensando && (
@@ -142,7 +151,8 @@ export default function CappuIA() {
               id="pergunta"
               className={`${ui.input} ${s.ta}`}
               rows={1}
-              placeholder="Pergunte à CappuIA…"
+              placeholder={acabou ? "Perguntas do mês esgotadas. Voltam no dia 1º." : "Pergunte à CappuIA…"}
+              maxLength={1500}
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
               onKeyDown={(e) => {
@@ -152,7 +162,7 @@ export default function CappuIA() {
                 }
               }}
             />
-            <button type="submit" className={s.send} aria-label="Enviar" disabled={!texto.trim() || pensando}>
+            <button type="submit" className={s.send} aria-label="Enviar" disabled={!texto.trim() || pensando || acabou}>
               <Icon name="send" />
             </button>
           </form>
@@ -160,8 +170,9 @@ export default function CappuIA() {
       </div>
 
       <p className={ui.note}>
-        Demonstração: as respostas são exemplos fixos. A CappuIA não cria imagens de pessoas reais nem conteúdo com aparência
-        de menor de idade.
+        A CappuIA usa inteligência artificial e pode errar: confira o que for importante na aula indicada. Não escreva dados
+        pessoais (CPF, senha, cartão) na conversa. Ela não cria conteúdo explícito, imagens de pessoas reais nem nada com
+        aparência de menor de idade.
       </p>
     </div>
   );
