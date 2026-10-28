@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMembro } from "../_components/membros/MemberContext";
 import Contador from "../_components/membros/Contador";
 import Icon from "../_components/membros/Icon";
@@ -27,11 +27,39 @@ const BRL2 = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL"
 // Sócios sempre contados como online, somados aos usuários com a plataforma aberta.
 const SOCIOS_ONLINE = 16;
 
+// Números sobem até o valor ao aparecer (respeita "reduzir movimento").
+function useContagem(alvo: number, ms = 1100) {
+  const [v, setV] = useState(alvo);
+  const de = useRef(0);
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setV(alvo);
+      return;
+    }
+    const ini = de.current;
+    const t0 = performance.now();
+    let raf = 0;
+    const passo = (t: number) => {
+      const k = Math.min(1, (t - t0) / ms);
+      const e = 1 - Math.pow(1 - k, 3);
+      setV(ini + (alvo - ini) * e);
+      if (k < 1) raf = requestAnimationFrame(passo);
+      else de.current = alvo;
+    };
+    raf = requestAnimationFrame(passo);
+    return () => cancelAnimationFrame(raf);
+  }, [alvo, ms]);
+  return v;
+}
+
 export default function Inicio() {
   const { nome } = useMembro();
   const { perfil, nivel, modulos, feitas, avancos, avancarMissao } = useProgresso();
   const [cursos, setCursos] = useState<Curso[] | null>(null);
-  const online = useOnline() + SOCIOS_ONLINE;
+  const presenca = useOnline();
+  const online = presenca.n + SOCIOS_ONLINE;
+  const caixaAnim = useContagem(caixa?.faturado ?? 0);
+  const onlineAnim = useContagem(online);
   const [caixa, setCaixa] = useState<{ faturado: number; membros: number } | null>(null);
 
   // Caixa da comunidade: soma do faturamento verificado de todos os membros.
@@ -85,16 +113,26 @@ export default function Inicio() {
         <Image src="/img/hero-neve.jpg" alt="" fill sizes="(max-width: 1024px) 100vw, 900px" className={s.heroImg} preload />
         <span className={s.heroLine} aria-hidden="true" />
         {/* Canto: caixa da comunidade e membros online */}
-        <aside className="hs-inicio-agora" aria-label="Comunidade agora">
-          <div className="hs-inicio-caixa">
+        <aside className="hs-agora" aria-label="Comunidade agora">
+          <p className="hs-agora-eb">
+            <i aria-hidden="true" /> Ao vivo · Comunidade
+          </p>
+          <div className="hs-agora-caixa">
             <small>Caixa da comunidade</small>
-            <b>{caixa ? BRL2.format(caixa.faturado) : "…"}</b>
-            <em>{caixa ? "faturamento comprovado pelos membros" : "carregando"}</em>
+            <b>{caixa ? BRL2.format(caixaAnim) : "R$ —"}</b>
+            <em>faturamento comprovado pelos membros</em>
           </div>
-          <div className="hs-inicio-online" aria-live="polite">
-            <i aria-hidden="true" />
-            <b>{NUM.format(online)}</b>
-            <span>{online === 1 ? "membro com a plataforma aberta" : "membros com a plataforma aberta"}</span>
+          <div className="hs-agora-on" aria-live="polite">
+            <span className="hs-agora-av" aria-hidden="true">
+              {presenca.iniciais.slice(0, 3).map((ini, k) => (
+                <span key={ini + k}>{ini}</span>
+              ))}
+              <span className="mais">+{SOCIOS_ONLINE}</span>
+            </span>
+            <span className="hs-agora-ontx">
+              <b>{NUM.format(Math.round(onlineAnim))}</b> online agora
+              <small>com a plataforma aberta</small>
+            </span>
           </div>
         </aside>
         <div className={s.heroIn}>

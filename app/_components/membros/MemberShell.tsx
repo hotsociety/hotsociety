@@ -237,7 +237,7 @@ function Casca({
   const { perfil, nivel, temporadaFim } = useProgresso();
   const nome = membro.nome;
   // Conta este membro como online enquanto a área de membros estiver aberta.
-  useEffect(() => entrarOnline(membro.user.id), [membro.user.id]);
+  useEffect(() => entrarOnline(membro.user.id, membro.iniciais), [membro.user.id, membro.iniciais]);
   const stop = ROUTE[perfil.stopAtual] ?? ROUTE[0];
 
   return (
