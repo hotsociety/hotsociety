@@ -27,7 +27,7 @@ export function entrarOnline(userId: string, ini = "") {
       const estado = (canal?.presenceState() ?? {}) as Record<string, { ini?: string }[]>;
       total = Object.keys(estado).length;
       iniciais = Object.values(estado)
-        .map((v) => (v[0]?.ini ?? "").slice(0, 2).toUpperCase())
+        .map((v) => (v.find((m) => m.ini)?.ini ?? "").slice(0, 2).toUpperCase()) // a mesma pessoa pode ter várias abas
         .filter(Boolean);
       avisar();
     })
