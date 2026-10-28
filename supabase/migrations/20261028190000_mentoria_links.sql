@@ -54,7 +54,7 @@ end $$;
 -- Confere permissão para desativar (a rota desliga o link na Stripe e marca com a chave de serviço).
 create or replace function public.mentoria_link_pode_desativar(p_id uuid)
 returns text
-language plpgsql stable security definer set search_path = '' as $$
+language plpgsql security definer set search_path = '' as $$
 declare l public.mentoria_links;
 begin
   perform public.hs_exigir_mentor();
