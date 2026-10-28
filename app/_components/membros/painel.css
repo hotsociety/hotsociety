@@ -128,3 +128,26 @@
 .hs-inv-vazio svg{color:var(--gold-t,#e2c27a)}
 .hs-inv-vazio b{color:var(--ink,var(--neve));font:800 18px/1.2 var(--f-d)}
 .hs-inv-vazio p{margin:0;max-width:420px;font-size:14px}
+
+/* ---------- Mentoria · gerador de link de pagamento ---------- */
+.hs-pn-gl{display:grid;gap:16px;padding:20px;border-radius:14px;border:1px solid rgba(var(--fg-rgb),.08);background:
+  radial-gradient(120% 140% at 100% 0,rgba(212,175,55,.10),transparent 55%),var(--s1);scroll-margin-top:90px}
+.hs-pn-gl-cab{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.hs-pn-gl-cab h2{margin:0;font:800 18px/1.2 var(--f-d)}
+.hs-pn-gl-cab p{margin:6px 0 0;color:var(--muted);font-size:13.5px;max-width:560px}
+.hs-pn-gl-total{display:grid;gap:2px;text-align:right}
+.hs-pn-gl-total small{color:var(--muted);font:600 11.5px/1 var(--f-t);text-transform:uppercase;letter-spacing:.08em}
+.hs-pn-gl-total b{font:800 22px/1.1 var(--f-d);color:var(--gold-t)}
+.hs-pn-gl-form{display:grid;gap:12px;grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr) minmax(150px,.8fr) auto;align-items:end}
+.hs-pn-gl-form .hs-pn-btn{min-height:42px;white-space:nowrap}
+.hs-pn-gl-valor span{position:relative;display:block}
+.hs-pn-gl-valor i{position:absolute;left:12px;top:50%;transform:translateY(-50%);font:700 14px/1 var(--f-t);font-style:normal;color:var(--gold-t);pointer-events:none}
+.hs-pn-gl-valor input{width:100%;padding-left:38px;font-weight:700;font-variant-numeric:tabular-nums}
+@media (max-width:900px){.hs-pn-gl-form{grid-template-columns:1fr 1fr}.hs-pn-gl-form .hs-pn-btn{grid-column:1/-1}}
+@media (max-width:520px){.hs-pn-gl-form{grid-template-columns:1fr}.hs-pn-gl-total{text-align:left}}
+.hs-pn-gl-ok{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:10px;
+  border:1px solid rgba(46,204,113,.35);background:rgba(46,204,113,.08)}
+.hs-pn-gl-oktx{display:grid;gap:4px;min-width:0;flex:1 1 280px}
+.hs-pn-gl-oktx small{color:var(--ok-t,var(--ok));font:700 12px/1.2 var(--f-t)}
+.hs-pn-gl-oktx a{color:var(--neve);font:600 13.5px/1.3 var(--f-t);overflow-wrap:anywhere}
+.hs-pn-gl .hs-pn-tw{margin:0}

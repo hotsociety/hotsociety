@@ -327,51 +327,203 @@ async function stripeConsultarSessao(id: string, pedidoId: string): Promise<Cobr
 
 // ---------- Repasse (Connect) ----------
 // Divisão por produto: % que vai para a conta conectada (FChelottiDev). O resto fica na conta principal (GuTayler).
-// Pode ser trocado sem mexer no código: STRIPE_REPASSE_PCT_MENSAL, _ANUAL, _LOJA (ou STRIPE_REPASSE_PERCENTUAL para todos).
-export const REPASSE_PADRAO: Record<Plano, number> = { mensal: 30, anual: 30, loja: 30 };
+// Pode ser trocado sem mexer no código: STRIPE_REPASSE_PCT_MENSAL, _ANUAL, _LOJA, _MENTORIA (ou STRIPE_REPASSE_PERCENTUAL para todos).
+export type ProdutoRepasse = Plano | "mentoria";
+export const REPASSE_PADRAO: Record<ProdutoRepasse, number> = { mensal: 30, anual: 30, loja: 30, mentoria: 30 };
 
-export function repassePercentual(plano: Plano): number {
-  const porProduto = process.env[`STRIPE_REPASSE_PCT_${plano.toUpperCase()}`];
+export function repassePercentual(produto: ProdutoRepasse): number {
+  const porProduto = process.env[`STRIPE_REPASSE_PCT_${produto.toUpperCase()}`];
   const geral = process.env.STRIPE_REPASSE_PERCENTUAL;
-  const pct = Number(porProduto ?? geral ?? REPASSE_PADRAO[plano]);
-  return pct >= 0 && pct < 100 ? pct : REPASSE_PADRAO[plano];
+  const pct = Number(porProduto ?? geral ?? REPASSE_PADRAO[produto]);
+  return pct >= 0 && pct < 100 ? pct : REPASSE_PADRAO[produto];
 }
 
-function repasseConfig(plano: Plano) {
+function repasseConfig(produto: ProdutoRepasse) {
   const conta = process.env.STRIPE_REPASSE_CONTA?.trim();
-  const pct = repassePercentual(plano);
+  const pct = repassePercentual(produto);
   return conta && /^acct_[A-Za-z0-9]+$/.test(conta) && pct > 0 ? { conta, pct } : null;
 }
 
-// Venda paga: transfere a parte do sócio (sobre o líquido, depois da taxa da Stripe). Devolve os centavos repassados.
-export async function stripeRepassar(p: Pedido, piId: string): Promise<number> {
-  const cfg = repasseConfig(p.plano);
+// Transfere a parte do sócio de um pagamento (sobre o líquido, depois da taxa da Stripe). Devolve os centavos repassados.
+async function repassarPI(piId: string, produto: ProdutoRepasse, grupo: string, brutoCentavos: number, descricao: string): Promise<number> {
+  const cfg = repasseConfig(produto);
   if (!cfg) return 0;
   const pi = await stripe(`/payment_intents/${encodeURIComponent(piId)}?expand[]=latest_charge.balance_transaction`, "GET");
   const ch = pi.latest_charge as (Record<string, unknown> & { id: string; balance_transaction?: { net?: number } | string | null }) | null;
   if (!ch?.id) throw new ErroGateway("cobrança sem charge para repassar", "SEM_CHARGE", 400);
   const bt = typeof ch.balance_transaction === "object" && ch.balance_transaction ? ch.balance_transaction : null;
   // Pix/boleto podem ainda não ter o saldo calculado: usa o valor bruto como base nesse caso.
-  const base = typeof bt?.net === "number" ? bt.net : p.valor_centavos;
+  const base = typeof bt?.net === "number" ? bt.net : brutoCentavos;
   const valor = Math.floor((base * cfg.pct) / 100);
   if (valor <= 0) return 0;
   await stripe(
     "/transfers",
     "POST",
-    { amount: valor, currency: "brl", destination: cfg.conta, source_transaction: ch.id, transfer_group: p.id, description: `Repasse ${cfg.pct}% · ${nomeProduto(p)}`, metadata: { pedido: p.id } },
-    `repasse-${p.id}`,
+    { amount: valor, currency: "brl", destination: cfg.conta, source_transaction: ch.id, transfer_group: grupo, description: `Repasse ${cfg.pct}% · ${descricao}`, metadata: { grupo } },
+    `repasse-${grupo}`,
   );
   return valor;
 }
 
+// Venda do site paga: repasse do pedido.
+export async function stripeRepassar(p: Pedido, piId: string): Promise<number> {
+  return repassarPI(piId, p.plano, p.id, p.valor_centavos, nomeProduto(p));
+}
+
 // Reembolso/contestação: desfaz o repasse do pedido (devolve da conta do sócio para a principal).
-export async function stripeEstornarRepasse(p: Pedido) {
+export async function stripeEstornarRepasse(p: Pick<Pedido, "id">) {
   if (!process.env.STRIPE_SECRET_KEY) return;
   const lista = await stripe(`/transfers?transfer_group=${encodeURIComponent(p.id)}&limit=10`, "GET");
   for (const t of (lista.data as { id: string; amount: number; amount_reversed: number }[] | undefined) ?? []) {
     const falta = t.amount - t.amount_reversed;
     if (falta > 0) await stripe(`/transfers/${t.id}/reversals`, "POST", { amount: falta, metadata: { pedido: p.id } }, `estorno-${t.id}`);
   }
+}
+
+// ---------- Links de pagamento da mentoria (Painel → Mentoria) ----------
+export type MentoriaLink = {
+  id: string;
+  descricao: string;
+  valor_centavos: number;
+  lead_nome: string | null;
+  status: string;
+  stripe_link_id: string | null;
+  pi_id: string | null;
+  criado_em: string;
+};
+
+// Cria um Payment Link da Stripe de uso único (todas as formas ativas: Pix, boleto, cartão, carteiras…).
+export async function stripeCriarLinkMentoria(l: Pick<MentoriaLink, "id" | "descricao" | "valor_centavos" | "lead_nome">) {
+  const preco = await stripe(
+    "/prices",
+    "POST",
+    { currency: "brl", unit_amount: l.valor_centavos, product_data: { name: l.descricao.slice(0, 120), metadata: { tipo: "mentoria" } }, metadata: { mentoria_link: l.id } },
+    `mentoria-preco-${l.id}`,
+  );
+  const meta = { mentoria_link: l.id, ...(l.lead_nome ? { lead: l.lead_nome.slice(0, 80) } : {}) };
+  const base = {
+    line_items: [{ price: preco.id as string, quantity: 1 }],
+    metadata: meta,
+    payment_intent_data: { metadata: meta, description: l.descricao.slice(0, 120), transfer_group: l.id },
+    phone_number_collection: { enabled: true },
+    after_completion: { type: "hosted_confirmation", hosted_confirmation: { custom_message: "Pagamento recebido! Em breve a equipe HOT SOCIETY fala com você no WhatsApp." } },
+  };
+  let link: Record<string, unknown>;
+  try {
+    link = await stripe("/payment_links", "POST", { ...base, restrictions: { completed_sessions: { limit: 1 } } }, `mentoria-link-${l.id}`);
+  } catch (e) {
+    if (!/restriction/i.test((e as Error).message)) throw e;
+    link = await stripe("/payment_links", "POST", base, `mentoria-link2-${l.id}`);
+  }
+  return { url: String(link.url), linkId: String(link.id) };
+}
+
+export async function stripeDesativarLink(linkId: string) {
+  await stripe(`/payment_links/${encodeURIComponent(linkId)}`, "POST", { active: false });
+}
+
+// Webhook: acha o link da mentoria do evento (metadata da sessão/PI) ou null se não for de mentoria.
+export async function mentoriaLinkDoEvento(o: Record<string, unknown> & { metadata?: Record<string, string> | null }): Promise<string | null> {
+  const direto = o.metadata?.mentoria_link;
+  if (direto && /^[0-9a-f-]{36}$/i.test(direto)) return direto;
+  if (typeof o.payment_intent === "string") {
+    const pi = await stripe(`/payment_intents/${encodeURIComponent(o.payment_intent)}`, "GET").catch(() => null);
+    const m = (pi?.metadata as Record<string, string> | undefined)?.mentoria_link;
+    if (m && /^[0-9a-f-]{36}$/i.test(m)) return m;
+  }
+  return null;
+}
+
+const METODO_STRIPE: Record<string, string> = { card: "cartao", pix: "pix", boleto: "boleto" };
+
+// Confere o pagamento na Stripe e atualiza o link: pago → repasse + lança em Vendas; reembolso/contestação → estorna.
+export async function mentoriaAplicarEvento(sb: SupabaseClient, linkId: string, tipo: string, o: Record<string, unknown>) {
+  const { data: l } = await sb.from("mentoria_links").select("*").eq("id", linkId).maybeSingle<MentoriaLink>();
+  if (!l) return { ignorado: "link não encontrado" };
+
+  // Reembolso ou contestação.
+  if (/^charge\.(refunded|dispute\.created)/.test(tipo)) {
+    if (l.status !== "pago") return { status: l.status };
+    await stripeEstornarRepasse({ id: l.id }).catch((e) => console.error(`estorno repasse mentoria ${l.id}:`, (e as Error).message));
+    await sb.from("mentoria_links").update({ status: "reembolsado" }).eq("id", l.id);
+    await lancarVendaMentoria(sb, { ...l, status: "reembolsado" }, null);
+    return { status: "reembolsado" };
+  }
+
+  // Descobre o PaymentIntent do evento (sessão do Payment Link ou o próprio PI).
+  let piId: string | null = null;
+  if (typeof o.id === "string" && o.id.startsWith("pi_")) piId = o.id;
+  else if (typeof o.payment_intent === "string") piId = o.payment_intent;
+  if (!piId) return { status: l.status };
+
+  const pi = (await stripe(`/payment_intents/${encodeURIComponent(piId)}?expand[]=latest_charge`, "GET")) as PIStripe;
+  if (pi.status !== "succeeded") {
+    if (/async_payment_failed|payment_failed/.test(tipo) && l.status === "aberto") await sb.from("mentoria_links").update({ status: "falhou", pi_id: pi.id }).eq("id", l.id);
+    return { status: l.status };
+  }
+  if (l.status === "pago") return { status: "pago" };
+  if ((pi.amount_received ?? pi.amount) !== l.valor_centavos) {
+    console.error(`mentoria ${l.id}: valor pago ${pi.amount_received} diferente de ${l.valor_centavos}`);
+    return { status: l.status };
+  }
+
+  const ch = typeof pi.latest_charge === "object" && pi.latest_charge ? pi.latest_charge : null;
+  const bd = (ch?.billing_details ?? {}) as { name?: string; email?: string };
+  const tipoPM = ((ch?.payment_method_details as { type?: string } | undefined)?.type ?? "") as string;
+  const metodo = METODO_STRIPE[tipoPM] ?? "outro";
+  const pago = {
+    status: "pago",
+    pi_id: pi.id,
+    pago_em: isoDe(ch?.created) ?? new Date().toISOString(),
+    pagador_nome: bd.name?.slice(0, 120) ?? null,
+    pagador_email: bd.email?.toLowerCase().slice(0, 200) ?? null,
+    metodo,
+  };
+  // Marca pago só uma vez (avisos repetidos não repassam de novo).
+  const { data: marcado } = await sb.from("mentoria_links").update(pago).eq("id", l.id).neq("status", "pago").select("id");
+  if (!marcado?.length) return { status: "pago" };
+
+  let repassado = 0;
+  try {
+    repassado = await repassarPI(pi.id, "mentoria", l.id, l.valor_centavos, l.descricao);
+    if (repassado > 0) await sb.from("mentoria_links").update({ split_centavos: repassado }).eq("id", l.id);
+  } catch (e) {
+    console.error(`repasse mentoria ${l.id}:`, (e as Error).message);
+  }
+  if (l.stripe_link_id) await stripeDesativarLink(l.stripe_link_id).catch(() => null);
+  await lancarVendaMentoria(sb, { ...l, ...pago }, repassado);
+  return { status: "pago" };
+}
+
+async function lancarVendaMentoria(
+  sb: SupabaseClient,
+  l: MentoriaLink & { pagador_nome?: string | null; pagador_email?: string | null; metodo?: string | null; pago_em?: string | null },
+  repassado: number | null,
+) {
+  let { pagador_email: email, pagador_nome: nome, metodo } = l;
+  if (!email) {
+    const { data } = await sb.from("mentoria_links").select("pagador_email, pagador_nome, metodo, split_centavos").eq("id", l.id).maybeSingle();
+    email = data?.pagador_email ?? null;
+    nome = nome ?? data?.pagador_nome ?? null;
+    metodo = metodo ?? data?.metodo ?? null;
+    if (repassado === null) repassado = data?.split_centavos ?? 0;
+  }
+  const { error } = await sb.rpc("receber_venda", {
+    p: {
+      pedido: `mentoria-${l.id}`,
+      plataforma: "stripe",
+      produto: l.descricao,
+      plano: "loja", // não mexe no acesso à plataforma
+      cliente_nome: nome ?? l.lead_nome,
+      cliente_email: email ?? "sem-email@hotsociety.com.br",
+      metodo: metodo ?? "outro",
+      valor: l.valor_centavos / 100,
+      liquido: (l.valor_centavos - (repassado ?? 0)) / 100,
+      status: l.status === "pago" ? "pago" : "reembolsado",
+      criado_em: l.pago_em ?? l.criado_em,
+    },
+  });
+  if (error) console.error("receber_venda mentoria:", error.message);
 }
 
 export async function stripeConsultar(p: Pedido): Promise<Cobranca | null> {
