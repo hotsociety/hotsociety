@@ -24,12 +24,14 @@ import s from "./inicio.styles";
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const NUM = new Intl.NumberFormat("pt-BR");
 const BRL2 = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+// Sócios sempre contados como online, somados aos usuários com a plataforma aberta.
+const SOCIOS_ONLINE = 16;
 
 export default function Inicio() {
   const { nome } = useMembro();
   const { perfil, nivel, modulos, feitas, avancos, avancarMissao } = useProgresso();
   const [cursos, setCursos] = useState<Curso[] | null>(null);
-  const online = useOnline();
+  const online = useOnline() + SOCIOS_ONLINE;
   const [caixa, setCaixa] = useState<{ faturado: number; membros: number } | null>(null);
 
   // Caixa da comunidade: soma do faturamento verificado de todos os membros.
@@ -91,7 +93,7 @@ export default function Inicio() {
           </div>
           <div className="hs-inicio-online" aria-live="polite">
             <i aria-hidden="true" />
-            <b>{online > 0 ? NUM.format(online) : "…"}</b>
+            <b>{NUM.format(online)}</b>
             <span>{online === 1 ? "membro com a plataforma aberta" : "membros com a plataforma aberta"}</span>
           </div>
         </aside>
