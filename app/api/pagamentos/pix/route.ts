@@ -34,7 +34,8 @@ function publico(p: Pedido) {
     valor: p.valor_centavos / 100,
     status: p.status,
     br_code: p.status === "pendente" && p.metodo !== "cartao" ? p.br_code : null,
-    checkout_url: p.status === "pendente" && p.metodo === "cartao" ? (p.checkout_url ?? null) : null,
+    // Página segura do gateway (cartão, ou Pix da Stripe quando o QR não pode ser mostrado aqui).
+    checkout_url: p.status === "pendente" ? (p.checkout_url ?? null) : null,
     expira_em: p.expira_em,
   };
 }
@@ -144,7 +145,7 @@ export async function POST(req: Request) {
 
   try {
     const c = await criarCobranca(pedido, { nome, cpf, telefone: telefone || undefined, email: user.email! }, metodo);
-    if (metodo === "pix" && !c.br_code) throw new Error("o gateway não devolveu o código Pix");
+    if (metodo === "pix" && !c.br_code && !c.checkout_url) throw new Error("o gateway não devolveu o código Pix");
     if (!c.id) throw new Error("o gateway não devolveu o id da cobrança");
     const { data: atual } = await sb
       .from("pedidos")

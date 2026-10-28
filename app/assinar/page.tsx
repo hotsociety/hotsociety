@@ -171,7 +171,7 @@ function Assinar() {
       const p = j as Pedido;
       setPedido(p);
       if (p.status === "pago") return setEtapa("pago");
-      if (p.metodo === "cartao" && p.checkout_url && /^https:\/\//.test(p.checkout_url)) {
+      if (p.checkout_url && /^https:\/\//.test(p.checkout_url)) {
         window.location.href = p.checkout_url; // página segura do gateway (o número do cartão não passa pelo nosso site)
         return;
       }

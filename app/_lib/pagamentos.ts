@@ -1,4 +1,10 @@
-// SÓ SERVIDOR. Pagamentos: gateway (Novus ou Transfeer) + gravação no Supabase.
+// SÓ SERVIDOR. Pagamentos: gateway (Stripe, Novus ou Transfeer) + gravação no Supabase.
+//
+// STRIPE (gateway principal — com STRIPE_SECRET_KEY configurada, ela vira o gateway ativo):
+//   STRIPE_SECRET_KEY      → chave secreta (sk_live_…) em Developers → API keys
+//   STRIPE_WEBHOOK_SECRET  → segredo do webhook (whsec_…) do endpoint https://hotsociety.com.br/api/pagamentos/stripe
+//   Pix: QR Code na própria página (Pix precisa estar ativo na conta Stripe; se não estiver, cai na página da Stripe).
+//   Cartão: página segura da Stripe (Checkout), com parcelamento quando a conta permitir.
 //
 // Variáveis na Vercel (tipo Sensitive, nunca NEXT_PUBLIC):
 //   NOVUS_API_KEY              → chave privada da Novus (Integrações → Chave Privada). Com ela, a Novus vira o gateway ativo.
@@ -24,7 +30,7 @@ import { ITENS_PAGOS, itemPago } from "./loja";
 export type PlanoAssinatura = "mensal" | "anual";
 export type Plano = PlanoAssinatura | "loja"; // "loja" = item avulso da Hot Store (não mexe no acesso)
 export type Metodo = "pix" | "cartao";
-export type Gateway = "novus" | "transfeer";
+export type Gateway = "stripe" | "novus" | "transfeer";
 export const VALOR_CENTAVOS: Record<PlanoAssinatura, number> = { mensal: PRICE.mensal * 100, anual: PRICE.anual * 100 };
 export const PRODUTO: Record<PlanoAssinatura, string> = { mensal: "HOT SOCIETY Mensal", anual: "HOT SOCIETY Anual" };
 
@@ -77,17 +83,20 @@ export type Cobranca = {
 export type Cliente = { nome: string; cpf: string; telefone?: string; email: string };
 
 export function gatewayAtivo(): Gateway {
+  if (process.env.STRIPE_SECRET_KEY) return "stripe";
   return process.env.NOVUS_API_KEY ? "novus" : "transfeer";
 }
 
 export function configurado() {
   const g = gatewayAtivo();
   const precisa =
-    g === "novus"
-      ? ["NOVUS_API_KEY", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_SUPABASE_URL"]
-      : ["TRANSFEER_API_KEY", "TRANSFEER_WEBHOOK_SECRET", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_SUPABASE_URL"];
+    g === "stripe"
+      ? ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_SUPABASE_URL"]
+      : g === "novus"
+        ? ["NOVUS_API_KEY", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_SUPABASE_URL"]
+        : ["TRANSFEER_API_KEY", "TRANSFEER_WEBHOOK_SECRET", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_SUPABASE_URL"];
   const faltando = precisa.filter((k) => !process.env[k]);
-  return { ok: faltando.length === 0, faltando, gateway: g, cartao: g === "novus" };
+  return { ok: faltando.length === 0, faltando, gateway: g, cartao: g === "novus" || g === "stripe" };
 }
 
 export function admin(): SupabaseClient {
@@ -152,6 +161,178 @@ async function chamar(url: string, init: RequestInit & { chave: string; idempote
     throw new ErroGateway(`${e.message || `HTTP ${r.status}`}${e.errors ? " " + JSON.stringify(e.errors).slice(0, 300) : ""}`, e.code || String(r.status), r.status);
   }
   return corpo;
+}
+
+/* =====================================================================
+   STRIPE  (API REST direto, sem SDK)
+   Pix: PaymentIntent confirmado no servidor → QR Code (copia e cola) mostrado no nosso site.
+        Se o Pix não estiver liberado na conta, usa a página da Stripe (Checkout) com Pix.
+   Cartão: Checkout Session (página segura da Stripe), parcelado quando disponível.
+   Avisos: webhook assinado (Stripe-Signature) em /api/pagamentos/stripe; o status é sempre
+           conferido de novo na API antes de liberar ou bloquear acesso.
+   ===================================================================== */
+const STRIPE = "https://api.stripe.com/v1";
+
+// Corpo no formato da Stripe (form-urlencoded com colchetes: a[b][0]=c).
+function formStripe(o: Record<string, unknown>, prefixo = "", out = new URLSearchParams()) {
+  for (const [k, v] of Object.entries(o)) {
+    if (v === undefined || v === null) continue;
+    const chave = prefixo ? `${prefixo}[${k}]` : k;
+    if (Array.isArray(v)) v.forEach((x, i) => (typeof x === "object" && x !== null ? formStripe(x as Record<string, unknown>, `${chave}[${i}]`, out) : out.append(`${chave}[${i}]`, String(x))));
+    else if (typeof v === "object") formStripe(v as Record<string, unknown>, chave, out);
+    else out.append(chave, String(v));
+  }
+  return out;
+}
+
+async function stripe(caminho: string, metodo: "GET" | "POST", corpo?: Record<string, unknown>, idempotencia?: string) {
+  const headers: Record<string, string> = { authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`, "stripe-version": "2024-06-20" };
+  if (corpo) headers["content-type"] = "application/x-www-form-urlencoded";
+  if (idempotencia) headers["idempotency-key"] = idempotencia;
+  const r = await fetch(`${STRIPE}${caminho}`, { method: metodo, headers, body: corpo ? formStripe(corpo).toString() : undefined, cache: "no-store", signal: AbortSignal.timeout(15000) });
+  const j = (await r.json().catch(() => ({}))) as Record<string, unknown> & { error?: { message?: string; code?: string; type?: string; param?: string } };
+  if (!r.ok) throw new ErroGateway(`${j.error?.message || `HTTP ${r.status}`}${j.error?.param ? ` (${j.error.param})` : ""}`, j.error?.code || j.error?.type || String(r.status), r.status);
+  return j;
+}
+
+type PIStripe = Record<string, unknown> & {
+  id: string;
+  status: string;
+  amount: number;
+  amount_received?: number;
+  metadata?: Record<string, string>;
+  latest_charge?: (Record<string, unknown> & { refunded?: boolean; amount_refunded?: number; disputed?: boolean; created?: number }) | string | null;
+  next_action?: { type?: string; pix_display_qr_code?: { data?: string; expires_at?: number } } | null;
+};
+
+const isoDe = (seg: unknown) => (typeof seg === "number" ? new Date(seg * 1000).toISOString() : null);
+
+// Status de um PaymentIntent (com a última cobrança expandida) no formato do site.
+function stripeStatusPI(pi: PIStripe): Cobranca["status"] {
+  const ch = typeof pi.latest_charge === "object" && pi.latest_charge ? pi.latest_charge : null;
+  if (ch?.disputed) return "bloqueado";
+  if (ch?.refunded || (ch?.amount_refunded ?? 0) >= pi.amount) return pi.status === "succeeded" ? "reembolsado" : null;
+  if (pi.status === "succeeded") return "pago";
+  if (pi.status === "canceled") return "expirado";
+  return null; // requires_action (Pix aguardando), processing, requires_payment_method…
+}
+
+function stripeDoPI(pi: PIStripe, sessao?: string | null): Cobranca {
+  const ch = typeof pi.latest_charge === "object" && pi.latest_charge ? pi.latest_charge : null;
+  return {
+    gateway: "stripe",
+    id: pi.id,
+    status: stripeStatusPI(pi),
+    valor: pi.status === "succeeded" ? (pi.amount_received ?? pi.amount) : pi.amount,
+    referencia: pi.metadata?.pedido ?? null,
+    sessao: sessao ?? null,
+    br_code: pi.next_action?.pix_display_qr_code?.data ?? null,
+    expira_em: isoDe(pi.next_action?.pix_display_qr_code?.expires_at),
+    pago_em: pi.status === "succeeded" ? isoDe(ch?.created) : null,
+  };
+}
+
+async function stripeCheckout(p: Pedido, c: Cliente, tipo: "card" | "pix"): Promise<Cobranca> {
+  try {
+    return await stripeCheckoutCom(p, c, tipo, true);
+  } catch (e) {
+    // Conta sem parcelamento liberado: tenta de novo sem parcelas.
+    if (tipo === "card" && /installment/i.test((e as Error).message)) return stripeCheckoutCom(p, c, tipo, false);
+    throw e;
+  }
+}
+
+async function stripeCheckoutCom(p: Pedido, c: Cliente, tipo: "card" | "pix", parcelas: boolean): Promise<Cobranca> {
+  const expira = Math.floor(Date.now() / 1000) + 2 * 3600; // a sessão da Stripe aceita de 30 min a 24 h
+  const volta = `${SITE}/assinar?${p.plano === "loja" ? `item=${p.item}&` : ""}pedido=${p.id}`;
+  const s = await stripe(
+    "/checkout/sessions",
+    "POST",
+    {
+      mode: "payment",
+      payment_method_types: [tipo],
+      line_items: [{ quantity: 1, price_data: { currency: "brl", unit_amount: p.valor_centavos, product_data: { name: nomeProduto(p) } } }],
+      customer_email: c.email,
+      client_reference_id: p.id,
+      metadata: { pedido: p.id },
+      payment_intent_data: { metadata: { pedido: p.id }, description: nomeProduto(p) },
+      success_url: volta,
+      cancel_url: `${SITE}/assinar?${p.plano === "loja" ? `item=${p.item}` : `plano=${p.plano}`}`,
+      expires_at: expira,
+      locale: "pt-BR",
+      ...(tipo === "card"
+        ? parcelas
+          ? { payment_method_options: { card: { installments: { enabled: true } } } }
+          : {}
+        : { payment_method_options: { pix: { expires_after_seconds: 3600 } } }),
+    },
+    `sessao-${p.id}${parcelas ? "" : "-sem-parcelas"}`,
+  );
+  const url = txt(s.url);
+  if (!url || !/^https:\/\//.test(url)) throw new ErroGateway("Stripe não devolveu a página de pagamento", "SEM_URL", 502);
+  return { gateway: "stripe", id: txt(s.id) ?? "", status: null, valor: num(s.amount_total) ?? p.valor_centavos, referencia: p.id, sessao: txt(s.id), checkout_url: url, expira_em: isoDe(s.expires_at) };
+}
+
+async function stripeCriarPix(p: Pedido, c: Cliente): Promise<Cobranca> {
+  try {
+    const pi = (await stripe(
+      "/payment_intents",
+      "POST",
+      {
+        amount: p.valor_centavos,
+        currency: "brl",
+        payment_method_types: ["pix"],
+        payment_method_data: { type: "pix", billing_details: { name: c.nome, email: c.email } },
+        payment_method_options: { pix: { expires_after_seconds: 3600 } },
+        confirm: true,
+        description: nomeProduto(p),
+        receipt_email: c.email,
+        metadata: { pedido: p.id },
+      },
+      `pix-${p.id}`,
+    )) as PIStripe;
+    const cob = stripeDoPI(pi);
+    if (cob.br_code) return { ...cob, referencia: p.id };
+    console.error("Stripe Pix sem QR Code, usando a página da Stripe. next_action:", pi.next_action?.type);
+  } catch (e) {
+    console.error("Stripe Pix direto falhou, usando a página da Stripe:", (e as Error).message);
+  }
+  return stripeCheckout(p, c, "pix");
+}
+
+async function stripeConsultarPI(id: string, sessao?: string | null): Promise<Cobranca> {
+  const pi = (await stripe(`/payment_intents/${encodeURIComponent(id)}?expand[]=latest_charge`, "GET")) as PIStripe;
+  return stripeDoPI(pi, sessao);
+}
+
+async function stripeConsultarSessao(id: string, pedidoId: string): Promise<Cobranca> {
+  const s = await stripe(`/checkout/sessions/${encodeURIComponent(id)}`, "GET");
+  const pi = txt(s.payment_intent);
+  if (pi) {
+    const c = await stripeConsultarPI(pi, id);
+    return { ...c, referencia: c.referencia ?? pedidoId };
+  }
+  return { gateway: "stripe", id, status: txt(s.status) === "expired" ? "expirado" : null, valor: num(s.amount_total), referencia: pedidoId, sessao: id };
+}
+
+export async function stripeConsultar(p: Pedido): Promise<Cobranca | null> {
+  if (!p.charge_id) return null;
+  return p.charge_id.startsWith("cs_") ? stripeConsultarSessao(p.charge_id, p.id) : stripeConsultarPI(p.charge_id);
+}
+
+// Assinatura do webhook: cabeçalho "t=…,v1=…" = HMAC-SHA256 de "t.corpo" com o segredo whsec_…; tolera 5 min.
+export function stripeAssinaturaConfere(corpoCru: string, cabecalho: string | null) {
+  const segredo = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!segredo || !cabecalho) return false;
+  const partes = cabecalho.split(",").map((x) => x.trim().split("="));
+  const t = partes.find(([k]) => k === "t")?.[1];
+  const assinaturas = partes.filter(([k]) => k === "v1").map(([, v]) => v);
+  if (!t || !/^\d+$/.test(t) || !assinaturas.length || Math.abs(Date.now() / 1000 - Number(t)) > 300) return false;
+  const certa = Buffer.from(createHmac("sha256", segredo).update(`${t}.${corpoCru}`, "utf8").digest("hex"));
+  return assinaturas.some((v) => {
+    const a = Buffer.from(v ?? "");
+    return a.length === certa.length && timingSafeEqual(a, certa);
+  });
 }
 
 /* =====================================================================
@@ -351,6 +532,7 @@ export function transfeerAssinaturaConfere(corpoCru: string, recebida: string | 
    ===================================================================== */
 
 export async function criarCobranca(p: Pedido, c: Cliente, metodo: Metodo): Promise<Cobranca> {
+  if (gatewayAtivo() === "stripe") return metodo === "cartao" ? stripeCheckout(p, c, "card") : stripeCriarPix(p, c);
   if (gatewayAtivo() === "novus") return metodo === "cartao" ? novusCriarCartao(p, c) : novusCriarPix(p, c);
   if (metodo === "cartao") throw new ErroGateway("Cartão indisponível neste gateway", "SEM_CARTAO", 400);
   return transfeerCriarPix(p, c);
@@ -359,6 +541,7 @@ export async function criarCobranca(p: Pedido, c: Cliente, metodo: Metodo): Prom
 // Status atual de um pedido direto no gateway em que ele foi criado.
 export async function consultarPedido(p: Pedido): Promise<Cobranca | null> {
   if (!p.charge_id) return null;
+  if (p.gateway === "stripe") return stripeConsultar(p);
   if ((p.gateway ?? "transfeer") === "novus") {
     return p.metodo === "cartao" ? novusConsultarSessao(p.charge_id, p.id) : novusConsultarFatura(p.charge_id);
   }
