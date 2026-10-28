@@ -77,7 +77,7 @@
 .hs-conq-ok .hs-conq-coin {
   border-color: var(--gold-hi);
   background: var(--gold-grad);
-  color: #141416;
+  color: var(--s1);
   box-shadow: 0 6px 22px rgba(201, 162, 78, 0.3);
 }
 .hs-conq-perto .hs-conq-coin {

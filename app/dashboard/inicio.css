@@ -20,7 +20,7 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(0deg, rgba(10, 10, 11, 0.97) 10%, rgba(10, 10, 11, 0.25) 75%);
+  background: linear-gradient(0deg, rgba(var(--bg-rgb), 0.97) 10%, rgba(var(--bg-rgb), 0.25) 75%);
 }
 .hs-inicio-heroLine {
   position: absolute;
@@ -163,7 +163,7 @@
   height: 42px;
   border-radius: 50%;
   background: var(--gold-grad);
-  color: #141416;
+  color: var(--s1);
   display: grid;
   place-items: center;
 }

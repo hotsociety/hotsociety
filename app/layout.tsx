@@ -48,7 +48,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${archivo.variable} ${inter.variable} ${mono.variable}`}>
+    <html lang="pt-BR" className={`${archivo.variable} ${inter.variable} ${mono.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Tema claro/escuro antes da página aparecer (sem piscar). */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem("hs-tema")==="claro")document.documentElement.dataset.tema="claro"}catch(e){}` }} />
+      </head>
       <body>
         <UtmCaptura />
         {children}

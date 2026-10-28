@@ -108,7 +108,7 @@
 }
 .hs-ui-btnGold {
   background: var(--gold-grad);
-  color: #141416;
+  color: var(--s1);
 }
 .hs-ui-btnGold:disabled {
   opacity: 0.45;
@@ -158,7 +158,7 @@
 .hs-ui-tab[aria-selected="true"] {
   background: var(--neve);
   border-color: var(--neve);
-  color: #141416;
+  color: var(--s1);
 }
 
 /* selos */
