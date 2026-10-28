@@ -21,6 +21,12 @@ type Link = {
   metodo: string | null;
   pago_em: string | null;
   split_centavos: number;
+  gateway?: "stripe" | "mercadopago";
+};
+type Gateway = "stripe" | "mercadopago";
+const GATEWAY: Record<Gateway, { t: string; sub: string }> = {
+  stripe: { t: "Pix · boleto · cartão à vista", sub: "Stripe" },
+  mercadopago: { t: "Cartão em até 12x", sub: "Mercado Pago" },
 };
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -33,8 +39,10 @@ const ST: Record<Link["status"], { t: string; cls: string }> = {
 };
 const METODO: Record<string, string> = { cartao: "Cartão", pix: "Pix", boleto: "Boleto", outro: "Outro" };
 const wpp = (n: string, texto: string) => `https://wa.me/${n.length <= 11 ? "55" + n : n}?text=${encodeURIComponent(texto)}`;
-const msg = (nome: string | null, desc: string, valor: number, url: string) =>
-  `Oi${nome ? `, ${nome.split(" ")[0]}` : ""}! Segue o link para garantir sua vaga na ${desc} (${BRL.format(valor / 100)}). Dá para pagar com Pix, cartão ou boleto:\n${url}`;
+const msg = (nome: string | null, desc: string, valor: number, url: string, g: Gateway = "stripe") =>
+  `Oi${nome ? `, ${nome.split(" ")[0]}` : ""}! Segue o link para garantir sua vaga na ${desc} (${BRL.format(valor / 100)}). ${
+    g === "mercadopago" ? "Dá para pagar no cartão em até 12x pelo Mercado Pago" : "Dá para pagar com Pix, cartão ou boleto"
+  }:\n${url}`;
 
 // Cartão parcelado em até 12x (Mercado Pago). A Stripe não parcela no Brasil, então a mentoria tem este link fixo.
 // Pagamentos por ele aparecem no painel do Mercado Pago (não entram sozinhos aqui).
@@ -68,7 +76,16 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
   const [valor, setValor] = useState("");
   const [gerando, setGerando] = useState(false);
   const [erro, setErro] = useState("");
-  const [novo, setNovo] = useState<{ url: string; lead: LeadLink | null; descricao: string; valor: number } | null>(null);
+  const [novo, setNovo] = useState<{ url: string; lead: LeadLink | null; descricao: string; valor: number; gateway: Gateway } | null>(null);
+  const [gateway, setGateway] = useState<Gateway>("stripe");
+  const [cfg, setCfg] = useState<{ stripe: boolean; mercadopago: boolean } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/mentoria/link")
+      .then((r) => r.json())
+      .then((j) => setCfg({ stripe: !!j.stripe, mercadopago: !!j.mercadopago }))
+      .catch(() => setCfg({ stripe: true, mercadopago: false }));
+  }, []);
 
   useEffect(() => {
     let vivo = true;
@@ -99,8 +116,8 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
     if (!Number.isFinite(v) || v < 1) return setErro("Digite o valor (mínimo R$ 1,00).");
     setGerando(true);
     try {
-      const r = await chamar({ descricao, valor: v, aplicacao: lead || null });
-      setNovo({ url: r.url!, lead: leadSel, descricao, valor: Math.round(v * 100) });
+      const r = await chamar({ descricao, valor: v, aplicacao: lead || null, gateway });
+      setNovo({ url: r.url!, lead: leadSel, descricao, valor: Math.round(v * 100), gateway });
       setValor("");
       setN((x) => x + 1);
       toast("Link gerado", true);
@@ -141,7 +158,7 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
       <div className="hs-pn-gl-cab">
         <div>
           <h2 id="links-mentoria">Link de pagamento</h2>
-          <p>Digite o valor e mande o link para o lead. Aceita Pix, cartão, boleto, Apple Pay e Google Pay. Cada link vale para um pagamento.</p>
+          <p>Escolha a forma, digite o valor e mande o link para o lead. Cada link vale para um pagamento.</p>
         </div>
         {pagos.length > 0 && (
           <span className="hs-pn-gl-total">
@@ -149,6 +166,28 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
             <b>{BRL.format(totalPago / 100)}</b>
           </span>
         )}
+      </div>
+
+      <div className="hs-pn-gl-gw" role="radiogroup" aria-label="Forma de pagamento do link">
+        {(Object.keys(GATEWAY) as Gateway[]).map((g) => (
+          <button
+            key={g}
+            type="button"
+            role="radio"
+            aria-checked={gateway === g}
+            className={gateway === g ? "on" : ""}
+            onClick={() => {
+              setGateway(g);
+              setErro("");
+            }}
+          >
+            <b>{GATEWAY[g].t}</b>
+            <small>
+              {GATEWAY[g].sub}
+              {cfg && !cfg[g] ? " · falta configurar" : ""}
+            </small>
+          </button>
+        ))}
       </div>
 
       <form className="hs-pn-gl-form" onSubmit={gerar}>
@@ -180,6 +219,7 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
       </form>
       {erro && <p className="hs-pn-erro">{erro}</p>}
 
+      {cfg && !cfg.mercadopago && (
       <div className="hs-pn-gl-mp">
         <span className="hs-pn-gl-oktx">
           <small>Cartão em até 12x · Mercado Pago · {BRL.format(MP_MENTORIA.valor / 100)}</small>
@@ -198,6 +238,7 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
           )}
         </span>
       </div>
+      )}
 
       {novo && (
         <div className="hs-pn-gl-ok" role="status">
@@ -215,7 +256,7 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
               Copiar
             </button>
             {novo.lead && (
-              <a className="hs-pn-btn hs-pn-btn-p hs-pn-btn-sm" href={wpp(novo.lead.whatsapp, msg(novo.lead.nome, novo.descricao, novo.valor, novo.url))} target="_blank" rel="noopener noreferrer">
+              <a className="hs-pn-btn hs-pn-btn-p hs-pn-btn-sm" href={wpp(novo.lead.whatsapp, msg(novo.lead.nome, novo.descricao, novo.valor, novo.url, novo.gateway))} target="_blank" rel="noopener noreferrer">
                 Enviar no WhatsApp
               </a>
             )}
@@ -250,6 +291,7 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
                     <td style={{ overflowWrap: "anywhere" }}>
                       <b>{l.lead_nome ?? "Link avulso"}</b>
                       <small>
+                        {l.gateway === "mercadopago" ? "Mercado Pago · " : ""}
                         {l.descricao}
                         {l.status === "pago" && l.pagador_email ? ` · pago por ${l.pagador_email}` : ""}
                       </small>
@@ -269,7 +311,7 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
                             Copiar
                           </button>
                           {ld && (
-                            <a className="hs-pn-btn hs-pn-btn-sm" href={wpp(ld.whatsapp, msg(ld.nome, l.descricao, l.valor_centavos, l.url))} target="_blank" rel="noopener noreferrer">
+                            <a className="hs-pn-btn hs-pn-btn-sm" href={wpp(ld.whatsapp, msg(ld.nome, l.descricao, l.valor_centavos, l.url, l.gateway ?? "stripe"))} target="_blank" rel="noopener noreferrer">
                               WhatsApp
                             </a>
                           )}
