@@ -7,6 +7,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../../_lib/supabase";
 import { ROUTE } from "../../_lib/site";
+import TemaToggle from "./TemaToggle";
 import Icon, { type IconName } from "./Icon";
 import { MemberContext, nomeDoUsuario, PODE, type Cargo, type Membro } from "./MemberContext";
 import SemAcesso, { type Acesso } from "./SemAcesso";
@@ -241,8 +242,10 @@ function Casca({
         {/* Barra lateral: ícones no tablet, completa no PC */}
         <aside className={s.side} aria-label="Menu da área de membros">
           <Link href="/dashboard" className={s.brand} aria-label="Início da área de membros">
-            <Image src="/brand/hs-simbolo.svg" alt="" width={36} height={36} className={s.brandIcon} />
-            <Image src="/brand/hs-logo.svg" alt="HOT SOCIETY" width={1253} height={170} className={s.brandFull} />
+            <Image src="/brand/hs-simbolo.svg" alt="" width={36} height={36} className={`${s.brandIcon} hs-so-escuro`} />
+            <Image src="/brand/hs-simbolo-escuro.svg" alt="" width={36} height={36} className={`${s.brandIcon} hs-so-claro`} />
+            <Image src="/brand/hs-logo.svg" alt="HOT SOCIETY" width={1253} height={170} className={`${s.brandFull} hs-so-escuro`} />
+            <Image src="/brand/hs-logo-escuro.svg" alt="HOT SOCIETY" width={1253} height={170} className={`${s.brandFull} hs-so-claro`} />
           </Link>
 
           <Link href="/dashboard/perfil" className={s.me}>
@@ -289,6 +292,7 @@ function Casca({
             <b>{temporadaFim}</b>
           </div>
 
+          <TemaToggle className={s.navItem} />
           <button type="button" className={s.navItem} onClick={membro.sair} title="Sair">
             <Icon name="out" />
             <span>Sair</span>
@@ -298,9 +302,11 @@ function Casca({
         {/* Topo: celular e tablet */}
         <header className={s.top}>
           <Link href="/dashboard" className={s.topLogo} aria-label="Início da área de membros">
-            <Image src="/brand/hs-logo.svg" alt="HOT SOCIETY" width={1253} height={170} />
+            <Image src="/brand/hs-logo.svg" alt="HOT SOCIETY" width={1253} height={170} className="hs-so-escuro" />
+            <Image src="/brand/hs-logo-escuro.svg" alt="HOT SOCIETY" width={1253} height={170} className="hs-so-claro" />
           </Link>
           <div className={s.topRight}>
+            <TemaToggle className={s.xp} rotulo={false} tamanho={16} />
             <span className={s.xp}>
               <Icon name="fire" size={16} /> {perfil.streak}
             </span>

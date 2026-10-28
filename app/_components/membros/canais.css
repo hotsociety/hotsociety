@@ -44,14 +44,14 @@
   padding: 0 6px;
   border-radius: 99px;
   background: var(--gold);
-  color: #141416;
+  color: var(--s1);
   font: 800 11px/20px var(--f-m);
   text-align: center;
 }
 .hs-com-ch[aria-current="true"] {
   background: var(--neve);
   border-color: var(--neve);
-  color: #141416;
+  color: var(--s1);
 }
 .hs-com-ch[aria-current="true"] i {
   color: #555;
@@ -149,7 +149,7 @@
   border-radius: 11px;
   border: 0;
   background: var(--gold-grad);
-  color: #141416;
+  color: var(--s1);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -200,6 +200,6 @@
     border-radius: 10px;
   }
 }
-.hs-ch-acao{appearance:none;border:0;background:none;padding:0 0 0 6px;margin-left:auto;color:var(--muted2,#85827a);font:600 11px/1 var(--f-t);cursor:pointer;opacity:0;transition:opacity .15s}
+.hs-ch-acao{appearance:none;border:0;background:none;padding:0 0 0 6px;margin-left:auto;color:var(--muted2,var(--muted2));font:600 11px/1 var(--f-t);cursor:pointer;opacity:0;transition:opacity .15s}
 .hs-com-msg:hover .hs-ch-acao,.hs-ch-acao:focus-visible{opacity:1}
 @media (hover:none){.hs-ch-acao{opacity:1}}

@@ -28,6 +28,10 @@
   --f-t: var(--font-inter, "Inter"), "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-m: var(--font-jetbrains, "JetBrains Mono"), "JetBrains Mono", ui-monospace, Menlo, monospace;
 
+  /* canais RGB para transparências que mudam com o tema (rgba(var(--fg-rgb), .1)) */
+  --fg-rgb: 255, 255, 255;
+  --bg-rgb: 10, 10, 11;
+
   --gutter: clamp(16px, 4vw, 40px);
   --max: 1200px;
   --radius: 14px;
@@ -95,3 +99,71 @@ textarea {
   white-space: nowrap;
   border: 0;
 }
+/* ---------- Tema claro (área de membros) ----------
+   Ligado pelo botão claro/escuro (html[data-tema="claro"]). Só vale onde há a área de membros,
+   para a página de vendas e o login continuarem no visual escuro da marca. */
+html[data-tema="claro"]:has(.hs-shell-app) {
+  color-scheme: light;
+  --breu: #f5f2eb;
+  --s1: #ffffff;
+  --s2: #f3efe6;
+  --s3: #e9e3d6;
+  --line: #e2dccf;
+  --line2: #b7ae9c;
+  --neve: #1a1712;
+  --neve2: #2a261e;
+  --muted: #6d675b;
+  --muted2: #8a8376;
+  --gold: #b48a34;
+  --gold-t: #8c6a22;
+  --gold-hi: #b48a34;
+  --gold-lo: #7a5c1e;
+  --ok: #23905a;
+  --fg-rgb: 26, 23, 18;
+  --bg-rgb: 245, 242, 235;
+  --red-t: #8c6a22;
+  --alt: #8c6a22;
+  --ambar: #8c6a22;
+}
+html[data-tema="claro"]:has(.hs-shell-app) .hs-shell-app {
+  --neve2: #2a261e;
+  --red-t: #8c6a22;
+  --alt: #8c6a22;
+  --ambar: #8c6a22;
+  --pista: #b48a34;
+}
+
+/* Ilhas escuras: capas, pôsteres, vitrine, celular e cards com foto continuam escuros no tema claro. */
+html[data-tema="claro"] .hs-escuro,
+html[data-tema="claro"] .hs-vt-palco,
+html[data-tema="claro"] .hs-aula-c,
+html[data-tema="claro"] .hs-m-am-hero,
+html[data-tema="claro"] .hs-m-mhero,
+html[data-tema="claro"] .hs-hp-hpw {
+  color-scheme: dark;
+  --breu: #0a0a0b;
+  --s1: #141416;
+  --s2: #1c1c1f;
+  --s3: #26262a;
+  --line: #2e2e33;
+  --line2: #6a6a72;
+  --neve: #f4f2ec;
+  --neve2: #edeae2;
+  --muted: #a9a69e;
+  --muted2: #85827a;
+  --gold: #c9a24e;
+  --gold-t: #d9b566;
+  --gold-hi: #f1dc9a;
+  --gold-lo: #9c7a33;
+  --fg-rgb: 255, 255, 255;
+  --bg-rgb: 10, 10, 11;
+  --red-t: #d9b566;
+  --alt: #d9b566;
+  --ambar: #d9b566;
+  color: var(--neve);
+}
+
+/* Logo: versão escura no tema claro. */
+.hs-so-claro { display: none !important; }
+html[data-tema="claro"]:has(.hs-shell-app) .hs-so-claro { display: revert !important; }
+html[data-tema="claro"]:has(.hs-shell-app) .hs-so-escuro { display: none !important; }

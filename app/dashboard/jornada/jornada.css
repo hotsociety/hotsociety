@@ -33,7 +33,7 @@
   background: var(--breu);
   display: grid;
   place-items: center;
-  color: #141416;
+  color: var(--s1);
 }
 .hs-jorn-ok .hs-jorn-dot {
   background: var(--gold);

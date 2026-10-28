@@ -157,7 +157,7 @@
 }
 .hs-shell-badge {
   background: var(--gold);
-  color: #141416;
+  color: var(--s1);
 }
 .hs-shell-soonTag {
   border: 1px solid var(--line);
@@ -227,7 +227,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  background: rgba(10, 10, 11, 0.9);
+  background: rgba(var(--bg-rgb), 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);

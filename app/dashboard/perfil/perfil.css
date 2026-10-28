@@ -15,7 +15,7 @@
   place-items: center;
   font: 900 22px/1 var(--f-d);
   color: var(--gold-hi);
-  background: #0b0b0c;
+  background: var(--breu);
 }
 .hs-perfil-passInfo {
   display: grid;

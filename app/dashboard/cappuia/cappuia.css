@@ -132,7 +132,7 @@
   justify-self: end;
   border-radius: 14px 4px 14px 14px;
   background: var(--neve);
-  color: #141416;
+  color: var(--s1);
 }
 .hs-ia-ia {
   justify-self: start;
@@ -182,7 +182,7 @@
   border-radius: 11px;
   border: 0;
   background: var(--gold-grad);
-  color: #141416;
+  color: var(--s1);
   display: grid;
   place-items: center;
   cursor: pointer;
