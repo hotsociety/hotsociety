@@ -149,6 +149,19 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
     }
   }
 
+  async function excluir(l: Link) {
+    const aviso = l.status === "aberto" ? " O link para de aceitar pagamento e" : "";
+    if (!window.confirm(`Excluir o link de ${BRL.format(l.valor_centavos / 100)}${l.lead_nome ? ` (${l.lead_nome})` : ""}?${aviso} Ele some da lista.`)) return;
+    try {
+      await chamar({ acao: "excluir", id: l.id });
+      if (novo?.url === l.url) setNovo(null);
+      setLinks((x) => x?.filter((y) => y.id !== l.id) ?? x);
+      toast("Link excluído");
+    } catch (err) {
+      toast((err as Error).message);
+    }
+  }
+
   const pagos = links?.filter((l) => l.status === "pago") ?? [];
   const totalPago = pagos.reduce((t, l) => t + l.valor_centavos, 0);
   const leadDe = (l: Link) => leads.find((x) => x.id === l.aplicacao_id) ?? null;
@@ -266,13 +279,13 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
 
       {links && links.length > 0 && (
         <div className="hs-pn-tw">
-          <table className="hs-pn-t" style={{ minWidth: 980, tableLayout: "fixed" }}>
+          <table className="hs-pn-t" style={{ minWidth: 1060, tableLayout: "fixed" }}>
             <colgroup>
               <col />
               <col style={{ width: 130 }} />
               <col style={{ width: 130 }} />
               <col style={{ width: 150 }} />
-              <col style={{ width: 290 }} />
+              <col style={{ width: 370 }} />
             </colgroup>
             <thead>
               <tr>
@@ -305,21 +318,28 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
                     </td>
                     <td className="nw">{dataHora(l.pago_em ?? l.criado_em)}</td>
                     <td>
-                      {l.status === "aberto" && l.url && (
-                        <div className="hs-pn-acts">
-                          <button type="button" className="hs-pn-btn hs-pn-btn-sm" onClick={() => copiar(l.url!)}>
-                            Copiar
+                      <div className="hs-pn-acts">
+                        {l.status === "aberto" && l.url && (
+                          <>
+                            <button type="button" className="hs-pn-btn hs-pn-btn-sm" onClick={() => copiar(l.url!)}>
+                              Copiar
+                            </button>
+                            {ld && (
+                              <a className="hs-pn-btn hs-pn-btn-sm" href={wpp(ld.whatsapp, msg(ld.nome, l.descricao, l.valor_centavos, l.url, l.gateway ?? "stripe"))} target="_blank" rel="noopener noreferrer">
+                                WhatsApp
+                              </a>
+                            )}
+                            <button type="button" className="hs-pn-btn hs-pn-btn-sm" onClick={() => desativar(l)} aria-label="Desativar link">
+                              Desativar
+                            </button>
+                          </>
+                        )}
+                        {l.status !== "pago" && l.status !== "reembolsado" && (
+                          <button type="button" className="hs-pn-btn hs-pn-btn-sm hs-pn-btn-d" onClick={() => excluir(l)} aria-label="Excluir link">
+                            Excluir
                           </button>
-                          {ld && (
-                            <a className="hs-pn-btn hs-pn-btn-sm" href={wpp(ld.whatsapp, msg(ld.nome, l.descricao, l.valor_centavos, l.url, l.gateway ?? "stripe"))} target="_blank" rel="noopener noreferrer">
-                              WhatsApp
-                            </a>
-                          )}
-                          <button type="button" className="hs-pn-btn hs-pn-btn-sm" onClick={() => desativar(l)} aria-label="Desativar link">
-                            Desativar
-                          </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
