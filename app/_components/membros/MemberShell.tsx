@@ -8,6 +8,7 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "../../_lib/supabase";
 import { ROUTE } from "../../_lib/site";
 import TemaToggle from "./TemaToggle";
+import { entrarOnline, sairOnline } from "./presenca";
 import Icon, { type IconName } from "./Icon";
 import { MemberContext, nomeDoUsuario, PODE, type Cargo, type Membro } from "./MemberContext";
 import SemAcesso, { type Acesso } from "./SemAcesso";
@@ -203,6 +204,7 @@ export default function MemberShell({ children }: { children: ReactNode }) {
     nome,
     iniciais: nome.slice(0, 2).toUpperCase(),
     sair: async () => {
+      sairOnline();
       await supabase.auth.signOut();
       router.replace("/login");
     },
@@ -234,6 +236,8 @@ function Casca({
 }) {
   const { perfil, nivel, temporadaFim } = useProgresso();
   const nome = membro.nome;
+  // Conta este membro como online enquanto a área de membros estiver aberta.
+  useEffect(() => entrarOnline(membro.user.id), [membro.user.id]);
   const stop = ROUTE[perfil.stopAtual] ?? ROUTE[0];
 
   return (

@@ -11,6 +11,7 @@ import { formatPreco, type Curso } from "../_lib/cursos";
 import { ROUTE } from "../_lib/site";
 import { MISSOES_PLANO } from "../_lib/demo";
 import ProximaLive from "../_components/membros/ProximaLive";
+import { useOnline } from "../_components/membros/presenca";
 import Ranking from "../_components/membros/Ranking";
 import { moduloAtual, proximaAula } from "../_lib/progresso";
 import { useProgresso } from "../_components/membros/Progresso";
@@ -27,6 +28,16 @@ export default function Inicio() {
   const { nome } = useMembro();
   const { perfil, nivel, modulos, feitas, avancos, avancarMissao } = useProgresso();
   const [cursos, setCursos] = useState<Curso[] | null>(null);
+  const online = useOnline();
+  const [caixa, setCaixa] = useState<{ faturado: number; membros: number } | null>(null);
+
+  // Caixa da comunidade: soma do faturamento verificado de todos os membros.
+  useEffect(() => {
+    supabase.rpc("comunidade_caixa").then(({ data }) => {
+      const c = data as { faturado: number | string; membros: number } | null;
+      if (c) setCaixa({ faturado: Number(c.faturado) || 0, membros: c.membros ?? 0 });
+    });
+  }, []);
 
   // Cursos avulsos cadastrados na tabela "cursos" do Supabase.
   useEffect(() => {
@@ -70,6 +81,19 @@ export default function Inicio() {
       <section className={s.hero}>
         <Image src="/img/hero-neve.jpg" alt="" fill sizes="(max-width: 1024px) 100vw, 900px" className={s.heroImg} preload />
         <span className={s.heroLine} aria-hidden="true" />
+        {/* Canto: caixa da comunidade e membros online */}
+        <aside className="hs-inicio-agora" aria-label="Comunidade agora">
+          <div className="hs-inicio-caixa">
+            <small>Caixa da comunidade</small>
+            <b>{caixa ? BRL.format(caixa.faturado) : "…"}</b>
+            <em>{caixa ? (caixa.membros ? `faturado verificado de ${NUM.format(caixa.membros)} ${caixa.membros === 1 ? "membro" : "membros"}` : "faturado verificado dos membros") : "carregando"}</em>
+          </div>
+          <div className="hs-inicio-online" aria-live="polite">
+            <i aria-hidden="true" />
+            <b>{online > 0 ? NUM.format(online) : "…"}</b>
+            <span>{online === 1 ? "membro online" : "membros online"}</span>
+          </div>
+        </aside>
         <div className={s.heroIn}>
           <p className={ui.eyebrow}>Passaporte · {p.passaporte}</p>
           <h1 className={ui.h1}>
