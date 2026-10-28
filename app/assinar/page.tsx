@@ -71,6 +71,7 @@ function Assinar() {
   const [cupomErro, setCupomErro] = useState("");
   const [abrirCupom, setAbrirCupom] = useState(() => !!params.get("cupom"));
   const [metodo, setMetodo] = useState<"pix" | "cartao">("pix");
+  const [stripe, setStripe] = useState(false); // Stripe: uma página só com todas as formas de pagamento
   const [temCartao, setTemCartao] = useState(false);
   const voltaPedido = useRef(params.get("pedido"));
 
@@ -95,7 +96,11 @@ function Assinar() {
       if (vivo && a?.ativo && !a.cargo && !item) setJaAtivo(a.valido_ate ?? "sem prazo");
       fetch("/api/pagamentos/pix", { cache: "no-store" })
         .then((r) => r.json())
-        .then((c: { cartao?: boolean }) => vivo && setTemCartao(!!c.cartao))
+        .then((c: { cartao?: boolean; gateway?: string }) => {
+          if (!vivo) return;
+          setTemCartao(!!c.cartao);
+          setStripe(c.gateway === "stripe");
+        })
         .catch(() => {});
       // Voltou da página do cartão: confere o pedido.
       const volta = voltaPedido.current;
@@ -330,7 +335,7 @@ function Assinar() {
                     .{loja ? " Sei que posso pedir reembolso integral em até 7 dias." : " Sei que não há renovação automática e que posso pedir reembolso integral em até 7 dias."}
                   </span>
                 </label>
-                {temCartao && (
+                {temCartao && !stripe && (
                   <div className="hs-as-planos" role="radiogroup" aria-label="Forma de pagamento">
                     <button type="button" role="radio" aria-checked={metodo === "pix"} className="hs-as-plano" onClick={() => setMetodo("pix")}>
                       <b>Pix</b>
@@ -348,7 +353,11 @@ function Assinar() {
                   </p>
                 )}
                 <button type="submit" className={s.primary} disabled={enviando}>
-                  {enviando
+                  {stripe
+                    ? enviando
+                      ? "Abrindo pagamento…"
+                      : `Ir para o pagamento · ${BRL.format(precoFinal)}`
+                    : enviando
                     ? metodo === "cartao"
                       ? "Abrindo pagamento…"
                       : "Gerando Pix…"
@@ -356,7 +365,11 @@ function Assinar() {
                       ? `Pagar ${BRL.format(precoFinal)} no cartão`
                       : `Pagar ${BRL.format(precoFinal)} com Pix`}
                 </button>
-                {metodo === "cartao" && <p className="hs-as-conta">Você vai para a página segura de pagamento e escolhe as parcelas lá. O número do cartão não passa pelo nosso site.</p>}
+                {stripe ? (
+                  <p className="hs-as-conta">Na página segura da Stripe você escolhe: Pix, cartão (em parcelas), boleto, Apple Pay ou Google Pay. Os dados do cartão não passam pelo nosso site.</p>
+                ) : (
+                  metodo === "cartao" && <p className="hs-as-conta">Você vai para a página segura de pagamento e escolhe as parcelas lá. O número do cartão não passa pelo nosso site.</p>
+                )}
                 <p className="hs-as-selos">
                   <span>🔒 Pagamento seguro e criptografado</span>
                   <span>↩ Garantia de 7 dias</span>
@@ -414,9 +427,13 @@ function Assinar() {
               </h1>
               <div className={s.form}>
                 <p className="hs-as-espera" role="status">
-                  <i aria-hidden="true" /> Aguardando a confirmação do cartão…
+                  <i aria-hidden="true" /> {stripe ? "Aguardando a confirmação do pagamento…" : "Aguardando a confirmação do cartão…"}
                 </p>
-                <p className="hs-as-passos">Costuma levar alguns segundos. Pode deixar esta página aberta.</p>
+                <p className="hs-as-passos">
+                  {stripe
+                    ? "Pix e cartão confirmam em segundos. Boleto leva até 3 dias úteis: o acesso libera sozinho e você recebe um e-mail. Pode fechar esta página."
+                    : "Costuma levar alguns segundos. Pode deixar esta página aberta."}
+                </p>
                 <button type="button" className={s.textBtn} onClick={conferir}>
                   Conferir agora
                 </button>

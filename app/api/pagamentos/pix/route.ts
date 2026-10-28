@@ -145,7 +145,7 @@ export async function POST(req: Request) {
 
   try {
     const c = await criarCobranca(pedido, { nome, cpf, telefone: telefone || undefined, email: user.email! }, metodo);
-    if (metodo === "pix" && !c.br_code && !c.checkout_url) throw new Error("o gateway não devolveu o código Pix");
+    if (!c.br_code && !c.checkout_url) throw new Error("o gateway não devolveu o pagamento");
     if (!c.id) throw new Error("o gateway não devolveu o id da cobrança");
     const { data: atual } = await sb
       .from("pedidos")
@@ -176,7 +176,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   const cfg = configurado();
   const id = new URL(req.url).searchParams.get("id");
-  if (!id) return resp({ pix: cfg.ok, cartao: cfg.ok && cfg.cartao });
+  if (!id) return resp({ pix: cfg.ok, cartao: cfg.ok && cfg.cartao, gateway: cfg.gateway });
   if (!cfg.ok) return resp({ erro: "indisponível" }, 503);
   const user = await usuarioDoPedido(req);
   if (!user) return resp({ erro: "Entre na sua conta." }, 401);

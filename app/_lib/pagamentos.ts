@@ -3,8 +3,8 @@
 // STRIPE (gateway principal — com STRIPE_SECRET_KEY configurada, ela vira o gateway ativo):
 //   STRIPE_SECRET_KEY      → chave secreta (sk_live_…) em Developers → API keys
 //   STRIPE_WEBHOOK_SECRET  → segredo do webhook (whsec_…) do endpoint https://hotsociety.com.br/api/pagamentos/stripe
-//   Pix: QR Code na própria página (Pix precisa estar ativo na conta Stripe; se não estiver, cai na página da Stripe).
-//   Cartão: página segura da Stripe (Checkout), com parcelamento quando a conta permitir.
+//   Página segura da Stripe (Checkout) com todas as formas ativas no painel: Pix, boleto, cartão
+//   (parcelado quando a conta permitir), Apple Pay, Google Pay, Link…
 //
 // Variáveis na Vercel (tipo Sensitive, nunca NEXT_PUBLIC):
 //   NOVUS_API_KEY              → chave privada da Novus (Integrações → Chave Privada). Com ela, a Novus vira o gateway ativo.
@@ -232,17 +232,20 @@ function stripeDoPI(pi: PIStripe, sessao?: string | null): Cobranca {
   };
 }
 
-async function stripeCheckout(p: Pedido, c: Cliente, tipo: "card" | "pix"): Promise<Cobranca> {
+type TipoStripe = "card" | "pix" | "todos";
+
+async function stripeCheckout(p: Pedido, c: Cliente, tipo: TipoStripe): Promise<Cobranca> {
   try {
     return await stripeCheckoutCom(p, c, tipo, true);
   } catch (e) {
-    // Conta sem parcelamento liberado: tenta de novo sem parcelas.
-    if (tipo === "card" && /installment/i.test((e as Error).message)) return stripeCheckoutCom(p, c, tipo, false);
+    // Conta sem parcelamento (ou sem alguma forma) liberada: tenta de novo sem as opções extras.
+    if (/installment|payment_method_options/i.test((e as Error).message)) return stripeCheckoutCom(p, c, tipo, false);
     throw e;
   }
 }
 
-async function stripeCheckoutCom(p: Pedido, c: Cliente, tipo: "card" | "pix", parcelas: boolean): Promise<Cobranca> {
+// parcelas = false: sem opções extras (parcelamento, validade do Pix e do boleto).
+async function stripeCheckoutCom(p: Pedido, c: Cliente, tipo: TipoStripe, parcelas: boolean): Promise<Cobranca> {
   const expira = Math.floor(Date.now() / 1000) + 2 * 3600; // a sessão da Stripe aceita de 30 min a 24 h
   const volta = `${SITE}/assinar?${p.plano === "loja" ? `item=${p.item}&` : ""}pedido=${p.id}`;
   const s = await stripe(
@@ -250,7 +253,8 @@ async function stripeCheckoutCom(p: Pedido, c: Cliente, tipo: "card" | "pix", pa
     "POST",
     {
       mode: "payment",
-      payment_method_types: [tipo],
+      // "todos": sem lista fixa, a Stripe mostra todas as formas ativas no painel (Pix, boleto, cartão, Apple Pay, Google Pay, Link…).
+      ...(tipo === "todos" ? {} : { payment_method_types: [tipo] }),
       line_items: [{ quantity: 1, price_data: { currency: "brl", unit_amount: p.valor_centavos, product_data: { name: nomeProduto(p) } } }],
       customer_email: c.email,
       client_reference_id: p.id,
@@ -260,44 +264,21 @@ async function stripeCheckoutCom(p: Pedido, c: Cliente, tipo: "card" | "pix", pa
       cancel_url: `${SITE}/assinar?${p.plano === "loja" ? `item=${p.item}` : `plano=${p.plano}`}`,
       expires_at: expira,
       locale: "pt-BR",
-      ...(tipo === "card"
-        ? parcelas
-          ? { payment_method_options: { card: { installments: { enabled: true } } } }
-          : {}
-        : { payment_method_options: { pix: { expires_after_seconds: 3600 } } }),
+      ...(parcelas
+        ? {
+            payment_method_options: {
+              ...(tipo !== "pix" ? { card: { installments: { enabled: true } } } : {}),
+              ...(tipo !== "card" ? { pix: { expires_after_seconds: 3600 } } : {}),
+              ...(tipo === "todos" ? { boleto: { expires_after_days: 3 } } : {}),
+            },
+          }
+        : {}),
     },
     `sessao-${p.id}${parcelas ? "" : "-sem-parcelas"}`,
   );
   const url = txt(s.url);
   if (!url || !/^https:\/\//.test(url)) throw new ErroGateway("Stripe não devolveu a página de pagamento", "SEM_URL", 502);
   return { gateway: "stripe", id: txt(s.id) ?? "", status: null, valor: num(s.amount_total) ?? p.valor_centavos, referencia: p.id, sessao: txt(s.id), checkout_url: url, expira_em: isoDe(s.expires_at) };
-}
-
-async function stripeCriarPix(p: Pedido, c: Cliente): Promise<Cobranca> {
-  try {
-    const pi = (await stripe(
-      "/payment_intents",
-      "POST",
-      {
-        amount: p.valor_centavos,
-        currency: "brl",
-        payment_method_types: ["pix"],
-        payment_method_data: { type: "pix", billing_details: { name: c.nome, email: c.email } },
-        payment_method_options: { pix: { expires_after_seconds: 3600 } },
-        confirm: true,
-        description: nomeProduto(p),
-        receipt_email: c.email,
-        metadata: { pedido: p.id },
-      },
-      `pix-${p.id}`,
-    )) as PIStripe;
-    const cob = stripeDoPI(pi);
-    if (cob.br_code) return { ...cob, referencia: p.id };
-    console.error("Stripe Pix sem QR Code, usando a página da Stripe. next_action:", pi.next_action?.type);
-  } catch (e) {
-    console.error("Stripe Pix direto falhou, usando a página da Stripe:", (e as Error).message);
-  }
-  return stripeCheckout(p, c, "pix");
 }
 
 async function stripeConsultarPI(id: string, sessao?: string | null): Promise<Cobranca> {
@@ -532,7 +513,8 @@ export function transfeerAssinaturaConfere(corpoCru: string, recebida: string | 
    ===================================================================== */
 
 export async function criarCobranca(p: Pedido, c: Cliente, metodo: Metodo): Promise<Cobranca> {
-  if (gatewayAtivo() === "stripe") return metodo === "cartao" ? stripeCheckout(p, c, "card") : stripeCriarPix(p, c);
+  // Stripe: uma página só com todas as formas de pagamento ativas na conta.
+  if (gatewayAtivo() === "stripe") return stripeCheckout(p, c, "todos");
   if (gatewayAtivo() === "novus") return metodo === "cartao" ? novusCriarCartao(p, c) : novusCriarPix(p, c);
   if (metodo === "cartao") throw new ErroGateway("Cartão indisponível neste gateway", "SEM_CARTAO", 400);
   return transfeerCriarPix(p, c);
