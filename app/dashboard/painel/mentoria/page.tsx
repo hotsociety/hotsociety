@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import MentoriaChat from "../../../_components/membros/MentoriaChat";
 import { PODE, useMembro } from "../../../_components/membros/MemberContext";
 import { Modal, toast } from "../../../_components/membros/Toast";
 import { data, dataHora, erroAmigavel } from "../../../_lib/painel";
 import { supabase } from "../../../_lib/supabase";
+import LinksPagamento from "./LinksPagamento";
 
 type Turma = { id: string; nome: string; inicio: string | null; ativa: boolean; qtd: number };
 type Mentorado = { user_id: string; email: string; nome: string; turma_id: string | null; ativo: boolean; desde: string };
@@ -80,6 +81,14 @@ export default function PainelMentoria() {
   const [apl, setApl] = useState<Aplic[] | null>(null);
   const [filtroApl, setFiltroApl] = useState<"todas" | "insta_cappu" | "plataforma" | StatusApl>("todas");
   const [verApl, setVerApl] = useState<Aplic | null>(null);
+  const [leadLink, setLeadLink] = useState<string | null>(null);
+  const linksRef = useRef<HTMLElement>(null);
+  const leadUsado = useCallback(() => setLeadLink(null), []);
+  const linkPara = (id: string) => {
+    setVerApl(null);
+    setLeadLink(id);
+    linksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   const recarregar = () => setN((x) => x + 1);
 
   useEffect(() => {
@@ -175,9 +184,15 @@ export default function PainelMentoria() {
 
       {apl && (
         <>
+          <LinksPagamento ref={linksRef} leads={apl.map((a) => ({ id: a.id, nome: a.nome, whatsapp: a.whatsapp }))} leadInicial={leadLink} onLeadUsado={leadUsado} />
           <div className="hs-pn-bar" style={{ justifyContent: "space-between" }}>
-            <h2 style={H2}>
-              Aplicações {apl.filter((a) => a.status === "novo").length > 0 && <span className="hs-pn-st pendente">· {apl.filter((a) => a.status === "novo").length} novas</span>}
+            <h2 style={{ ...H2, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              Aplicações
+              {apl.filter((a) => a.status === "novo").length > 0 && (
+                <span className="hs-pn-st pendente" style={{ font: "600 13px/1 var(--f-t)" }}>
+                  {apl.filter((a) => a.status === "novo").length} novas
+                </span>
+              )}
             </h2>
             <select className="hs-pn-sel" value={filtroApl} onChange={(e) => setFiltroApl(e.target.value as typeof filtroApl)} aria-label="Filtrar aplicações">
               <option value="todas">Todas ({apl.length})</option>
@@ -231,9 +246,14 @@ export default function PainelMentoria() {
                       </td>
                       <td className="nw">{dataHora(a.criado_em)}</td>
                       <td>
-                        <button type="button" className="hs-pn-btn hs-pn-btn-sm" onClick={() => setVerApl(a)}>
-                          Ver
-                        </button>
+                        <div className="hs-pn-acts">
+                          <button type="button" className="hs-pn-btn hs-pn-btn-sm" onClick={() => linkPara(a.id)} title="Gerar link de pagamento para este lead">
+                            Link
+                          </button>
+                          <button type="button" className="hs-pn-btn hs-pn-btn-sm" onClick={() => setVerApl(a)}>
+                            Ver
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

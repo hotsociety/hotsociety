@@ -7,7 +7,7 @@
 //   checkout.session.completed · checkout.session.async_payment_succeeded · checkout.session.async_payment_failed · checkout.session.expired
 //   charge.refunded · charge.dispute.created · charge.dispute.closed
 
-import { admin, aplicarCobranca, stripeAssinaturaConfere, stripeConsultar, type Pedido } from "../../../_lib/pagamentos";
+import { admin, aplicarCobranca, mentoriaAplicarEvento, mentoriaLinkDoEvento, stripeAssinaturaConfere, stripeConsultar, type Pedido } from "../../../_lib/pagamentos";
 
 type Obj = Record<string, unknown> & { id?: string; metadata?: Record<string, string> | null };
 
@@ -30,8 +30,20 @@ export async function POST(req: Request) {
   const o = ev.data?.object ?? {};
   const tipo = ev.type ?? "";
 
-  // Descobre o nosso pedido pelo metadata (pedido), client_reference_id ou pelo id da cobrança.
   const sb = admin();
+
+  // Link de pagamento da mentoria (Painel → Mentoria): tem fluxo próprio.
+  if (!o.metadata?.pedido) {
+    try {
+      const link = await mentoriaLinkDoEvento(o);
+      if (link) return Response.json({ ok: true, mentoria: link, ...(await mentoriaAplicarEvento(sb, link, tipo, o)) });
+    } catch (e) {
+      console.error("Stripe mentoria (aviso):", (e as Error).message);
+      return Response.json({ ok: false }, { status: 500 });
+    }
+  }
+
+  // Descobre o nosso pedido pelo metadata (pedido), client_reference_id ou pelo id da cobrança.
   const ref = o.metadata?.pedido ?? (typeof o.client_reference_id === "string" ? o.client_reference_id : null);
   let pedido: Pedido | null = null;
   if (ref && /^[0-9a-f-]{36}$/i.test(ref)) ({ data: pedido } = await sb.from("pedidos").select("*").eq("id", ref).maybeSingle<Pedido>());
