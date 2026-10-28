@@ -5,7 +5,8 @@
 //   STRIPE_WEBHOOK_SECRET  → segredo do webhook (whsec_…) do endpoint https://hotsociety.com.br/api/pagamentos/stripe
 //   Repasse automático (Stripe Connect) — parte de cada venda vai para a conta conectada do sócio:
 //   STRIPE_REPASSE_CONTA       → id da conta conectada (acct_…)
-//   STRIPE_REPASSE_PERCENTUAL  → % do valor líquido (depois da taxa da Stripe), ex.: 30
+//   Percentual por produto: REPASSE_PADRAO (30% em Mensal, Anual e Loja), sobre o líquido depois da taxa da Stripe.
+//   Opcional: STRIPE_REPASSE_PCT_MENSAL / _ANUAL / _LOJA ou STRIPE_REPASSE_PERCENTUAL (todos) para trocar sem deploy de código.
 //   Página segura da Stripe (Checkout) com todas as formas ativas no painel: Pix, boleto, cartão
 //   (parcelado quando a conta permitir), Apple Pay, Google Pay, Link…
 //
@@ -283,7 +284,11 @@ async function stripeCheckoutCom(p: Pedido, c: Cliente, tipo: TipoStripe, parcel
       customer_email: c.email,
       client_reference_id: p.id,
       metadata: { pedido: p.id },
-      payment_intent_data: { metadata: { pedido: p.id }, description: nomeProduto(p) },
+      payment_intent_data: {
+        metadata: { pedido: p.id, divisao: `${100 - repassePercentual(p.plano)}/${repassePercentual(p.plano)}` },
+        description: nomeProduto(p),
+        transfer_group: p.id,
+      },
       success_url: volta,
       cancel_url: `${SITE}/assinar?${p.plano === "loja" ? `item=${p.item}` : `plano=${p.plano}`}`,
       expires_at: expira,
@@ -321,15 +326,26 @@ async function stripeConsultarSessao(id: string, pedidoId: string): Promise<Cobr
 }
 
 // ---------- Repasse (Connect) ----------
-function repasseConfig() {
+// Divisão por produto: % que vai para a conta conectada (FChelottiDev). O resto fica na conta principal (GuTayler).
+// Pode ser trocado sem mexer no código: STRIPE_REPASSE_PCT_MENSAL, _ANUAL, _LOJA (ou STRIPE_REPASSE_PERCENTUAL para todos).
+export const REPASSE_PADRAO: Record<Plano, number> = { mensal: 30, anual: 30, loja: 30 };
+
+export function repassePercentual(plano: Plano): number {
+  const porProduto = process.env[`STRIPE_REPASSE_PCT_${plano.toUpperCase()}`];
+  const geral = process.env.STRIPE_REPASSE_PERCENTUAL;
+  const pct = Number(porProduto ?? geral ?? REPASSE_PADRAO[plano]);
+  return pct >= 0 && pct < 100 ? pct : REPASSE_PADRAO[plano];
+}
+
+function repasseConfig(plano: Plano) {
   const conta = process.env.STRIPE_REPASSE_CONTA?.trim();
-  const pct = Number(process.env.STRIPE_REPASSE_PERCENTUAL);
-  return conta && /^acct_[A-Za-z0-9]+$/.test(conta) && pct > 0 && pct < 100 ? { conta, pct } : null;
+  const pct = repassePercentual(plano);
+  return conta && /^acct_[A-Za-z0-9]+$/.test(conta) && pct > 0 ? { conta, pct } : null;
 }
 
 // Venda paga: transfere a parte do sócio (sobre o líquido, depois da taxa da Stripe). Devolve os centavos repassados.
 export async function stripeRepassar(p: Pedido, piId: string): Promise<number> {
-  const cfg = repasseConfig();
+  const cfg = repasseConfig(p.plano);
   if (!cfg) return 0;
   const pi = await stripe(`/payment_intents/${encodeURIComponent(piId)}?expand[]=latest_charge.balance_transaction`, "GET");
   const ch = pi.latest_charge as (Record<string, unknown> & { id: string; balance_transaction?: { net?: number } | string | null }) | null;
