@@ -369,15 +369,62 @@ async function repassarPI(piId: string, produto: ProdutoRepasse, grupo: string, 
   const bt = typeof ch.balance_transaction === "object" && ch.balance_transaction ? ch.balance_transaction : null;
   // Pix/boleto podem ainda não ter o saldo calculado: usa o valor bruto como base nesse caso.
   const base = typeof bt?.net === "number" ? bt.net : brutoCentavos;
-  const valor = Math.floor((base * cfg.pct) / 100);
+  const bruto = Math.floor((base * cfg.pct) / 100);
+  if (bruto <= 0) return 0;
+  // Débitos pendentes do sócio (estorno sem saldo, parte dele da taxa de contestação) saem deste repasse.
+  const desconto = await reservarDebitos(cfg.conta, bruto, grupo);
+  const valor = bruto - desconto;
   if (valor <= 0) return 0;
   await stripe(
     "/transfers",
     "POST",
-    { amount: valor, currency: "brl", destination: cfg.conta, source_transaction: ch.id, transfer_group: grupo, description: `Repasse ${cfg.pct}% · ${descricao}`, metadata: { grupo } },
+    {
+      amount: valor,
+      currency: "brl",
+      destination: cfg.conta,
+      source_transaction: ch.id,
+      transfer_group: grupo,
+      description: `Repasse ${cfg.pct}% · ${descricao}${desconto ? ` (− ${(desconto / 100).toFixed(2)} de débitos)` : ""}`,
+      metadata: { grupo, ...(desconto ? { debitos_centavos: String(desconto) } : {}) },
+    },
     `repasse-${grupo}`,
   );
   return valor;
+}
+
+// ---------- Débitos do sócio (reembolso/contestação cobrados da conta dele) ----------
+// Quando não dá para puxar na hora (saldo dele zerado) ou é a parte dele da taxa de contestação,
+// o valor fica em repasse_debitos e é descontado dos próximos repasses.
+async function registrarDebito(conta: string, centavos: number, motivo: string, referencia: string) {
+  if (centavos <= 0) return;
+  const { error } = await admin()
+    .from("repasse_debitos")
+    .upsert({ conta, valor_centavos: centavos, restante_centavos: centavos, motivo, referencia }, { onConflict: "referencia", ignoreDuplicates: true });
+  if (error) console.error("registrar débito:", error.message);
+}
+
+async function reservarDebitos(conta: string, limite: number, grupo: string): Promise<number> {
+  const sb = admin();
+  const { data } = await sb
+    .from("repasse_debitos")
+    .select("id, restante_centavos")
+    .eq("conta", conta)
+    .gt("restante_centavos", 0)
+    .order("criado_em", { ascending: true })
+    .limit(50);
+  let usado = 0;
+  for (const d of (data as { id: string; restante_centavos: number }[] | null) ?? []) {
+    if (usado >= limite) break;
+    const parte = Math.min(d.restante_centavos, limite - usado);
+    const resto = d.restante_centavos - parte;
+    const { error } = await sb
+      .from("repasse_debitos")
+      .update({ restante_centavos: resto, quitado_em: resto === 0 ? new Date().toISOString() : null, ultimo_repasse: grupo })
+      .eq("id", d.id)
+      .eq("restante_centavos", d.restante_centavos); // não usa o mesmo débito duas vezes
+    if (!error) usado += parte;
+  }
+  return usado;
 }
 
 // Venda do site paga: repasse do pedido.
@@ -385,13 +432,39 @@ export async function stripeRepassar(p: Pedido, piId: string): Promise<number> {
   return repassarPI(piId, p.plano, p.id, p.valor_centavos, nomeProduto(p));
 }
 
-// Reembolso/contestação: desfaz o repasse do pedido (devolve da conta do sócio para a principal).
-export async function stripeEstornarRepasse(p: Pick<Pedido, "id">) {
+// Reembolso/contestação: a parte do sócio sai da conta dele.
+//  - reembolso parcial → devolve a mesma proporção do repasse; total ou contestação → devolve tudo;
+//  - se a Stripe não deixar puxar (saldo dele zerado), o valor vira débito e sai dos próximos repasses;
+//  - contestação: a parte dele (mesmo % do repasse) da taxa de contestação também vira débito.
+export async function stripeEstornarRepasse(p: Pick<Pedido, "id"> & { plano?: Plano }, piId?: string | null, produto?: ProdutoRepasse) {
   if (!process.env.STRIPE_SECRET_KEY) return;
+  let fracao = 1;
+  let disputa: { id: string; taxa: number } | null = null;
+  if (piId) {
+    const pi = await stripe(`/payment_intents/${encodeURIComponent(piId)}?expand[]=latest_charge`, "GET").catch(() => null);
+    const ch = (pi?.latest_charge ?? null) as { id?: string; amount?: number; amount_refunded?: number; disputed?: boolean } | null;
+    if (ch?.amount && !ch.disputed && ch.amount_refunded) fracao = Math.min(1, ch.amount_refunded / ch.amount);
+    if (ch?.disputed && ch.id) {
+      const ds = await stripe(`/disputes?charge=${encodeURIComponent(ch.id)}&limit=1`, "GET").catch(() => null);
+      const d = (ds?.data as { id: string; balance_transactions?: { fee?: number }[] }[] | undefined)?.[0];
+      if (d) disputa = { id: d.id, taxa: (d.balance_transactions ?? []).reduce((t, b) => t + (b.fee ?? 0), 0) };
+    }
+  }
   const lista = await stripe(`/transfers?transfer_group=${encodeURIComponent(p.id)}&limit=10`, "GET");
-  for (const t of (lista.data as { id: string; amount: number; amount_reversed: number }[] | undefined) ?? []) {
-    const falta = t.amount - t.amount_reversed;
-    if (falta > 0) await stripe(`/transfers/${t.id}/reversals`, "POST", { amount: falta, metadata: { pedido: p.id } }, `estorno-${t.id}`);
+  for (const t of (lista.data as { id: string; amount: number; amount_reversed: number; destination: string }[] | undefined) ?? []) {
+    const falta = Math.min(t.amount, Math.ceil(t.amount * fracao)) - t.amount_reversed;
+    if (falta <= 0) continue;
+    try {
+      await stripe(`/transfers/${t.id}/reversals`, "POST", { amount: falta, metadata: { pedido: p.id } }, `estorno-${t.id}-${falta}`);
+    } catch (e) {
+      console.error(`estorno ${t.id} sem saldo, vira débito:`, (e as Error).message);
+      await registrarDebito(t.destination, falta, "estorno sem saldo", `estorno-${t.id}-${falta}`);
+    }
+  }
+  if (disputa && disputa.taxa > 0) {
+    const prod = produto ?? p.plano;
+    const cfg = prod ? repasseConfig(prod) : null;
+    if (cfg) await registrarDebito(cfg.conta, Math.floor((disputa.taxa * cfg.pct) / 100), "taxa de contestação", `taxa-${disputa.id}`);
   }
 }
 
@@ -459,7 +532,7 @@ export async function mentoriaAplicarEvento(sb: SupabaseClient, linkId: string, 
   // Reembolso ou contestação.
   if (/^charge\.(refunded|dispute\.created)/.test(tipo)) {
     if (l.status !== "pago") return { status: l.status };
-    await stripeEstornarRepasse({ id: l.id }).catch((e) => console.error(`estorno repasse mentoria ${l.id}:`, (e as Error).message));
+    await stripeEstornarRepasse({ id: l.id }, l.pi_id, "mentoria").catch((e) => console.error(`estorno repasse mentoria ${l.id}:`, (e as Error).message));
     await sb.from("mentoria_links").update({ status: "reembolsado" }).eq("id", l.id);
     await lancarVendaMentoria(sb, { ...l, status: "reembolsado" }, null);
     return { status: "reembolsado" };
@@ -822,7 +895,7 @@ export async function aplicarCobranca(sb: SupabaseClient, c: Cobranca): Promise<
       console.error(`repasse Stripe pedido ${atual.id}:`, (e as Error).message);
     }
   } else if (atual && c.gateway === "stripe" && (novo === "reembolsado" || novo === "chargeback")) {
-    await stripeEstornarRepasse(atual).catch((e) => console.error(`estorno repasse pedido ${atual.id}:`, (e as Error).message));
+    await stripeEstornarRepasse(atual, c.id).catch((e) => console.error(`estorno repasse pedido ${atual.id}:`, (e as Error).message));
   }
   if (atual && ["pago", "reembolsado", "chargeback", "falhou"].includes(novo)) await enviarUtmify(atual);
   // Afiliados: pago gera a comissão de quem indicou; reembolso ou contestação cancela.
