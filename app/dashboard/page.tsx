@@ -23,6 +23,7 @@ import s from "./inicio.styles";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const NUM = new Intl.NumberFormat("pt-BR");
+const BRL2 = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function Inicio() {
   const { nome } = useMembro();
@@ -85,13 +86,13 @@ export default function Inicio() {
         <aside className="hs-inicio-agora" aria-label="Comunidade agora">
           <div className="hs-inicio-caixa">
             <small>Caixa da comunidade</small>
-            <b>{caixa ? BRL.format(caixa.faturado) : "…"}</b>
-            <em>{caixa ? (caixa.membros ? `faturado verificado de ${NUM.format(caixa.membros)} ${caixa.membros === 1 ? "membro" : "membros"}` : "faturado verificado dos membros") : "carregando"}</em>
+            <b>{caixa ? BRL2.format(caixa.faturado) : "…"}</b>
+            <em>{caixa ? "faturamento comprovado pelos membros" : "carregando"}</em>
           </div>
           <div className="hs-inicio-online" aria-live="polite">
             <i aria-hidden="true" />
             <b>{online > 0 ? NUM.format(online) : "…"}</b>
-            <span>{online === 1 ? "membro online" : "membros online"}</span>
+            <span>{online === 1 ? "membro com a plataforma aberta" : "membros com a plataforma aberta"}</span>
           </div>
         </aside>
         <div className={s.heroIn}>
