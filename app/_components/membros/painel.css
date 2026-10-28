@@ -11,12 +11,12 @@
 
 /* ---------- botões e campos ---------- */
 .hs-pn-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--line2);background:transparent;color:var(--neve,var(--neve));font:700 14px/1 var(--f-t);cursor:pointer;text-decoration:none;white-space:nowrap}
-.hs-pn-btn:hover{background:var(--s3,#232327)}
+.hs-pn-btn:hover{background:var(--s3)}
 .hs-pn-btn:disabled{opacity:.5;cursor:not-allowed}
 .hs-pn-btn-p{background:var(--gold-grad);border-color:transparent;color:var(--s1)}
 .hs-pn-btn-p:hover{background:linear-gradient(180deg,#F1DC9A,#D9B566)}
 .hs-pn-btn-d{border-color:#6e2a2a;color:#ff9b9b}
-.hs-pn-btn-d:hover{background:#2a1414}
+.hs-pn-btn-d:hover{background:var(--tint-erro)}
 .hs-pn-btn-sm{min-height:36px;padding:0 12px;font-size:13px}
 .hs-pn-link{appearance:none;border:0;background:none;color:var(--gold-t);font:600 14px/1 var(--f-t);cursor:pointer;padding:10px 4px;text-decoration:underline;text-underline-offset:3px}
 
@@ -44,7 +44,7 @@
 .hs-pn-tabs a{padding:12px 14px;transition:color .2s;color:var(--muted);font:700 13.5px/1 var(--f-t);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap}
 .hs-pn-tabs a[aria-current="page"]{color:var(--neve,var(--neve));border-bottom-color:var(--gold)}
 .hs-pn-tabs a:hover{color:var(--neve,var(--neve))}
-.hs-pn-role{display:inline-flex;align-items:center;gap:6px;font:700 11px/1 var(--f-t);letter-spacing:.08em;text-transform:uppercase;padding:6px 9px;border-radius:999px;background:#29230F;color:var(--gold-t)}
+.hs-pn-role{display:inline-flex;align-items:center;gap:6px;font:700 11px/1 var(--f-t);letter-spacing:.08em;text-transform:uppercase;padding:6px 9px;border-radius:999px;background:var(--tint-ouro2);color:var(--gold-t)}
 .hs-pn-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .hs-pn-bar .hs-pn-in{flex:1 1 220px}
 .hs-pn-vazio{padding:40px 16px;text-align:center;color:var(--muted)}
@@ -73,17 +73,17 @@
 .hs-pn-t th{text-align:left;font:600 12px/1 var(--f-t);color:var(--muted);padding:14px 10px;border-bottom:1px dashed var(--line);white-space:nowrap}
 .hs-pn-t td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
 .hs-pn-t tr:last-child td{border-bottom:0}
-.hs-pn-t tbody tr:hover{background:#18181b}
+.hs-pn-t tbody tr:hover{background:var(--tint-hover)}
 .hs-pn-t .nw{white-space:nowrap}
 .hs-pn-t .n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .hs-pn-t small{display:block;color:var(--muted2,var(--muted2));font-size:12px;margin-top:3px}
 .hs-pn-mono{font-family:var(--f-m);font-size:13px;letter-spacing:.02em}
 .hs-pn-cli{display:flex;align-items:center;gap:10px;min-width:0}
-.hs-pn-av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#29230F;color:var(--gold-t);font:700 13px/1 var(--f-t);flex:none}
+.hs-pn-av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--tint-ouro2);color:var(--gold-t);font:700 13px/1 var(--f-t);flex:none}
 .hs-pn-pill{display:inline-block;padding:6px 10px;border-radius:6px;font:600 12.5px/1 var(--f-t);white-space:nowrap}
-.hs-pn-pill.ok{background:#11281E;color:var(--ok)}
-.hs-pn-pill.wait{background:#29230F;color:var(--gold-t)}
-.hs-pn-pill.off{background:#232327;color:var(--muted)}
+.hs-pn-pill.ok{background:var(--tint-ok);color:var(--ok)}
+.hs-pn-pill.wait{background:var(--tint-ouro2);color:var(--gold-t)}
+.hs-pn-pill.off{background:var(--tint-neutro);color:var(--muted)}
 .hs-pn-st{display:inline-flex;align-items:center;gap:7px;font-weight:600;white-space:nowrap}
 .hs-pn-st::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
 .hs-pn-st.pago,.hs-pn-st.ativo,.hs-pn-st.equipe{color:var(--ok)}
@@ -100,14 +100,14 @@
 .hs-pn-log time{color:var(--muted2,var(--muted2));font:500 12px/1.4 var(--f-m)}
 @media (max-width:560px){.hs-pn-log li{grid-template-columns:1fr}}
 .hs-pn-alerta{display:block;margin-top:4px;color:#ffb36b;font-weight:700;font-size:12px}
-.hs-exemplo{margin:0;padding:10px 14px;border:1px dashed #6a5a2a;border-radius:10px;background:#1a1710;color:var(--muted,var(--muted));font-size:13px;line-height:1.45}
-.hs-exemplo b{display:inline-block;margin-right:6px;padding:2px 7px;border-radius:999px;background:#29230F;color:var(--gold-t,#d9b566);font:700 10.5px/1.4 var(--f-t);letter-spacing:.06em;text-transform:uppercase}
+.hs-exemplo{margin:0;padding:10px 14px;border:1px dashed #6a5a2a;border-radius:10px;background:var(--tint-ouro);color:var(--muted,var(--muted));font-size:13px;line-height:1.45}
+.hs-exemplo b{display:inline-block;margin-right:6px;padding:2px 7px;border-radius:999px;background:var(--tint-ouro2);color:var(--gold-t,#d9b566);font:700 10.5px/1.4 var(--f-t);letter-spacing:.06em;text-transform:uppercase}
 
 /* ---------- feed real ---------- */
 .hs-fd-img{display:block;width:100%;max-height:560px;object-fit:cover;background:var(--breu)}
 .hs-fd-menu{position:absolute;right:0;top:calc(100% + 4px);z-index:5;display:grid;min-width:190px;padding:6px;border-radius:10px;border:1px solid var(--line2,#3a3a40);background:var(--s1);box-shadow:0 12px 30px rgba(0,0,0,.5)}
 .hs-fd-menu button{appearance:none;text-align:left;border:0;background:none;color:var(--neve,var(--neve));font:600 13.5px/1 var(--f-t);padding:11px 10px;border-radius:6px;cursor:pointer}
-.hs-fd-menu button:hover{background:#232327}
+.hs-fd-menu button:hover{background:var(--tint-neutro)}
 
 /* ---------- Hot Store: meus resgates ---------- */
 .hs-st-res{display:grid;gap:0;border:1px solid var(--line);border-radius:12px;background:var(--s1,var(--s1))}

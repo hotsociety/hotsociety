@@ -196,8 +196,8 @@
   cursor: pointer;
 }
 .hs-inicio-missionOk {
-  border-color: #1e7a4c;
-  background: #10201a;
+  border-color: var(--borda-ok);
+  background: var(--tint-ok);
 }
 .hs-inicio-missionOk b {
   text-decoration: line-through;
@@ -264,7 +264,7 @@
 .hs-inicio-me {
   margin-top: 6px;
   border: 1px solid var(--gold-lo);
-  background: #1d1a12 !important;
+  background: var(--tint-ouro) !important;
 }
 .hs-inicio-me .hs-inicio-rname {
   color: var(--gold-hi);

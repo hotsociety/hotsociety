@@ -116,7 +116,7 @@
 }
 .hs-com-eu .hs-com-bubble {
   border-radius: 14px 4px 14px 14px;
-  background: #1d1a12;
+  background: var(--tint-ouro);
   border-color: var(--gold-lo);
 }
 .hs-com-meta {
