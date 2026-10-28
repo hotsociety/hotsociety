@@ -663,6 +663,16 @@ function VerAplicacao({ a, onClose, onFeito }: { a: Aplic; onClose: () => void; 
     onFeito();
   }
 
+  async function excluir() {
+    if (!window.confirm(`Excluir a aplicação de ${a.nome}? Isso não pode ser desfeito.`)) return;
+    setSalvando(true);
+    const { error } = await supabase.rpc("mentoria_aplicacao_excluir", { p_id: a.id });
+    setSalvando(false);
+    if (error) return setErro(erroAmigavel(error));
+    toast("Aplicação excluída");
+    onFeito();
+  }
+
   return (
     <Modal title={`Aplicação · ${a.nome}`} onClose={onClose}>
       <form className="hs-pn-form" onSubmit={salvar}>
@@ -700,6 +710,11 @@ function VerAplicacao({ a, onClose, onFeito }: { a: Aplic; onClose: () => void; 
         </label>
         {erro && <p className="hs-pn-erro">{erro}</p>}
         <Rodape salvando={salvando} onClose={onClose} />
+        <div className="hs-pn-bar" style={{ borderTop: "1px solid var(--line)", paddingTop: 12, justifyContent: "flex-end" }}>
+          <button type="button" className="hs-pn-btn hs-pn-btn-sm" style={{ color: "#ff8a8a", borderColor: "rgba(255,138,138,.4)" }} onClick={excluir} disabled={salvando}>
+            Excluir aplicação
+          </button>
+        </div>
       </form>
     </Modal>
   );
