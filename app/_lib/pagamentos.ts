@@ -3,6 +3,9 @@
 // STRIPE (gateway principal — com STRIPE_SECRET_KEY configurada, ela vira o gateway ativo):
 //   STRIPE_SECRET_KEY      → chave secreta (sk_live_…) em Developers → API keys
 //   STRIPE_WEBHOOK_SECRET  → segredo do webhook (whsec_…) do endpoint https://hotsociety.com.br/api/pagamentos/stripe
+//   Repasse automático (Stripe Connect) — parte de cada venda vai para a conta conectada do sócio:
+//   STRIPE_REPASSE_CONTA       → id da conta conectada (acct_…)
+//   STRIPE_REPASSE_PERCENTUAL  → % do valor líquido (depois da taxa da Stripe), ex.: 30
 //   Página segura da Stripe (Checkout) com todas as formas ativas no painel: Pix, boleto, cartão
 //   (parcelado quando a conta permitir), Apple Pay, Google Pay, Link…
 //
@@ -317,6 +320,44 @@ async function stripeConsultarSessao(id: string, pedidoId: string): Promise<Cobr
   return { gateway: "stripe", id, status: txt(s.status) === "expired" ? "expirado" : null, valor: num(s.amount_total), referencia: pedidoId, sessao: id };
 }
 
+// ---------- Repasse (Connect) ----------
+function repasseConfig() {
+  const conta = process.env.STRIPE_REPASSE_CONTA?.trim();
+  const pct = Number(process.env.STRIPE_REPASSE_PERCENTUAL);
+  return conta && /^acct_[A-Za-z0-9]+$/.test(conta) && pct > 0 && pct < 100 ? { conta, pct } : null;
+}
+
+// Venda paga: transfere a parte do sócio (sobre o líquido, depois da taxa da Stripe). Devolve os centavos repassados.
+export async function stripeRepassar(p: Pedido, piId: string): Promise<number> {
+  const cfg = repasseConfig();
+  if (!cfg) return 0;
+  const pi = await stripe(`/payment_intents/${encodeURIComponent(piId)}?expand[]=latest_charge.balance_transaction`, "GET");
+  const ch = pi.latest_charge as (Record<string, unknown> & { id: string; balance_transaction?: { net?: number } | string | null }) | null;
+  if (!ch?.id) throw new ErroGateway("cobrança sem charge para repassar", "SEM_CHARGE", 400);
+  const bt = typeof ch.balance_transaction === "object" && ch.balance_transaction ? ch.balance_transaction : null;
+  // Pix/boleto podem ainda não ter o saldo calculado: usa o valor bruto como base nesse caso.
+  const base = typeof bt?.net === "number" ? bt.net : p.valor_centavos;
+  const valor = Math.floor((base * cfg.pct) / 100);
+  if (valor <= 0) return 0;
+  await stripe(
+    "/transfers",
+    "POST",
+    { amount: valor, currency: "brl", destination: cfg.conta, source_transaction: ch.id, transfer_group: p.id, description: `Repasse ${cfg.pct}% · ${nomeProduto(p)}`, metadata: { pedido: p.id } },
+    `repasse-${p.id}`,
+  );
+  return valor;
+}
+
+// Reembolso/contestação: desfaz o repasse do pedido (devolve da conta do sócio para a principal).
+export async function stripeEstornarRepasse(p: Pedido) {
+  if (!process.env.STRIPE_SECRET_KEY) return;
+  const lista = await stripe(`/transfers?transfer_group=${encodeURIComponent(p.id)}&limit=10`, "GET");
+  for (const t of (lista.data as { id: string; amount: number; amount_reversed: number }[] | undefined) ?? []) {
+    const falta = t.amount - t.amount_reversed;
+    if (falta > 0) await stripe(`/transfers/${t.id}/reversals`, "POST", { amount: falta, metadata: { pedido: p.id } }, `estorno-${t.id}`);
+  }
+}
+
 export async function stripeConsultar(p: Pedido): Promise<Cobranca | null> {
   if (!p.charge_id) return null;
   return p.charge_id.startsWith("cs_") ? stripeConsultarSessao(p.charge_id, p.id) : stripeConsultarPI(p.charge_id);
@@ -585,6 +626,21 @@ export async function aplicarCobranca(sb: SupabaseClient, c: Cobranca): Promise<
     .select("*")
     .single<Pedido>();
 
+  // Stripe: repasse automático da parte do sócio (Connect) e estorno em reembolso/contestação.
+  if (atual && c.gateway === "stripe" && novo === "pago") {
+    try {
+      const repassado = await stripeRepassar(atual, c.id);
+      if (repassado > 0) {
+        await sb.from("pedidos").update({ split_centavos: repassado }).eq("id", atual.id);
+        atual.split_centavos = repassado;
+        p.split_centavos = repassado;
+      }
+    } catch (e) {
+      console.error(`repasse Stripe pedido ${atual.id}:`, (e as Error).message);
+    }
+  } else if (atual && c.gateway === "stripe" && (novo === "reembolsado" || novo === "chargeback")) {
+    await stripeEstornarRepasse(atual).catch((e) => console.error(`estorno repasse pedido ${atual.id}:`, (e as Error).message));
+  }
   if (atual && ["pago", "reembolsado", "chargeback", "falhou"].includes(novo)) await enviarUtmify(atual);
   // Afiliados: pago gera a comissão de quem indicou; reembolso ou contestação cancela.
   // Itens da loja não geram comissão de afiliado.
