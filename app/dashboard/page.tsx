@@ -58,9 +58,10 @@ export default function Inicio() {
   const [cursos, setCursos] = useState<Curso[] | null>(null);
   const presenca = useOnline();
   const online = presenca.n + SOCIOS_ONLINE;
+
+  const [caixa, setCaixa] = useState<{ faturado: number; membros: number } | null>(null);
   const caixaAnim = useContagem(caixa?.faturado ?? 0);
   const onlineAnim = useContagem(online);
-  const [caixa, setCaixa] = useState<{ faturado: number; membros: number } | null>(null);
 
   // Caixa da comunidade: soma do faturamento verificado de todos os membros.
   useEffect(() => {
