@@ -50,7 +50,7 @@
 }
 .hs-ui-cardGold {
   border-color: var(--gold-lo);
-  background: linear-gradient(160deg, #1d1a12, var(--s1) 55%);
+  background: linear-gradient(160deg, var(--tint-ouro), var(--s1) 55%);
 }
 .hs-ui-h2 {
   margin: 0;
@@ -178,17 +178,17 @@
 .hs-ui-badgeGold {
   border-color: var(--gold-lo);
   color: var(--gold-hi);
-  background: #1d1a12;
+  background: var(--tint-ouro);
 }
 .hs-ui-badgeOk {
-  border-color: #1e7a4c;
+  border-color: var(--borda-ok);
   color: #a6f0c7;
-  background: #11281e;
+  background: var(--tint-ok);
 }
 .hs-ui-badgeRed {
   border-color: #6b2525;
   color: #ffb3b3;
-  background: #2a1414;
+  background: var(--tint-erro);
 }
 
 /* barra de progresso */
@@ -294,8 +294,8 @@ textarea.hs-ui-input {
   margin: 0;
   padding: 12px 14px;
   border-radius: 12px;
-  background: #11281e;
-  border: 1px solid #1e7a4c;
+  background: var(--tint-ok);
+  border: 1px solid var(--borda-ok);
   color: #a6f0c7;
   font-size: 14px;
 }

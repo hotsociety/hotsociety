@@ -20,7 +20,7 @@
 }
 .hs-sup-topic[aria-pressed="true"] {
   border-color: var(--gold);
-  background: #1d1a12;
+  background: var(--tint-ouro);
 }
 .hs-sup-n {
   font: 700 12px/1 var(--f-m);

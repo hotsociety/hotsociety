@@ -108,7 +108,7 @@
 }
 .hs-jorn-opt[aria-checked="true"] {
   border-color: var(--gold);
-  background: #1d1a12;
+  background: var(--tint-ouro);
 }
 .hs-jorn-check {
   display: flex;

@@ -40,7 +40,7 @@
 }
 .hs-ia-mode[aria-checked="true"] {
   border-color: var(--gold);
-  background: #1d1a12;
+  background: var(--tint-ouro);
 }
 .hs-ia-mode[aria-checked="true"] b {
   color: var(--gold-hi);

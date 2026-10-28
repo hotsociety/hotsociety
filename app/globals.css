@@ -31,6 +31,15 @@
   /* canais RGB para transparências que mudam com o tema (rgba(var(--fg-rgb), .1)) */
   --fg-rgb: 255, 255, 255;
   --bg-rgb: 10, 10, 11;
+  /* fundos de destaque (selecionado, ok, erro) que mudam com o tema */
+  --tint-ouro: #1d1a12;
+  --tint-ouro2: #29230f;
+  --tint-ok: #11281e;
+  --borda-ok: #1e7a4c;
+  --tint-erro: #2a1414;
+  --tint-neutro: #232327;
+  --tint-hover: #18181b;
+  --side-bg: #0d0d0f;
 
   --gutter: clamp(16px, 4vw, 40px);
   --max: 1200px;
@@ -124,6 +133,14 @@ html[data-tema="claro"]:has(.hs-shell-app) {
   --red-t: #8c6a22;
   --alt: #8c6a22;
   --ambar: #8c6a22;
+  --tint-ouro: #f6ecd3;
+  --tint-ouro2: #f1e2bd;
+  --tint-ok: #e2f3e9;
+  --borda-ok: #8fcfaa;
+  --tint-erro: #fbe4e2;
+  --tint-neutro: #ece6da;
+  --tint-hover: #f6f2ea;
+  --side-bg: #ffffff;
 }
 html[data-tema="claro"]:has(.hs-shell-app) .hs-shell-app {
   --neve2: #2a261e;
@@ -135,6 +152,22 @@ html[data-tema="claro"]:has(.hs-shell-app) .hs-shell-app {
 
 /* Ilhas escuras: capas, pôsteres, vitrine, celular e cards com foto continuam escuros no tema claro. */
 html[data-tema="claro"] .hs-escuro,
+html[data-tema="claro"] .hs-inicio-hero,
+html[data-tema="claro"] .hs-inicio-courseCover,
+html[data-tema="claro"] .hs-shell-avatar,
+html[data-tema="claro"] .hs-shell-avatarSm,
+html[data-tema="claro"] .hs-conq-avatar,
+html[data-tema="claro"] .hs-m-igp .hs-m-sl,
+html[data-tema="claro"] .hs-m-igp .hs-m-txt,
+html[data-tema="claro"] .hs-m-sv,
+html[data-tema="claro"] .hs-m-am-c.hs-m-gfx,
+html[data-tema="claro"] .hs-m-gm-hook,
+html[data-tema="claro"] .hs-m-af-bal,
+html[data-tema="claro"] .hs-m-af-tier .hs-m-bd,
+html[data-tema="claro"] .hs-m-af-bars .hs-m-tip,
+html[data-tema="claro"] .hs-m-lc-hero,
+html[data-tema="claro"] .hs-m-st-feat,
+html[data-tema="claro"] .hs-pn-gate,
 html[data-tema="claro"] .hs-vt-palco,
 html[data-tema="claro"] .hs-aula-c,
 html[data-tema="claro"] .hs-m-am-hero,
@@ -160,7 +193,19 @@ html[data-tema="claro"] .hs-hp-hpw {
   --red-t: #d9b566;
   --alt: #d9b566;
   --ambar: #d9b566;
+  --tint-ouro: #1d1a12;
+  --tint-ouro2: #29230f;
+  --tint-ok: #11281e;
+  --borda-ok: #1e7a4c;
+  --tint-erro: #2a1414;
+  --tint-neutro: #232327;
+  --tint-hover: #18181b;
   color: var(--neve);
+}
+/* Esqueleto de carregamento no claro */
+html[data-tema="claro"]:has(.hs-shell-app) .hs-esq {
+  background: linear-gradient(90deg, #ece6da 0%, #f6f2ea 50%, #ece6da 100%);
+  background-size: 200% 100%;
 }
 
 /* Logo: versão escura no tema claro. */

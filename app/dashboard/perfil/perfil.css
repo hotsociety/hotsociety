@@ -43,7 +43,7 @@
   margin: 0;
   padding: 12px 14px;
   border-radius: 12px;
-  background: #2a1414;
+  background: var(--tint-erro);
   border: 1px solid #5a2a2a;
   color: #ffb3b3;
   font-size: 14px;

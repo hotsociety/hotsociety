@@ -393,7 +393,7 @@
     height: 100dvh;
     display: flex;
     flex-direction: column;
-    background: #0d0d0f;
+    background: var(--side-bg);
     border-right: 1px solid var(--line);
     padding-bottom: 12px;
   }
