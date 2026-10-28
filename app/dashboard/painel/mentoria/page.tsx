@@ -711,7 +711,7 @@ function VerAplicacao({ a, onClose, onFeito }: { a: Aplic; onClose: () => void; 
         {erro && <p className="hs-pn-erro">{erro}</p>}
         <Rodape salvando={salvando} onClose={onClose} />
         <div className="hs-pn-bar" style={{ borderTop: "1px solid var(--line)", paddingTop: 12, justifyContent: "flex-end" }}>
-          <button type="button" className="hs-pn-btn hs-pn-btn-sm" style={{ color: "#ff8a8a", borderColor: "rgba(255,138,138,.4)" }} onClick={excluir} disabled={salvando}>
+          <button type="button" className="hs-pn-btn hs-pn-btn-sm" style={{ color: "var(--erro-t)", borderColor: "rgba(255,138,138,.4)" }} onClick={excluir} disabled={salvando}>
             Excluir aplicação
           </button>
         </div>

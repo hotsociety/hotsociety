@@ -255,7 +255,7 @@ export default function Jornada() {
             </label>
 
             {erro && (
-              <p className={ui.muted} role="alert" style={{ color: "#ff9b9b", margin: 0 }}>
+              <p className={ui.muted} role="alert" style={{ color: "var(--erro-t)", margin: 0 }}>
                 {erro}
               </p>
             )}

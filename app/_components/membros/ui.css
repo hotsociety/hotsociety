@@ -182,12 +182,12 @@
 }
 .hs-ui-badgeOk {
   border-color: var(--borda-ok);
-  color: #a6f0c7;
+  color: var(--ok-t);
   background: var(--tint-ok);
 }
 .hs-ui-badgeRed {
   border-color: #6b2525;
-  color: #ffb3b3;
+  color: var(--erro-t);
   background: var(--tint-erro);
 }
 
@@ -259,7 +259,7 @@
 .hs-ui-field > span {
   font-size: 13px;
   font-weight: 600;
-  color: #d4d1c9;
+  color: var(--texto2);
 }
 .hs-ui-input {
   width: 100%;
@@ -296,7 +296,7 @@ textarea.hs-ui-input {
   border-radius: 12px;
   background: var(--tint-ok);
   border: 1px solid var(--borda-ok);
-  color: #a6f0c7;
+  color: var(--ok-t);
   font-size: 14px;
 }
 

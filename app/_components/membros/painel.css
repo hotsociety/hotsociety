@@ -15,7 +15,7 @@
 .hs-pn-btn:disabled{opacity:.5;cursor:not-allowed}
 .hs-pn-btn-p{background:var(--gold-grad);border-color:transparent;color:var(--s1)}
 .hs-pn-btn-p:hover{background:linear-gradient(180deg,#F1DC9A,#D9B566)}
-.hs-pn-btn-d{border-color:#6e2a2a;color:#ff9b9b}
+.hs-pn-btn-d{border-color:#6e2a2a;color:var(--erro-t)}
 .hs-pn-btn-d:hover{background:var(--tint-erro)}
 .hs-pn-btn-sm{min-height:36px;padding:0 12px;font-size:13px}
 .hs-pn-link{appearance:none;border:0;background:none;color:var(--gold-t);font:600 14px/1 var(--f-t);cursor:pointer;padding:10px 4px;text-decoration:underline;text-underline-offset:3px}
@@ -26,7 +26,7 @@
 .hs-pn-form{display:grid;gap:14px}
 .hs-pn-form2{display:grid;gap:14px;grid-template-columns:1fr 1fr}
 @media (max-width:560px){.hs-pn-form2{grid-template-columns:1fr}}
-.hs-pn-erro{color:#ff9b9b;font-size:13.5px;margin:0}
+.hs-pn-erro{color:var(--erro-t);font-size:13.5px;margin:0}
 .hs-pn-nota{color:var(--muted);font-size:13px;margin:0;line-height:1.45}
 
 /* ---------- estrutura ---------- */
@@ -88,7 +88,7 @@
 .hs-pn-st::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
 .hs-pn-st.pago,.hs-pn-st.ativo,.hs-pn-st.equipe{color:var(--ok)}
 .hs-pn-st.pendente,.hs-pn-st.vencido{color:var(--gold-t)}
-.hs-pn-st.recusado,.hs-pn-st.cancelado,.hs-pn-st.reembolsado,.hs-pn-st.chargeback,.hs-pn-st.bloqueado{color:#ff8a8a}
+.hs-pn-st.recusado,.hs-pn-st.cancelado,.hs-pn-st.reembolsado,.hs-pn-st.chargeback,.hs-pn-st.bloqueado{color:var(--erro-t)}
 .hs-pn-st.sem{color:var(--muted)}
 .hs-pn-risk{text-decoration:line-through;color:var(--muted2,var(--muted2))}
 .hs-pn-acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}

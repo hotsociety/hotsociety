@@ -45,7 +45,7 @@
   border-radius: 12px;
   background: var(--tint-erro);
   border: 1px solid #5a2a2a;
-  color: #ffb3b3;
+  color: var(--erro-t);
   font-size: 14px;
 }
 .hs-perfil-plan {
@@ -77,5 +77,5 @@
 }
 .hs-perfil-out:hover {
   border-color: #c25050;
-  color: #ffb3b3;
+  color: var(--erro-t);
 }

@@ -163,7 +163,7 @@ export default function MinhasCompras() {
                 <input className={ui.input} value={motivo} onChange={(e) => setMotivo(e.target.value)} maxLength={500} />
               </label>
               {erro && (
-                <p className={ui.muted} role="alert" style={{ color: "#ff9b9b", margin: 0 }}>
+                <p className={ui.muted} role="alert" style={{ color: "var(--erro-t)", margin: 0 }}>
                   {erro}
                 </p>
               )}
