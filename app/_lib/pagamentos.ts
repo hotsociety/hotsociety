@@ -173,6 +173,16 @@ async function chamar(url: string, init: RequestInit & { chave: string; idempote
    ===================================================================== */
 const STRIPE = "https://api.stripe.com/v1";
 
+// Produtos cadastrados no Catálogo da Stripe (o preço vai junto em cada cobrança, para valer cupom).
+const STRIPE_PRODUTO: { mensal: string; anual: string; loja: Record<string, string> } = {
+  mensal: "prod_VWh6H33G7ohbLy", // HOT SOCIETY Mensal · R$ 97
+  anual: "prod_VWh6aDtUihsB0H", // HOT SOCIETY Anual · R$ 997
+  loja: { cs: "prod_VWh7UUduu9Z1ad" }, // Consultoria 1:1 · call de 60 min · R$ 497
+};
+function produtoStripe(p: Pedido) {
+  return p.plano === "loja" ? (p.item ? STRIPE_PRODUTO.loja[p.item] : undefined) : STRIPE_PRODUTO[p.plano];
+}
+
 // Corpo no formato da Stripe (form-urlencoded com colchetes: a[b][0]=c).
 function formStripe(o: Record<string, unknown>, prefixo = "", out = new URLSearchParams()) {
   for (const [k, v] of Object.entries(o)) {
@@ -238,6 +248,8 @@ async function stripeCheckout(p: Pedido, c: Cliente, tipo: TipoStripe): Promise<
   try {
     return await stripeCheckoutCom(p, c, tipo, true);
   } catch (e) {
+    // Produto do catálogo não encontrado (ex.: chave de teste): cobra com o nome avulso.
+    if (/No such product|product/i.test((e as Error).message) && produtoStripe(p)) return stripeCheckoutCom(p, c, tipo, true, true);
     // Conta sem parcelamento (ou sem alguma forma) liberada: tenta de novo sem as opções extras.
     if (/installment|payment_method_options/i.test((e as Error).message)) return stripeCheckoutCom(p, c, tipo, false);
     throw e;
@@ -245,7 +257,7 @@ async function stripeCheckout(p: Pedido, c: Cliente, tipo: TipoStripe): Promise<
 }
 
 // parcelas = false: sem opções extras (parcelamento, validade do Pix e do boleto).
-async function stripeCheckoutCom(p: Pedido, c: Cliente, tipo: TipoStripe, parcelas: boolean): Promise<Cobranca> {
+async function stripeCheckoutCom(p: Pedido, c: Cliente, tipo: TipoStripe, parcelas: boolean, semProduto = false): Promise<Cobranca> {
   const expira = Math.floor(Date.now() / 1000) + 2 * 3600; // a sessão da Stripe aceita de 30 min a 24 h
   const volta = `${SITE}/assinar?${p.plano === "loja" ? `item=${p.item}&` : ""}pedido=${p.id}`;
   const s = await stripe(
@@ -255,7 +267,16 @@ async function stripeCheckoutCom(p: Pedido, c: Cliente, tipo: TipoStripe, parcel
       mode: "payment",
       // "todos": sem lista fixa, a Stripe mostra todas as formas ativas no painel (Pix, boleto, cartão, Apple Pay, Google Pay, Link…).
       ...(tipo === "todos" ? {} : { payment_method_types: [tipo] }),
-      line_items: [{ quantity: 1, price_data: { currency: "brl", unit_amount: p.valor_centavos, product_data: { name: nomeProduto(p) } } }],
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: "brl",
+            unit_amount: p.valor_centavos,
+            ...(produtoStripe(p) && !semProduto ? { product: produtoStripe(p) } : { product_data: { name: nomeProduto(p) } }),
+          },
+        },
+      ],
       customer_email: c.email,
       client_reference_id: p.id,
       metadata: { pedido: p.id },
@@ -274,7 +295,7 @@ async function stripeCheckoutCom(p: Pedido, c: Cliente, tipo: TipoStripe, parcel
           }
         : {}),
     },
-    `sessao-${p.id}${parcelas ? "" : "-sem-parcelas"}`,
+    `sessao-${p.id}${parcelas ? "" : "-sem-parcelas"}${semProduto ? "-avulso" : ""}`,
   );
   const url = txt(s.url);
   if (!url || !/^https:\/\//.test(url)) throw new ErroGateway("Stripe não devolveu a página de pagamento", "SEM_URL", 502);
