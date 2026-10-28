@@ -170,7 +170,7 @@ function Explicacao({ ok, tempo, texto, ultima, onProxima }: { ok: boolean; temp
         ) : tempo ? (
           <b>Tempo esgotado. </b>
         ) : (
-          <b style={{ color: "#ff8a8a" }}>Quase. </b>
+          <b style={{ color: "var(--erro-t)" }}>Quase. </b>
         )}
         {texto}
       </div>

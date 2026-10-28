@@ -56,7 +56,7 @@ export default function MeusDados() {
           {baixando ? "Gerando…" : "Baixar meus dados"}
         </button>
         {!cargo && (
-          <button type="button" className={ui.btnGhost} style={{ borderColor: "#6e2a2a", color: "#ff9b9b" }} onClick={() => setExcluir(true)}>
+          <button type="button" className={ui.btnGhost} style={{ borderColor: "#6e2a2a", color: "var(--erro-t)" }} onClick={() => setExcluir(true)}>
             Excluir minha conta
           </button>
         )}
@@ -79,7 +79,7 @@ export default function MeusDados() {
               <input className={ui.input} value={conf} onChange={(e) => setConf(e.target.value)} autoComplete="off" />
             </label>
             {erro && (
-              <p className={ui.muted} role="alert" style={{ color: "#ff9b9b", margin: 0 }}>
+              <p className={ui.muted} role="alert" style={{ color: "var(--erro-t)", margin: 0 }}>
                 {erro}
               </p>
             )}

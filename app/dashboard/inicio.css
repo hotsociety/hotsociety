@@ -44,7 +44,7 @@
 }
 .hs-inicio-where {
   margin: 0;
-  color: #d4d1c9;
+  color: var(--texto2);
   font-size: 14.5px;
 }
 .hs-inicio-where b {

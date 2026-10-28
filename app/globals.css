@@ -40,6 +40,9 @@
   --tint-neutro: #232327;
   --tint-hover: #18181b;
   --side-bg: #0d0d0f;
+  --texto2: #d4d1c9; /* texto de apoio claro sobre fundo escuro */
+  --erro-t: #ff9b9b;
+  --ok-t: #a6f0c7;
 
   --gutter: clamp(16px, 4vw, 40px);
   --max: 1200px;
@@ -141,6 +144,9 @@ html[data-tema="claro"]:has(.hs-shell-app) {
   --tint-neutro: #ece6da;
   --tint-hover: #f6f2ea;
   --side-bg: #ffffff;
+  --texto2: #3f3a31;
+  --erro-t: #b3322c;
+  --ok-t: #1f7a4b;
 }
 html[data-tema="claro"]:has(.hs-shell-app) .hs-shell-app {
   --neve2: #2a261e;
@@ -200,6 +206,9 @@ html[data-tema="claro"] .hs-hp-hpw {
   --tint-erro: #2a1414;
   --tint-neutro: #232327;
   --tint-hover: #18181b;
+  --texto2: #d4d1c9;
+  --erro-t: #ff9b9b;
+  --ok-t: #a6f0c7;
   color: var(--neve);
 }
 /* Esqueleto de carregamento no claro */
@@ -209,6 +218,8 @@ html[data-tema="claro"]:has(.hs-shell-app) .hs-esq {
 }
 
 /* Logo: versão escura no tema claro. */
-.hs-so-claro { display: none !important; }
-html[data-tema="claro"]:has(.hs-shell-app) .hs-so-claro { display: revert !important; }
-html[data-tema="claro"]:has(.hs-shell-app) .hs-so-escuro { display: none !important; }
+html:not([data-tema="claro"]) .hs-so-claro,
+html[data-tema="claro"]:not(:has(.hs-shell-app)) .hs-so-claro,
+html[data-tema="claro"]:has(.hs-shell-app) .hs-so-escuro {
+  display: none !important;
+}

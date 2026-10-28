@@ -123,7 +123,7 @@ export default function CappuIA() {
               </div>
             )}
             {falas.map((f) => (
-              <div key={f.id} className={f.de === "eu" ? s.me : s.ia} style={f.erro ? { borderColor: "rgba(239,68,68,.45)", color: "#fca5a5" } : undefined}>
+              <div key={f.id} className={f.de === "eu" ? s.me : s.ia} style={f.erro ? { borderColor: "rgba(239,68,68,.45)", color: "var(--erro-t)" } : undefined}>
                 {f.de === "ia" && !f.erro ? <TextoIA t={f.t} /> : f.t}
               </div>
             ))}

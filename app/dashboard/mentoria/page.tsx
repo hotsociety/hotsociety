@@ -69,10 +69,10 @@ export default function MinhaMentoria() {
               <span className={m("s")}>Acesso direto ao</span>
               <span>Cappu</span>
             </h1>
-            <p className={m("sub")} style={{ color: "#C9CFDB" }}>
+            <p className={m("sub")} style={{ color: "var(--texto2)" }}>
               Encontros ao vivo em grupo, calls individuais e chat direto com o mentor, tudo aqui dentro. Entrada por aplicação.
             </p>
-            <ul style={{ margin: 0, paddingLeft: 18, color: "#C9CFDB", fontSize: 14, display: "grid", gap: 4 }}>
+            <ul style={{ margin: 0, paddingLeft: 18, color: "var(--texto2)", fontSize: 14, display: "grid", gap: 4 }}>
               <li>Análise da sua operação</li>
               <li>Hotseats com o seu funil</li>
               <li>Chat da turma e canal privado com o mentor</li>
@@ -110,7 +110,7 @@ export default function MinhaMentoria() {
             <span className={m("s")}>Minha</span>
             <span>Mentoria</span>
           </h1>
-          <p className={m("sub")} style={{ color: "#C9CFDB" }}>
+          <p className={m("sub")} style={{ color: "var(--texto2)" }}>
             {prox
               ? `Próximo: ${prox.titulo} · ${fData.format(new Date(prox.inicio))} às ${fHora.format(new Date(prox.inicio))}`
               : "Nenhum encontro marcado ainda. O mentor avisa por aqui."}

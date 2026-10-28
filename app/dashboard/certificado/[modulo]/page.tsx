@@ -82,7 +82,7 @@ function Conteudo() {
             <input className={ui.input} value={nome} onChange={(e) => setNome(e.target.value)} maxLength={80} autoComplete="name" required />
           </label>
           {erro && (
-            <p className={ui.muted} role="alert" style={{ color: "#ff9b9b", margin: 0 }}>
+            <p className={ui.muted} role="alert" style={{ color: "var(--erro-t)", margin: 0 }}>
               {erro}
             </p>
           )}
