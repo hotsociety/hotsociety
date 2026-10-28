@@ -9,24 +9,30 @@ import { supabase } from "../../_lib/supabase";
 let canal: RealtimeChannel | null = null;
 let dono: string | null = null;
 let total = 0;
-const ouvintes = new Set<(n: number) => void>();
+let iniciais: string[] = [];
+type Online = { n: number; iniciais: string[] };
+const ouvintes = new Set<(o: Online) => void>();
 
 function avisar() {
-  for (const f of ouvintes) f(total);
+  for (const f of ouvintes) f({ n: total, iniciais });
 }
 
-export function entrarOnline(userId: string) {
+export function entrarOnline(userId: string, ini = "") {
   if (canal && dono === userId) return;
   if (canal) supabase.removeChannel(canal);
   dono = userId;
   canal = supabase.channel("hs-online", { config: { presence: { key: userId } } });
   canal
     .on("presence", { event: "sync" }, () => {
-      total = Object.keys(canal?.presenceState() ?? {}).length;
+      const estado = (canal?.presenceState() ?? {}) as Record<string, { ini?: string }[]>;
+      total = Object.keys(estado).length;
+      iniciais = Object.values(estado)
+        .map((v) => (v[0]?.ini ?? "").slice(0, 2).toUpperCase())
+        .filter(Boolean);
       avisar();
     })
     .subscribe((status) => {
-      if (status === "SUBSCRIBED") canal?.track({ desde: Date.now() });
+      if (status === "SUBSCRIBED") canal?.track({ desde: Date.now(), ini });
     });
 }
 
@@ -35,17 +41,19 @@ export function sairOnline() {
   canal = null;
   dono = null;
   total = 0;
+  iniciais = [];
   avisar();
 }
 
-export function useOnline() {
-  const [n, setN] = useState(total);
+// Quantos estão com a plataforma aberta e as iniciais deles (só as iniciais, sem nome).
+export function useOnline(): Online {
+  const [o, setO] = useState<Online>({ n: total, iniciais });
   useEffect(() => {
-    ouvintes.add(setN);
-    setN(total);
+    ouvintes.add(setO);
+    setO({ n: total, iniciais });
     return () => {
-      ouvintes.delete(setN);
+      ouvintes.delete(setO);
     };
   }, []);
-  return n;
+  return o;
 }
