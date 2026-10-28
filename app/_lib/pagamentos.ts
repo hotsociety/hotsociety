@@ -4,6 +4,7 @@
 //   STRIPE_SECRET_KEY      → chave secreta (sk_live_…) em Developers → API keys
 //   STRIPE_WEBHOOK_SECRET  → segredo do webhook (whsec_…) do endpoint https://hotsociety.com.br/api/pagamentos/stripe
 //   Repasse automático (Stripe Connect) — parte de cada venda vai para a conta conectada do sócio:
+//   STRIPE_PLATAFORMA          → "fernando" quando a chave for da conta HotSociety Org (repasse padrão 70% ao GuTayler)
 //   STRIPE_REPASSE_CONTA       → id da conta conectada (acct_…)
 //   Percentual por produto: REPASSE_PADRAO (30% em Mensal, Anual e Loja), sobre o líquido depois da taxa da Stripe.
 //   Opcional: STRIPE_REPASSE_PCT_MENSAL / _ANUAL / _LOJA ou STRIPE_REPASSE_PERCENTUAL (todos) para trocar sem deploy de código.
@@ -177,12 +178,24 @@ async function chamar(url: string, init: RequestInit & { chave: string; idempote
    ===================================================================== */
 const STRIPE = "https://api.stripe.com/v1";
 
-// Produtos cadastrados no Catálogo da Stripe (o preço vai junto em cada cobrança, para valer cupom).
-const STRIPE_PRODUTO: { mensal: string; anual: string; loja: Record<string, string> } = {
-  mensal: "prod_VWh6H33G7ohbLy", // HOT SOCIETY Mensal · R$ 97
-  anual: "prod_VWh6aDtUihsB0H", // HOT SOCIETY Anual · R$ 997
-  loja: { cs: "prod_VWh7UUduu9Z1ad" }, // Consultoria 1:1 · call de 60 min · R$ 497
+// Qual conta Stripe cobra (é a dona da STRIPE_SECRET_KEY). STRIPE_PLATAFORMA=fernando troca para a conta
+// HotSociety Org (FChelottiDev), que repassa 70% ao GuTayler; sem a variável, cobra a conta do GuTayler, que repassa 30%.
+const PLATAFORMA: "gutayler" | "fernando" = process.env.STRIPE_PLATAFORMA?.trim().toLowerCase() === "fernando" ? "fernando" : "gutayler";
+
+// Produtos cadastrados no Catálogo da Stripe de cada conta (o preço vai junto em cada cobrança, para valer cupom).
+const CATALOGO: Record<typeof PLATAFORMA, { mensal: string; anual: string; loja: Record<string, string> }> = {
+  gutayler: {
+    mensal: "prod_VWh6H33G7ohbLy", // HOT SOCIETY Mensal · R$ 97
+    anual: "prod_VWh6aDtUihsB0H", // HOT SOCIETY Anual · R$ 997
+    loja: { cs: "prod_VWh7UUduu9Z1ad" }, // Consultoria 1:1 · call de 60 min · R$ 497
+  },
+  fernando: {
+    mensal: "prod_VWieiN23k1rObe",
+    anual: "prod_VWif1gGbWP13Lo",
+    loja: { cs: "prod_VWifdkQI8mcokg" },
+  },
 };
+const STRIPE_PRODUTO = CATALOGO[PLATAFORMA];
 function produtoStripe(p: Pedido) {
   return p.plano === "loja" ? (p.item ? STRIPE_PRODUTO.loja[p.item] : undefined) : STRIPE_PRODUTO[p.plano];
 }
@@ -326,10 +339,12 @@ async function stripeConsultarSessao(id: string, pedidoId: string): Promise<Cobr
 }
 
 // ---------- Repasse (Connect) ----------
-// Divisão por produto: % que vai para a conta conectada (FChelottiDev). O resto fica na conta principal (GuTayler).
+// Divisão por produto: % que vai para a conta conectada (STRIPE_REPASSE_CONTA). O resto fica na conta que cobra.
 // Pode ser trocado sem mexer no código: STRIPE_REPASSE_PCT_MENSAL, _ANUAL, _LOJA, _MENTORIA (ou STRIPE_REPASSE_PERCENTUAL para todos).
 export type ProdutoRepasse = Plano | "mentoria";
-export const REPASSE_PADRAO: Record<ProdutoRepasse, number> = { mensal: 30, anual: 30, loja: 30, mentoria: 30 };
+// Conta do GuTayler cobrando: 30% vai para o FChelottiDev. Conta do FChelottiDev cobrando: 70% vai para o GuTayler.
+const PCT_PADRAO = PLATAFORMA === "fernando" ? 70 : 30;
+export const REPASSE_PADRAO: Record<ProdutoRepasse, number> = { mensal: PCT_PADRAO, anual: PCT_PADRAO, loja: PCT_PADRAO, mentoria: PCT_PADRAO };
 
 export function repassePercentual(produto: ProdutoRepasse): number {
   const porProduto = process.env[`STRIPE_REPASSE_PCT_${produto.toUpperCase()}`];
