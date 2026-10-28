@@ -223,3 +223,21 @@ html[data-tema="claro"]:not(:has(.hs-shell-app)) .hs-so-claro,
 html[data-tema="claro"]:has(.hs-shell-app) .hs-so-escuro {
   display: none !important;
 }
+
+/* Tema claro nas telas feitas com utilitários (aula, trilha, discussão, notas). */
+html[data-tema="claro"] .hs-shell-main :is(.text-white, .text-zinc-100) { color: var(--neve); }
+html[data-tema="claro"] .hs-shell-main :is(.text-zinc-200, .text-zinc-300) { color: var(--texto2); }
+html[data-tema="claro"] .hs-shell-main :is(.text-zinc-400, .text-zinc-500) { color: var(--muted); }
+html[data-tema="claro"] .hs-shell-main .hover\:text-white:hover { color: var(--neve); }
+html[data-tema="claro"] .hs-shell-main :is(.text-\[\#d9b566\], .text-\[\#c9a24e\]) { color: var(--gold-t); }
+html[data-tema="claro"] .hs-shell-main :is(.bg-\[\#141416\], .bg-\[\#0f0f11\], .bg-\[\#17171a\]) { background-color: var(--s1); }
+html[data-tema="claro"] .hs-shell-main :is(.bg-zinc-900, .bg-zinc-800) { background-color: var(--s2); }
+html[data-tema="claro"] .hs-shell-main .bg-zinc-700 { background-color: var(--s3); }
+html[data-tema="claro"] .hs-shell-main .hover\:bg-zinc-900:hover { background-color: var(--tint-hover); }
+html[data-tema="claro"] .hs-shell-main :is(.border-\[\#2e2e33\], .border-\[\#232327\], .border-zinc-700, .border-zinc-800) { border-color: var(--line); }
+html[data-tema="claro"] .hs-shell-main :is(.hover\:border-zinc-500, .hover\:border-zinc-600):hover { border-color: var(--line2); }
+/* o player e as capas continuam escuros */
+html[data-tema="claro"] .hs-shell-main .bg-black :is(.text-white, .text-zinc-200, .text-zinc-300) { color: #f4f2ec; }
+
+/* Passaporte do perfil no claro */
+html[data-tema="claro"]:has(.hs-shell-app) .hs-perfil-pass { background: radial-gradient(120% 140% at 0% 0%, var(--tint-ouro2), var(--s1) 60%); }
