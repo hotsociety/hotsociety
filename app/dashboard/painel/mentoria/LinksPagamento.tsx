@@ -118,6 +118,7 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
     if (!window.confirm(`Desativar o link de ${BRL.format(l.valor_centavos / 100)}${l.lead_nome ? ` (${l.lead_nome})` : ""}? Ele para de aceitar pagamento.`)) return;
     try {
       await chamar({ acao: "desativar", id: l.id });
+      if (novo?.url === l.url) setNovo(null);
       toast("Link desativado");
       setN((x) => x + 1);
     } catch (err) {
