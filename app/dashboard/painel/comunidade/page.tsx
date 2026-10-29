@@ -56,6 +56,7 @@ export default function Comunidade() {
   return (
     <>
       {erro && <p className="hs-pn-erro">{erro}</p>}
+      {cargo === "admin" && <MusicaPlataforma />}
       <h2 style={{ margin: "4px 0 0", font: "800 18px/1.2 var(--f-d)" }}>Denúncias</h2>
       <div className="hs-pn-tw">
         <table className="hs-pn-t">
@@ -156,6 +157,40 @@ export default function Comunidade() {
         />
       )}
     </>
+  );
+}
+
+// Playlist do player de música da área de membros (só admin).
+function MusicaPlataforma() {
+  const [url, setUrl] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  useEffect(() => {
+    supabase.rpc("musica_playlist").then(({ data }) => setUrl((data as string | null) ?? ""));
+  }, []);
+
+  async function salvar(e: React.FormEvent) {
+    e.preventDefault();
+    setSalvando(true);
+    const { data, error } = await supabase.rpc("musica_definir", { p_url: url.trim() });
+    setSalvando(false);
+    if (error) return toast(/inválido/.test(error.message) ? "Cole um link do Spotify (playlist, álbum, artista ou podcast)." : erroAmigavel(error));
+    setUrl((data as string | null) ?? "");
+    toast(data ? "Playlist atualizada. Vale para quem abrir o player a partir de agora." : "Player de música desligado.");
+  }
+
+  return (
+    <form onSubmit={salvar} style={{ display: "grid", gap: 8, padding: 14, borderRadius: 12, border: "1px solid var(--line)", background: "var(--s1)" }}>
+      <h2 style={{ margin: 0, font: "800 18px/1.2 var(--f-d)" }}>Música da plataforma</h2>
+      <p className="hs-pn-nota" style={{ margin: 0 }}>
+        Player do Spotify que os alunos ouvem enquanto navegam. Cole o link de uma playlist (Spotify → Compartilhar → Copiar link). Deixe vazio para desligar.
+      </p>
+      <div className="hs-pn-bar" style={{ gap: 8 }}>
+        <input className="hs-pn-in" style={{ flex: 1, minWidth: 0 }} value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://open.spotify.com/playlist/…" />
+        <button type="submit" className="hs-pn-btn hs-pn-btn-p" disabled={salvando}>
+          {salvando ? "Salvando…" : "Salvar"}
+        </button>
+      </div>
+    </form>
   );
 }
 
