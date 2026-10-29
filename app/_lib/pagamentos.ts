@@ -44,6 +44,9 @@ export const PRODUTO: Record<PlanoAssinatura, string> = { mensal: "HOT SOCIETY M
 // Convite do Discord do adicional (só servidor; mostrado só para quem pagou).
 export const ARSENAL_CONVITE = (process.env.ARSENAL_DISCORD_URL || "https://discord.gg/VWxpJGvuS").trim();
 
+// Pedido que dá direito ao convite do Discord: adicional no plano ou o item "ar" da Hot Store.
+export const temArsenal = (p: { plano: Plano; item?: string | null; adicional?: string | null }) => !!p.adicional || (p.plano === "loja" && p.item === "ar");
+
 // Nome com o adicional, para recibo, venda e Stripe.
 export function nomeVenda(p: { plano: Plano; item?: string | null; adicional?: string | null }) {
   return p.adicional ? `${nomeProduto(p)} + ${ADICIONAL.titulo}` : nomeProduto(p);
@@ -965,7 +968,7 @@ async function enviarRecibo(p: Pedido, c: Cobranca) {
   const loja = p.plano === "loja";
   const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#141416">
   <h2 style="margin:0 0 12px">Pagamento aprovado ✈️</h2>
-  <p>Olá${p.nome ? ", " + esc(p.nome.split(" ")[0]) : ""}! ${loja ? "Sua compra já está no seu Inventário." : "Seu passaporte HOT SOCIETY está ativo."}</p>
+  <p>Olá${p.nome ? ", " + esc(p.nome.split(" ")[0]) : ""}! ${loja ? (p.item === "ar" ? "Seu Arsenal do Cappu está liberado." : "Sua compra já está no seu Inventário.") : "Seu passaporte HOT SOCIETY está ativo."}</p>
   <table style="width:100%;border-collapse:collapse;font-size:14px">
     <tr><td style="padding:6px 0;color:#666">Produto</td><td>${esc(nomeVenda(p))}</td></tr>
     <tr><td style="padding:6px 0;color:#666">Valor</td><td>${valor} (${meio})</td></tr>
@@ -974,7 +977,7 @@ async function enviarRecibo(p: Pedido, c: Cobranca) {
   </table>
   <p><a href="${SITE}${loja ? "/dashboard/inventario" : "/dashboard"}" style="display:inline-block;background:#C9A24E;color:#141416;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold">${loja ? "Abrir meu Inventário" : "Entrar na área de membros"}</a></p>
   ${
-    p.adicional
+    temArsenal(p)
       ? `<div style="margin:16px 0;padding:14px 16px;border:1px solid #e6c978;border-radius:10px;background:#fffaf0">
     <b>🔓 ${esc(ADICIONAL.titulo)}</b><br><span style="font-size:13px;color:#555">Seu acesso ao Arsenal e à comunidade de networking é pelo Discord:</span>
     <p style="margin:10px 0 0"><a href="${ARSENAL_CONVITE}" style="display:inline-block;background:#5865F2;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:bold">Entrar no Discord</a></p>
@@ -982,7 +985,7 @@ async function enviarRecibo(p: Pedido, c: Cobranca) {
   </div>`
       : ""
   }
-  <p style="font-size:12px;color:#666">${loja ? "No Inventário você agenda a sua call. " : ""}Garantia de 7 dias: se se arrepender, peça o reembolso integral em Perfil → Acesso e compras.${loja ? "" : " Não há renovação automática."}</p>
+  <p style="font-size:12px;color:#666">${loja && p.item === "cs" ? "No Inventário você agenda a sua call. " : ""}Garantia de 7 dias: se se arrepender, peça o reembolso integral em Perfil → Acesso e compras.${loja ? "" : " Não há renovação automática."}</p>
 </div>`;
   await fetch("https://api.resend.com/emails", {
     method: "POST",

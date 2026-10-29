@@ -9,6 +9,8 @@ import Icon from "../../_components/membros/Icon";
 import { postApi } from "../../_lib/api";
 import { PRODUTOS } from "../../_lib/demo";
 import { ITENS_PAGOS, itemPago } from "../../_lib/loja";
+import { BotaoDiscord } from "../../_components/membros/ArsenalCard";
+import "../inicio.css";
 import { supabase } from "../../_lib/supabase";
 
 // Tudo o que o aluno comprou (em reais) ou resgatou (com coins) na Hot Store.
@@ -144,6 +146,8 @@ export default function Inventario() {
                           {enviando === it.id ? "Enviando…" : "Agendar minha call"}
                         </button>
                       )
+                    ) : it.origem === "compra" && it.item === "ar" && it.status === "pago" ? (
+                      <BotaoDiscord />
                     ) : it.item === "hp" && st.ok ? (
                       <span className="hs-inv-dica">Cor liberada nos Ajustes do HOTPHONE</span>
                     ) : it.origem === "resgate" && st.ok && it.status !== "entregue" ? (

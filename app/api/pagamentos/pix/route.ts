@@ -20,7 +20,7 @@ import {
 } from "../../../_lib/pagamentos";
 import { SITE } from "../../../_lib/site";
 import { ADICIONAL, adicionalValido } from "../../../_lib/adicional";
-import { ARSENAL_CONVITE } from "../../../_lib/pagamentos";
+import { ARSENAL_CONVITE, temArsenal } from "../../../_lib/pagamentos";
 import { ITENS_PAGOS, itemPago } from "../../../_lib/loja";
 import { limparUtm } from "../../../_lib/utm";
 import { enviarUtmify } from "../../../_lib/utmify";
@@ -41,7 +41,7 @@ function publico(p: Pedido) {
     expira_em: p.expira_em,
     adicional: p.adicional ?? null,
     // Convite do Discord do adicional: só depois de pago.
-    convite: p.adicional && p.status === "pago" ? ARSENAL_CONVITE : null,
+    convite: temArsenal(p) && p.status === "pago" ? ARSENAL_CONVITE : null,
   };
 }
 

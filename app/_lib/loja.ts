@@ -4,6 +4,7 @@
 
 export const ITENS_PAGOS = {
   cs: { titulo: "Consultoria 1:1 · call de 60 min", preco: 497 },
+  ar: { titulo: "Arsenal do Cappu + Networking", preco: 87 }, // entrega: convite do Discord (ARSENAL_CONVITE)
 } as const;
 
 export type ItemPago = keyof typeof ITENS_PAGOS;
