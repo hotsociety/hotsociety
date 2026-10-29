@@ -29,7 +29,7 @@ export default function Conquistas() {
   const p = { ...perfil, nivel, xpProx };
   const pct = Math.round((p.xp / p.xpProx) * 100);
   const ins = useMinhasInsignias({ stop: p.stopAtual, faturado: p.faturado, missoes: 0 });
-  const MEDALHAS = medalhas(dias ?? 0, p.faturado);
+  const MEDALHAS = medalhas(dias ?? 0, p.faturado, ins.medalhas ?? []);
   const ganhas = MEDALHAS.filter((m) => m.status === "ok").length;
 
   return (
@@ -95,7 +95,7 @@ export default function Conquistas() {
 }
 
 // Medalhas calculadas com os dados reais do aluno.
-function medalhas(dias: number, faturado: number): Medalha[] {
+function medalhas(dias: number, faturado: number, concedidas: string[]): Medalha[] {
   const tempo = (d: number, sigla: string, t: string, extra?: string): Medalha => ({
     sigla,
     t,
@@ -108,7 +108,7 @@ function medalhas(dias: number, faturado: number): Medalha[] {
     d: "Placa física",
     status: faturado >= m ? "ok" : faturado >= m * 0.7 ? "perto" : "futuro",
   });
-  return [
+  const lista: Medalha[] = [
     tempo(30, "1M", "1 mês"),
     tempo(90, "3M", "3 meses"),
     tempo(180, "6M", "6 meses"),
@@ -118,4 +118,6 @@ function medalhas(dias: number, faturado: number): Medalha[] {
     meta(50000, "50K", "R$ 50 mil"),
     meta(100000, "100K", "R$ 100 mil"),
   ];
+  // Concedidas à mão contam como conquistadas.
+  return lista.map((m): Medalha => (concedidas.includes(m.sigla) && m.status !== "ok" ? { ...m, status: "ok", d: "Concedida pela equipe" } : m));
 }
