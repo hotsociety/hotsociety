@@ -197,7 +197,7 @@ const STRIPE = "https://api.stripe.com/v1";
 const PLATAFORMA: "gutayler" | "fernando" = process.env.STRIPE_PLATAFORMA?.trim().toLowerCase() === "fernando" ? "fernando" : "gutayler";
 
 // Produtos cadastrados no Catálogo da Stripe de cada conta (o preço vai junto em cada cobrança, para valer cupom).
-const CATALOGO: Record<typeof PLATAFORMA, { mensal: string; anual: string; loja: Record<string, string> }> = {
+const CATALOGO: Record<typeof PLATAFORMA, { mensal: string; anual: string; loja: Record<string, string>; adicional?: string }> = {
   gutayler: {
     mensal: "prod_VWh6H33G7ohbLy", // HOT SOCIETY Mensal · R$ 97
     anual: "prod_VWh6aDtUihsB0H", // HOT SOCIETY Anual · R$ 997
@@ -206,7 +206,8 @@ const CATALOGO: Record<typeof PLATAFORMA, { mensal: string; anual: string; loja:
   fernando: {
     mensal: "prod_VWieiN23k1rObe",
     anual: "prod_VWif1gGbWP13Lo",
-    loja: { cs: "prod_VWifdkQI8mcokg" },
+    loja: { cs: "prod_VWifdkQI8mcokg", ar: "prod_VWlIsxmdXQ5ZLs" },
+    adicional: "prod_VWlIsxmdXQ5ZLs", // Arsenal do Cappu + Networking (R$ 87 na loja, R$ 57 como adicional)
   },
 };
 const STRIPE_PRODUTO = CATALOGO[PLATAFORMA];
@@ -309,7 +310,16 @@ async function stripeCheckoutCom(p: Pedido, c: Cliente, tipo: TipoStripe, parcel
         },
         // Adicional marcado no checkout (Arsenal do Cappu + Networking).
         ...(p.adicional && p.adicional_centavos
-          ? [{ quantity: 1, price_data: { currency: "brl", unit_amount: p.adicional_centavos, product_data: { name: ADICIONAL.titulo } } }]
+          ? [
+              {
+                quantity: 1,
+                price_data: {
+                  currency: "brl",
+                  unit_amount: p.adicional_centavos,
+                  ...(STRIPE_PRODUTO.adicional && !semProduto ? { product: STRIPE_PRODUTO.adicional } : { product_data: { name: ADICIONAL.titulo } }),
+                },
+              },
+            ]
           : []),
       ],
       customer_email: c.email,
