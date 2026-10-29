@@ -1,4 +1,4 @@
-// Desenha uma insígnia em pixel art (SVG). Altura = tamanho; veículos são mais largos (24×16).
+// Desenha uma insígnia em pixel art (SVG). Altura = tamanho; veículos são mais largos (24 ou 32 × 16).
 import { insignia } from "../../../_lib/insignias";
 import { PALETA, SPRITES } from "./sprites";
 import "./insignias.css";
