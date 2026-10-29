@@ -79,7 +79,13 @@ export default function Conquistas() {
         <ul className={s.medals}>
           {MEDALHAS.map((m) => (
             <li key={m.sigla} className={`${s.medal} ${s[m.status]}`}>
-              <span className={s.coin}>{m.sigla}</span>
+              <span className="hs-moeda" aria-hidden>
+                <span className="hs-moeda-face">
+                  <i>HSC</i>
+                  <b className={m.sigla.length >= 4 ? "lg" : undefined}>{m.sigla}</b>
+                </span>
+              </span>
+              <code className="hs-moeda-tk">$HS{m.sigla.replace("ª", "V")}</code>
               <b>{m.t}</b>
               <small>{m.d}</small>
               <span className={`${ui.badge} ${m.status === "ok" ? ui.badgeOk : m.status === "perto" ? ui.badgeGold : ""}`}>

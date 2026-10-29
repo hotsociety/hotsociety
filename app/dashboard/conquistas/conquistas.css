@@ -62,28 +62,99 @@
   color: var(--muted);
   font-size: 12px;
 }
-.hs-conq-coin {
+/* Medalhas como moedas digitais (estilo bitcoin): borda serrilhada, anel interno, valor em relevo, espessura 3D. */
+.hs-moeda {
+  --m1: #ffb347;
+  --m2: #f7931a;
+  --m3: #c46a07;
+  --m4: #8a4a05;
+  position: relative;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin: 2px 0 2px;
+  background: repeating-conic-gradient(var(--m3) 0 4deg, var(--m1) 4deg 8deg);
+  box-shadow:
+    0 1px 0 var(--m3),
+    0 2px 0 var(--m4),
+    0 3px 0 var(--m4),
+    0 4px 0 #5e3203,
+    0 10px 22px -6px rgba(247, 147, 26, 0.55);
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(.2, .8, .2, 1);
+}
+.hs-moeda-face {
   width: 62px;
   height: 62px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font: 900 17px/1 var(--f-d);
+  align-content: center;
+  gap: 1px;
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.55), transparent 38%),
+    radial-gradient(circle at 50% 55%, var(--m2), var(--m3) 78%);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.25),
+    inset 0 0 0 5px var(--m3),
+    inset 0 0 0 6px rgba(255, 233, 190, 0.55),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.25);
+  color: #fff;
+}
+.hs-moeda-face i {
+  font: 800 7.5px/1 var(--f-m, var(--f-t));
+  font-style: normal;
+  letter-spacing: 0.18em;
+  opacity: 0.85;
+}
+.hs-moeda-face b {
+  font: 900 19px/1 var(--f-d);
   font-stretch: 110%;
-  border: 2px solid var(--line2);
-  color: var(--muted2);
-  background: var(--s3);
+  text-shadow: 0 1px 0 var(--m4), 0 -1px 0 rgba(255, 255, 255, 0.35);
 }
-.hs-conq-ok .hs-conq-coin {
-  border-color: var(--gold-hi);
-  background: var(--gold-grad);
-  color: var(--s1);
-  box-shadow: 0 6px 22px rgba(201, 162, 78, 0.3);
+.hs-moeda-face b.lg {
+  font-size: 15px;
 }
-.hs-conq-perto .hs-conq-coin {
-  border-color: var(--gold-t);
-  color: var(--gold-hi);
-  border-style: dashed;
+.hs-conq-medal:hover .hs-moeda {
+  transform: rotateY(360deg);
+}
+.hs-moeda-tk {
+  font: 700 10.5px/1 var(--f-m, var(--f-t));
+  letter-spacing: 0.06em;
+  padding: 3px 7px;
+  border-radius: 6px;
+  color: #f7931a;
+  background: rgba(247, 147, 26, 0.1);
+  border: 1px solid rgba(247, 147, 26, 0.3);
+}
+/* Falta pouco: moeda sendo minerada (brilho pulsando) */
+.hs-conq-perto .hs-moeda {
+  filter: saturate(0.55) brightness(0.85);
+  animation: hs-moeda-pulso 1.8s ease-in-out infinite;
+}
+@keyframes hs-moeda-pulso {
+  50% { box-shadow: 0 1px 0 var(--m3), 0 2px 0 var(--m4), 0 3px 0 var(--m4), 0 4px 0 #5e3203, 0 0 26px 2px rgba(247, 147, 26, 0.55); }
+}
+/* Bloqueada: moeda sem cunhar (cinza) */
+.hs-conq-futuro .hs-moeda {
+  --m1: #6d6d74;
+  --m2: #4b4b52;
+  --m3: #38383e;
+  --m4: #26262b;
+  box-shadow: 0 1px 0 var(--m3), 0 2px 0 var(--m4), 0 3px 0 var(--m4), 0 4px 0 #18181b;
+}
+.hs-conq-futuro .hs-moeda-face { color: #a8a8b0; }
+.hs-conq-futuro .hs-moeda-tk { color: var(--muted); background: transparent; border-color: var(--line); }
+.hs-conq-ok {
+  border-color: rgba(247, 147, 26, 0.35);
+  background: radial-gradient(90% 70% at 50% 0%, rgba(247, 147, 26, 0.1), transparent 70%), var(--s2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hs-moeda { transition: none; }
+  .hs-conq-medal:hover .hs-moeda { transform: none; }
+  .hs-conq-perto .hs-moeda { animation: none; }
 }
 .hs-conq-futuro {
   opacity: 0.6;
