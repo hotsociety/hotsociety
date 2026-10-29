@@ -14,8 +14,8 @@ export function useMinhasInsignias(reserva: Metricas) {
   useEffect(() => {
     let vivo = true;
     supabase.rpc("minhas_insignias").then(({ data }) => {
-      const d = data as { stop?: number; faturado?: number; missoes?: number } | null;
-      if (vivo && d) setM({ stop: Number(d.stop ?? 0), faturado: Number(d.faturado ?? 0), missoes: Number(d.missoes ?? 0) });
+      const d = data as { stop?: number; faturado?: number; missoes?: number; extra?: string[] } | null;
+      if (vivo && d) setM({ stop: Number(d.stop ?? 0), faturado: Number(d.faturado ?? 0), missoes: Number(d.missoes ?? 0), extra: Array.isArray(d.extra) ? d.extra : [] });
     });
     return () => {
       vivo = false;
