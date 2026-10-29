@@ -3,7 +3,7 @@
 import { useProgresso } from "../../_components/membros/Progresso";
 import { useEffect, useState } from "react";
 import type { Medalha } from "../../_lib/demo";
-import Ranking from "../../_components/membros/Ranking";
+import RankingTemporada from "../../_components/membros/ranking/RankingTemporada";
 import VitrineInsignias, { useMinhasInsignias } from "../../_components/membros/insignias/Vitrine";
 import { InsigniasNome } from "../../_components/membros/insignias/Insignia";
 import { destaque } from "../../_lib/insignias";
@@ -37,9 +37,11 @@ export default function Conquistas() {
       <header className={ui.head}>
         <p className={ui.eyebrow}>Ranking</p>
         <h1 className={ui.h1}>
-          Medalhas e <span className={ui.gold}>ranking.</span>
+          Quem lidera a <span className={ui.gold}>temporada.</span>
         </h1>
       </header>
+
+      <RankingTemporada />
 
       <section className={`${ui.card} ${ui.cardGold} ${s.profile}`}>
         <span className={s.avatar}>{iniciais}</span>
@@ -88,14 +90,6 @@ export default function Conquistas() {
         </ul>
       </section>
 
-      <section className={ui.card} aria-labelledby="rank">
-        <div className={ui.rowBetween}>
-          <h2 id="rank" className={ui.h2}>
-            Ranking da temporada · XP
-          </h2>
-        </div>
-        <Ranking classes={{ lista: "hs-inicio-rank", pos: "hs-inicio-pos", nome: "hs-inicio-rname", badge: ui.badge, xp: "hs-inicio-rxp", eu: "hs-inicio-me", vazio: ui.muted }} />
-      </section>
     </div>
   );
 }
