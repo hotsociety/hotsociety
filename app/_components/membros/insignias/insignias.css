@@ -1,6 +1,6 @@
 /* Insígnias em pixel art. */
 .hs-ins{display:inline-block;vertical-align:middle;flex:none;image-rendering:pixelated}
-.hs-ins.off{filter:grayscale(1) brightness(.45);opacity:.55}
+.hs-ins.off{filter:grayscale(1) brightness(.9) contrast(.85);opacity:.42}
 .hs-ins-nome{display:inline-flex;align-items:center;gap:2px;margin-left:6px;vertical-align:middle;line-height:0}
 .hs-ins-nome .hs-ins{filter:drop-shadow(0 0 1px rgba(0,0,0,.6))}
 
