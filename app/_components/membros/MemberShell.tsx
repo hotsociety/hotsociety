@@ -45,7 +45,7 @@ export const GRUPOS: Grupo[] = [
   {
     g: "Conquistas",
     itens: [
-      { href: "/dashboard/conquistas", t: "Gamificação", icon: "trophy" },
+      { href: "/dashboard/conquistas", t: "Ranking", icon: "trophy" },
       { href: "/dashboard/jornada", t: "Prêmios", icon: "plaque" },
     ],
   },

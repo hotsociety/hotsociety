@@ -35,7 +35,7 @@ export default function Conquistas() {
   return (
     <div className={ui.page}>
       <header className={ui.head}>
-        <p className={ui.eyebrow}>Conquistas</p>
+        <p className={ui.eyebrow}>Ranking</p>
         <h1 className={ui.h1}>
           Medalhas e <span className={ui.gold}>ranking.</span>
         </h1>

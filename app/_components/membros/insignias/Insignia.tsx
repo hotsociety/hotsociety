@@ -1,4 +1,4 @@
-// Desenha uma insígnia em pixel art (SVG, nítido em qualquer tamanho múltiplo de 16).
+// Desenha uma insígnia em pixel art (SVG). Altura = tamanho; veículos são mais largos (24×16).
 import { insignia } from "../../../_lib/insignias";
 import { PALETA, SPRITES } from "./sprites";
 import "./insignias.css";
@@ -31,11 +31,12 @@ export function Insignia({ id, tamanho = 16, bloqueada = false, titulo }: { id: 
   const meta = insignia(id);
   if (!meta || !SPRITES[id]) return null;
   const rotulo = titulo ?? `${meta.nome} · ${meta.regra}`;
+  const larg = SPRITES[id][0]?.length ?? 16;
   return (
     <svg
       className={"hs-ins" + (bloqueada ? " off" : "")}
-      viewBox="0 0 16 16"
-      width={tamanho}
+      viewBox={`0 0 ${larg} 16`}
+      width={(tamanho * larg) / 16}
       height={tamanho}
       shapeRendering="crispEdges"
       role="img"
