@@ -233,12 +233,20 @@
 .hs-hp-esc:hover{color:#fff;border-color:#C9A24E}
 @media (hover:none){.hs-hp-esc{opacity:1;transform:none}.hs-hp-rot{display:none}}
 /* aba na lateral (escondido) */
-.hs-hp-aba{position:fixed;right:0;bottom:120px;z-index:2147483000;display:flex;align-items:center;gap:8px;height:46px;padding:0 12px 0 13px;border-radius:14px 0 0 14px;border:1px solid rgba(201,162,78,.55);border-right:0;background:linear-gradient(180deg,#1c1c1f,#121214);color:#F1DC9A;cursor:pointer;box-shadow:-6px 8px 22px rgba(0,0,0,.45);transform:translateX(calc(100% - 46px));transition:transform .25s cubic-bezier(.2,.8,.2,1);animation:hs-hp-abain .35s ease-out}
+.hs-hp-aba{position:fixed;right:0;bottom:120px;z-index:2147483000;display:flex;align-items:center;gap:8px;height:46px;padding:0 12px 0 13px;border-radius:14px 0 0 14px;border:1px solid rgba(201,162,78,.55);border-right:0;background:linear-gradient(180deg,#1c1c1f,#121214);color:#F1DC9A;cursor:pointer;box-shadow:-6px 8px 22px rgba(0,0,0,.45);transform:translateX(calc(100% - 44px));transition:transform .25s cubic-bezier(.2,.8,.2,1);animation:hs-hp-abain .35s ease-out}
 @keyframes hs-hp-abain{from{transform:translateX(100%)}}
 .hs-hp-aba:hover,.hs-hp-aba:focus-visible{transform:none}
-.hs-hp-aba span{font:800 11px/1 var(--f-d);font-stretch:120%;letter-spacing:.14em}
+.hs-hp-aba span{font:800 11px/1 var(--f-d);font-stretch:120%;letter-spacing:.14em;opacity:0;transition:opacity .2s}
+.hs-hp-aba:hover span,.hs-hp-aba:focus-visible span{opacity:1}
 .hs-hp-aba i{position:absolute;top:7px;left:26px;width:8px;height:8px;border-radius:50%;background:#E0453A;box-shadow:0 0 0 2px #121214}
-@media(max-width:860px){.hs-hp-aba{bottom:calc(150px + env(safe-area-inset-bottom,0px));height:42px}}
+@media(max-width:860px){
+  .hs-hp-hpmini .hs-hp-hp{--w:52px!important}
+  .hs-hp-miniw::before{inset:-10px -8px}
+  .hs-hp-hpmini .hs-hp-lock b{font-size:12px}
+  .hs-hp-hpmini .hs-hp-lock small{display:none}
+  .hs-hp-hpmini .hs-hp-bdg{min-width:18px;height:18px;font-size:10px;line-height:18px;top:-6px;right:-6px}
+  .hs-hp-hptip{width:180px;font-size:12px}
+  .hs-hp-aba{bottom:calc(150px + env(safe-area-inset-bottom,0px));height:42px}}
 /* aberto: botões do topo e fundo escuro no celular */
 .hs-hp-hpopen .hs-hp-topo{position:absolute;top:-10px;left:-8px;z-index:30;display:flex;gap:6px;align-items:center}
 .hs-hp-escb{appearance:none;height:36px;padding:0 13px;border-radius:999px;border:1px solid #6A6A72;background:#141416;color:#D9D6CE;font:700 12px/1 var(--f-t);cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.5)}
