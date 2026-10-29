@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { ROUTE } from "../../_lib/site";
+import { InsigniasNome } from "./insignias/Insignia";
 
-type Linha = { pos: number; nome: string; escala: number; xp: number; eu: boolean };
+type Linha = { pos: number; nome: string; escala: number; xp: number; eu: boolean; insignias?: string[] | null };
 
 const NUM = new Intl.NumberFormat("pt-BR");
 
@@ -31,7 +32,10 @@ export default function Ranking({ classes }: { classes: { lista: string; pos: st
       {linhas.map((r) => (
         <li key={r.pos} className={r.eu ? classes.eu : undefined}>
           <span className={classes.pos}>{String(r.pos).padStart(2, "0")}</span>
-          <span className={classes.nome}>{r.eu ? "Você" : r.nome}</span>
+          <span className={classes.nome}>
+            {r.eu ? "Você" : r.nome}
+            <InsigniasNome ids={r.insignias} tamanho={14} />
+          </span>
           <span className={classes.badge}>{ROUTE[r.escala]?.code ?? "GRU"}</span>
           <span className={classes.xp}>{NUM.format(r.xp)}</span>
         </li>

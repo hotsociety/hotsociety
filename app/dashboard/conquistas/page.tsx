@@ -4,6 +4,9 @@ import { useProgresso } from "../../_components/membros/Progresso";
 import { useEffect, useState } from "react";
 import type { Medalha } from "../../_lib/demo";
 import Ranking from "../../_components/membros/Ranking";
+import VitrineInsignias, { useMinhasInsignias } from "../../_components/membros/insignias/Vitrine";
+import { InsigniasNome } from "../../_components/membros/insignias/Insignia";
+import { destaque } from "../../_lib/insignias";
 import { useMembro } from "../../_components/membros/MemberContext";
 import { ROUTE } from "../../_lib/site";
 import "../../_components/membros/ui.css";
@@ -25,6 +28,7 @@ export default function Conquistas() {
   const { perfil, nivel, xpProx } = useProgresso();
   const p = { ...perfil, nivel, xpProx };
   const pct = Math.round((p.xp / p.xpProx) * 100);
+  const ins = useMinhasInsignias({ stop: p.stopAtual, faturado: p.faturado, missoes: 0 });
   const MEDALHAS = medalhas(dias ?? 0, p.faturado);
   const ganhas = MEDALHAS.filter((m) => m.status === "ok").length;
 
@@ -40,7 +44,10 @@ export default function Conquistas() {
       <section className={`${ui.card} ${ui.cardGold} ${s.profile}`}>
         <span className={s.avatar}>{iniciais}</span>
         <div className={s.pInfo}>
-          <b className={s.pName}>{nome}</b>
+          <b className={s.pName}>
+            {nome}
+            <InsigniasNome ids={destaque(ins)} tamanho={18} />
+          </b>
           <small>
             {ROUTE[p.stopAtual].country} · {ROUTE[p.stopAtual].code} · {ganhas} medalhas
           </small>
@@ -54,6 +61,13 @@ export default function Conquistas() {
             <i style={{ width: `${pct}%` }} />
           </div>
         </div>
+      </section>
+
+      <section className={ui.card} aria-labelledby="insignias">
+        <h2 id="insignias" className={ui.h2}>
+          Insígnias
+        </h2>
+        <VitrineInsignias m={ins} />
       </section>
 
       <section className={ui.card} aria-labelledby="medalhas">

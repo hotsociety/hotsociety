@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Icon from "../Icon";
 import { toast } from "../Toast";
 import { supabase } from "../../../_lib/supabase";
+import { InsigniasNome } from "../insignias/Insignia";
 
 type Comentario = {
   id: number;
@@ -16,6 +17,7 @@ type Comentario = {
   criado_em: string;
   votos: number;
   votei: boolean;
+  insignias?: string[] | null;
 };
 
 function quando(iso: string) {
@@ -156,6 +158,7 @@ export default function Discussao({ aulaId }: { aulaId: string }) {
           <div className="flex-1 min-w-0">
             <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
               <span className="font-semibold text-white">{c.autor}</span>
+              <InsigniasNome ids={c.insignias} />
               {c.equipe && <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#c9a24e]/15 text-[#d9b566]">Equipe</span>}
               {c.eu && <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">Você</span>}
               <span className="text-xs text-zinc-500">{quando(c.criado_em)}</span>

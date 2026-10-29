@@ -6,12 +6,13 @@ import { useMembro } from "./MemberContext";
 import { toast } from "./Toast";
 import { CANAIS, REGRAS } from "../../_lib/demo";
 import { supabase } from "../../_lib/supabase";
+import { InsigniasNome } from "./insignias/Insignia";
 import "./ui.css";
 import ui from "./ui.styles";
 import "./canais.css";
 import s from "./canais.styles";
 
-type Msg = { id: number; autor: string; eu: boolean; equipe: boolean; texto: string; criado_em: string };
+type Msg = { id: number; autor: string; eu: boolean; equipe: boolean; texto: string; criado_em: string; insignias?: string[] | null };
 
 const HORA = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" });
 const DIA = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit" });
@@ -123,7 +124,10 @@ export default function Canais() {
                   <span className={ui.ini}>{ini(m.autor)}</span>
                   <div className={s.bubble}>
                     <div className={s.meta}>
-                      <b>{m.eu ? "Você" : m.equipe ? `${m.autor} · Equipe` : m.autor}</b>
+                      <b>
+                        {m.eu ? "Você" : m.equipe ? `${m.autor} · Equipe` : m.autor}
+                        <InsigniasNome ids={m.insignias} />
+                      </b>
                       <small>{hora(m.criado_em)}</small>
                       <button type="button" className="hs-ch-acao" onClick={() => acao(m)}>
                         {m.eu || cargo ? "apagar" : "denunciar"}

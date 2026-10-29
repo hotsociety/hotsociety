@@ -8,6 +8,7 @@ import { Modal, toast } from "../../_components/membros/Toast";
 import { m } from "../../_components/membros/proto";
 import { CANAIS } from "../../_lib/demo";
 import { supabase } from "../../_lib/supabase";
+import { InsigniasNome } from "../../_components/membros/insignias/Insignia";
 
 /* ---------- ícones ---------- */
 const Heart = () => (
@@ -43,6 +44,7 @@ type Post = {
   curtidas: number;
   curti: boolean;
   comentarios: number;
+  insignias?: string[] | null;
 };
 
 const TIPO: Record<Post["tipo"], string> = { texto: "", resultado: "Resultado", duvida: "Dúvida" };
@@ -174,7 +176,10 @@ export default function ParaVoce({ onCanais }: { onCanais: () => void }) {
               <div className={m("hd")}>
                 <Av nome={p.autor} equipe={p.equipe} />
                 <div className={m("who")}>
-                  <b>{p.equipe ? `${p.autor} · Equipe` : p.autor}</b>
+                  <b>
+                    {p.equipe ? `${p.autor} · Equipe` : p.autor}
+                    <InsigniasNome ids={p.insignias} />
+                  </b>
                   {p.equipe && <Verificado />}
                   <small>
                     {TIPO[p.tipo] ? `${TIPO[p.tipo]} · ` : ""}
@@ -295,7 +300,7 @@ export default function ParaVoce({ onCanais }: { onCanais: () => void }) {
 }
 
 /* ---------- comentários ---------- */
-type Coment = { id: number; autor: string; eu: boolean; equipe: boolean; texto: string; criado_em: string };
+type Coment = { id: number; autor: string; eu: boolean; equipe: boolean; texto: string; criado_em: string; insignias?: string[] | null };
 
 function Comentarios({ post, onClose, onMudou }: { post: Post; onClose: () => void; onMudou: (n: number) => void }) {
   const { cargo } = useMembro();
@@ -369,7 +374,10 @@ function Comentarios({ post, onClose, onMudou }: { post: Post; onClose: () => vo
         <div key={c.id} className={m("igc")}>
           <Av nome={c.autor} equipe={c.equipe} />
           <div style={{ overflowWrap: "anywhere" }}>
-            <b>{c.equipe ? `${c.autor} · Equipe` : c.autor}</b>
+            <b>
+              {c.equipe ? `${c.autor} · Equipe` : c.autor}
+              <InsigniasNome ids={c.insignias} />
+            </b>
             {c.equipe && <Verificado />} {c.texto}
             <small>{quando(c.criado_em)}</small>
           </div>
