@@ -19,6 +19,8 @@ import {
   type Plano,
 } from "../../../_lib/pagamentos";
 import { SITE } from "../../../_lib/site";
+import { ADICIONAL, adicionalValido } from "../../../_lib/adicional";
+import { ARSENAL_CONVITE } from "../../../_lib/pagamentos";
 import { ITENS_PAGOS, itemPago } from "../../../_lib/loja";
 import { limparUtm } from "../../../_lib/utm";
 import { enviarUtmify } from "../../../_lib/utmify";
@@ -37,6 +39,9 @@ function publico(p: Pedido) {
     // Página segura do gateway (cartão, ou Pix da Stripe quando o QR não pode ser mostrado aqui).
     checkout_url: p.status === "pendente" ? (p.checkout_url ?? null) : null,
     expira_em: p.expira_em,
+    adicional: p.adicional ?? null,
+    // Convite do Discord do adicional: só depois de pago.
+    convite: p.adicional && p.status === "pago" ? ARSENAL_CONVITE : null,
   };
 }
 
@@ -50,7 +55,7 @@ export async function POST(req: Request) {
   const user = await usuarioDoPedido(req);
   if (!user) return resp({ erro: "Entre na sua conta para assinar." }, 401);
 
-  let corpo: { plano?: string; item?: string; nome?: string; cpf?: string; telefone?: string; aceite?: boolean; cupom?: string; metodo?: string; utm?: unknown };
+  let corpo: { plano?: string; item?: string; nome?: string; cpf?: string; telefone?: string; aceite?: boolean; cupom?: string; metodo?: string; utm?: unknown; adicional?: string };
   try {
     corpo = await req.json();
   } catch {
@@ -82,7 +87,10 @@ export async function POST(req: Request) {
     if (!r?.ok) return resp({ erro: "Cupom inválido, vencido ou esgotado." }, 400);
     desconto = Math.round((VALOR_CENTAVOS[plano] * (r.desconto ?? 0)) / 100);
   }
-  const valor = item ? ITENS_PAGOS[item].preco * 100 : VALOR_CENTAVOS[plano as "mensal" | "anual"] - desconto;
+  // Adicional (Arsenal do Cappu + Networking): só nos planos e só pela Stripe (uma página com os dois itens).
+  const adicional = !item && gateway === "stripe" ? adicionalValido(corpo.adicional) : null;
+  const adicionalCentavos = adicional ? ADICIONAL.preco * 100 : 0;
+  const valor = (item ? ITENS_PAGOS[item].preco * 100 : VALOR_CENTAVOS[plano as "mensal" | "anual"] - desconto) + adicionalCentavos;
 
   // Já existe uma cobrança igual ainda válida? Reaproveita.
   const { data: aberto } = await sb
@@ -94,6 +102,7 @@ export async function POST(req: Request) {
     .eq("valor_centavos", valor)
     .eq("gateway", gateway)
     .eq("metodo", metodo)
+    .filter("adicional", adicional ? "eq" : "is", adicional ?? null)
     .eq("status", "pendente")
     .gt("expira_em", new Date(Date.now() + 5 * 60_000).toISOString())
     .order("criado_em", { ascending: false })
@@ -135,6 +144,7 @@ export async function POST(req: Request) {
       utm: limparUtm(corpo.utm),
       ref_afiliado: refAfiliado,
       ...(codigo ? { cupom: codigo, desconto_centavos: desconto } : {}),
+      ...(adicional ? { adicional, adicional_centavos: adicionalCentavos } : {}),
     })
     .select("*")
     .single<Pedido>();

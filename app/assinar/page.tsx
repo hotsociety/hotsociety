@@ -10,12 +10,13 @@ import { qrSvgPath } from "../_lib/qrcode";
 import { lerUtm } from "../_lib/utm";
 import { ITENS_PAGOS, itemPago } from "../_lib/loja";
 import { BIBLIOTECA } from "../_lib/biblioteca";
+import { ADICIONAL } from "../_lib/adicional";
 import "../login/login.css";
 import s from "../login/login.styles";
 import "./assinar.css";
 
 type Plano = "mensal" | "anual";
-type Pedido = { id: string; plano: Plano | "loja"; item?: string | null; metodo?: "pix" | "cartao"; valor: number; status: string; br_code: string | null; checkout_url?: string | null; expira_em: string | null };
+type Pedido = { id: string; plano: Plano | "loja"; item?: string | null; metodo?: "pix" | "cartao"; valor: number; status: string; br_code: string | null; checkout_url?: string | null; expira_em: string | null; adicional?: string | null; convite?: string | null };
 type Etapa = "carregando" | "form" | "pix" | "cartao" | "pago" | "expirado";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -73,6 +74,7 @@ function Assinar() {
   const [metodo, setMetodo] = useState<"pix" | "cartao">("pix");
   const [stripe, setStripe] = useState(false); // Stripe: uma página só com todas as formas de pagamento
   const [temCartao, setTemCartao] = useState(false);
+  const [comAdicional, setComAdicional] = useState(false); // Arsenal do Cappu + Networking (só nos planos, pela Stripe)
   const voltaPedido = useRef(params.get("pedido"));
 
   // Precisa estar logado: o pagamento fica ligado à conta. Roda uma vez só.
@@ -168,7 +170,17 @@ function Assinar() {
         body: JSON.stringify(
           item
             ? { item, metodo, nome: n, cpf, telefone: tel, aceite, utm: lerUtm() }
-            : { plano, metodo, nome: n, cpf, telefone: tel, aceite, cupom: cupom?.plano === plano ? cupom.codigo : undefined, utm: lerUtm() },
+            : {
+                plano,
+                metodo,
+                nome: n,
+                cpf,
+                telefone: tel,
+                aceite,
+                cupom: cupom?.plano === plano ? cupom.codigo : undefined,
+                adicional: stripe && comAdicional ? ADICIONAL.id : undefined,
+                utm: lerUtm(),
+              },
         ),
       });
       const j = await r.json().catch(() => ({}));
@@ -218,7 +230,8 @@ function Assinar() {
     setCupom({ codigo: r.codigo!, desconto: r.desconto!, plano });
   }
   const precoCom = (k: Plano) => (cupom && cupom.plano === k ? Math.round(PLANOS[k].preco * (100 - cupom.desconto)) / 100 : PLANOS[k].preco);
-  const precoFinal = loja ? loja.preco : precoCom(plano);
+  const mostraAdicional = !loja && stripe;
+  const precoFinal = loja ? loja.preco : precoCom(plano) + (mostraAdicional && comAdicional ? ADICIONAL.preco : 0);
   const nomePedido = (p: Pedido) => (p.plano === "loja" ? (loja?.titulo ?? "Hot Store") : PLANOS[p.plano].t);
 
   const mm = String(Math.floor(restante / 60000)).padStart(2, "0");
@@ -317,6 +330,27 @@ function Assinar() {
                   <p className={s.err} role="alert">
                     {cupomErro}
                   </p>
+                )}
+                {mostraAdicional && (
+                  <div className={`hs-as-bump${comAdicional ? " on" : ""}`}>
+                    <p className="hs-as-bump-cab">🔥 {ADICIONAL.chamada}</p>
+                    <div className="hs-as-bump-corpo">
+                      <Image src={ADICIONAL.img} alt="" width={86} height={86} className="hs-as-bump-img" />
+                      <div>
+                        <b className="hs-as-bump-t">🔓 {ADICIONAL.titulo}</b>
+                        <p className="hs-as-bump-tx">{ADICIONAL.texto}</p>
+                        <p className="hs-as-bump-preco">
+                          <strong>{BRL.format(ADICIONAL.preco)}</strong>
+                          <s>{BRL.format(ADICIONAL.de)}</s>
+                          <span>-{Math.round((1 - ADICIONAL.preco / ADICIONAL.de) * 100)}%</span>
+                        </p>
+                      </div>
+                    </div>
+                    <label className="hs-as-bump-add">
+                      <input type="checkbox" checked={comAdicional} onChange={(e) => setComAdicional(e.target.checked)} />
+                      <span>Adicionar produto!</span>
+                    </label>
+                  </div>
                 )}
                 <p className="hs-as-conta">
                   {loja ? "A compra fica registrada na conta" : "O acesso será liberado na conta"} <b>{email}</b>.
@@ -458,6 +492,17 @@ function Assinar() {
                       ? "Sua compra já está no seu Inventário. É por lá que você agenda a call."
                       : "Seu passaporte está ativo. Boa viagem!"}
                 </p>
+                {pedido?.convite && (
+                  <div className="hs-as-bump on">
+                    <p className="hs-as-bump-cab">🔓 {ADICIONAL.titulo}</p>
+                    <p className="hs-as-bump-tx" style={{ padding: "0 14px" }}>
+                      Seu acesso aos materiais e à comunidade de networking é pelo Discord. O convite também fica no Início da área de membros e no seu e-mail.
+                    </p>
+                    <a href={pedido.convite} target="_blank" rel="noopener noreferrer" className="hs-as-discord">
+                      Entrar no Discord
+                    </a>
+                  </div>
+                )}
                 <a
                   href={daBiblioteca ? `/dashboard/aulas?desbloqueado=${item}` : loja ? "/dashboard/inventario" : "/dashboard"}
                   className={s.primary}
