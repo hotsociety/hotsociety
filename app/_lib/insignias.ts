@@ -38,7 +38,7 @@ export const CATEGORIAS: { cat: Categoria; t: string; d: string }[] = [
 
 export const insignia = (id: string) => INSIGNIAS.find((i) => i.id === id) ?? null;
 
-export type Metricas = { stop: number; missoes: number; faturado: number; extra?: string[] }; // extra = concedidas à mão
+export type Metricas = { stop: number; missoes: number; faturado: number; extra?: string[]; medalhas?: string[] }; // extra/medalhas = concedidas à mão
 
 // Todas as liberadas (vitrine).
 export function liberadas(m: Metricas): Set<string> {
