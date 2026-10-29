@@ -8,6 +8,7 @@ import { supabase } from "../../_lib/supabase";
 import { problemaNaSenha } from "../../_lib/senha";
 import MeusDados from "./MeusDados";
 import MinhasCompras from "./MinhasCompras";
+import MusicaPerfil from "./MusicaPerfil";
 import "../../_components/membros/ui.css";
 import ui from "../../_components/membros/ui.styles";
 import "./perfil.css";
@@ -107,6 +108,8 @@ export default function Perfil() {
           </button>
         </form>
       </div>
+
+      <MusicaPerfil />
 
       <MinhasCompras />
 

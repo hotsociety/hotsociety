@@ -18,7 +18,7 @@
 .hs-mu-alvo{min-height:152px;border-radius:12px;overflow:hidden;background:#1c1c1f}
 .hs-mu-painel header em{font:700 10px/1 var(--f-t);font-style:normal;letter-spacing:.08em;text-transform:uppercase;color:#3ecf72}
 .hs-mu-eq.parado i{animation:none;transform:scaleY(.4)}
-.hs-mu-painel small{padding:0 6px 2px;color:#85827A;font-size:10.5px}
+
 .hs-mu-eq{display:inline-flex;align-items:flex-end;gap:2px;height:12px}
 .hs-mu-eq i{width:3px;border-radius:2px;background:currentColor;animation:hs-mu-eq 1s ease-in-out infinite}
 .hs-mu-painel .hs-mu-eq{color:#E6C978}
@@ -34,3 +34,21 @@
   .hs-mu-btn>span:not(.hs-mu-eq){display:none}
 }
 @media (prefers-reduced-motion:reduce){.hs-mu-eq i{animation:none}}
+.hs-mu-abas{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:4px;padding:3px;border-radius:12px;background:#1c1c1f}
+.hs-mu-abas button{height:30px;border:0;border-radius:9px;background:transparent;color:#A9A69E;font:700 11.5px/1 var(--f-t);cursor:pointer}
+.hs-mu-abas button[aria-selected="true"]{background:#2a2a2f;color:#F1DC9A;box-shadow:inset 0 0 0 1px rgba(201,162,78,.4)}
+.hs-mu-link{display:flex;gap:6px}
+.hs-mu-link input{flex:1;min-width:0;height:34px;padding:0 10px;border-radius:9px;border:1px solid #3a3a40;background:#1c1c1f;color:#F4F2EC;font:400 12.5px/1 var(--f-t)}
+.hs-mu-link input:focus{outline:0;border-color:#C9A24E}
+.hs-mu-link button{height:34px;padding:0 12px;border:0;border-radius:9px;background:var(--gold-grad);color:#141416;font:800 12px/1 var(--f-t);cursor:pointer}
+.hs-mu-link button:disabled{opacity:.4;cursor:default}
+.hs-mu-vazio{margin:0;padding:12px;border-radius:12px;border:1px dashed #3a3a40;color:#A9A69E;font-size:12px;line-height:1.45}
+.hs-mu-vazio b{color:#F1DC9A}
+.hs-mu-painel footer{display:grid;gap:3px;padding:0 4px}
+.hs-mu-painel footer a{display:inline-flex;align-items:center;gap:6px;width:max-content;color:#1ed760;font:700 12px/1 var(--f-t);text-decoration:none}
+.hs-mu-painel footer a:hover{text-decoration:underline}
+.hs-mu-painel footer span{color:#85827A;font-size:10.5px}
+.hs-mu-rodape{display:flex;justify-content:space-between;gap:8px;padding:2px 4px 0;border-top:1px solid #26262a;padding-top:8px}
+.hs-mu-rodape button{border:0;background:none;padding:0;color:#85827A;font:600 11px/1 var(--f-t);cursor:pointer}
+.hs-mu-rodape button:last-child{margin-left:auto}
+.hs-mu-rodape button:hover{color:#F1DC9A}
