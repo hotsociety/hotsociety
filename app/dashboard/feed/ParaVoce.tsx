@@ -425,7 +425,8 @@ function NovoPost({ tipo, onClose, onPublicado }: { tipo: Post["tipo"]; onClose:
       const { error } = await supabase.storage.from("feed").upload(caminho, foto, { contentType: foto.type, upsert: false });
       if (error) {
         setEnviando(false);
-        return toast("Não deu para enviar a foto.");
+        console.error("feed upload:", error.message);
+        return toast(/size|large|grande/i.test(error.message) ? "A foto passou de 5 MB." : /mime|type/i.test(error.message) ? "Use foto PNG, JPG ou WEBP." : "Não deu para enviar a foto. Tente de novo.");
       }
     }
     const { error } = await supabase.rpc("publicar_post", { p_tipo: t, p_texto: x, p_imagem: caminho });
