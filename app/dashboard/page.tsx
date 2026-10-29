@@ -64,7 +64,7 @@ export default function Inicio() {
   const caixaAnim = useContagem(caixa?.faturado ?? 0);
   const onlineAnim = useContagem(online);
 
-  // Caixa da comunidade: soma do faturamento verificado de todos os membros.
+  // Caixa da comunidade: base comprovada + faturamento verificado dos membros + vendas pagas da plataforma.
   useEffect(() => {
     supabase.rpc("comunidade_caixa").then(({ data }) => {
       const c = data as { faturado: number | string; membros: number } | null;
@@ -122,7 +122,7 @@ export default function Inicio() {
           <div className="hs-agora-caixa">
             <small>Caixa da comunidade</small>
             <b>{caixa ? BRL2.format(caixaAnim) : "R$ —"}</b>
-            <em>faturamento comprovado pelos membros</em>
+            <em>faturamento da comunidade · membros + vendas</em>
           </div>
           <div className="hs-agora-on" aria-live="polite">
             <span className="hs-agora-av" aria-hidden="true">
