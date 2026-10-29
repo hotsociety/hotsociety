@@ -91,3 +91,6 @@
   .hs-rk-item .hs-rk-barra{display:none}
   .hs-rk-av{width:32px;height:32px;font-size:12px}
 }
+.hs-rk-mais{justify-self:center;padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:rgba(var(--fg),.04);color:inherit;font:700 12.5px/1 var(--f-t);cursor:pointer}
+.hs-rk-mais:hover{border-color:rgba(201,162,78,.55);color:var(--gold-t)}
+.p1 .hs-rk-degrau{box-shadow:0 -12px 40px -16px var(--ouro)}

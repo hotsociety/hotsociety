@@ -52,7 +52,7 @@ function Coroa() {
   const px = ["k.k.k.k", "kokokok", "koooook", "kotoook", "kkkkkkk"];
   const c: Record<string, string> = { k: "#17140f", o: "#e0b84a", t: "#c63a31" };
   return (
-    <svg className="hs-rk-coroa" viewBox="0 0 7 5" width={28} height={20} shapeRendering="crispEdges" aria-hidden>
+    <svg className="hs-rk-coroa" viewBox="0 0 7 5" width={42} height={30} shapeRendering="crispEdges" aria-hidden>
       {px.flatMap((l, y) => [...l].map((ch, x) => (ch === "." ? null : <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={c[ch]} />)))}
     </svg>
   );
@@ -62,6 +62,7 @@ export default function RankingTemporada() {
   const [linhas, setLinhas] = useState<Linha[] | null>(null);
   const [fim, setFim] = useState("");
   const [mes, setMes] = useState("");
+  const [tudo, setTudo] = useState(false);
 
   useEffect(() => {
     let vivo = true;
@@ -107,7 +108,8 @@ export default function RankingTemporada() {
   const eu = linhas.find((l) => l.eu) ?? null;
   const acima = eu ? linhas.find((l) => l.pos === eu.pos - 1) ?? null : null;
   const top = linhas.filter((l) => l.pos <= 3);
-  const resto = linhas.filter((l) => l.pos > 3 && l.pos <= 20);
+  const resto = linhas.filter((l) => l.pos > 3 && (l.pos <= (tudo ? 20 : 10) || (l.eu && l.pos <= 20)));
+  const temMais = linhas.some((l) => l.pos > 10 && l.pos <= 20);
   const fora = linhas.filter((l) => l.pos > 20);
   const podio = [top[1], top[0], top[2]].filter(Boolean) as Linha[];
 
@@ -184,6 +186,12 @@ export default function RankingTemporada() {
         </ol>
       )}
 
+      {temMais && (
+        <button type="button" className="hs-rk-mais" onClick={() => setTudo((v) => !v)}>
+          {tudo ? "Mostrar só o top 10" : "Ver até o 20º lugar"}
+        </button>
+      )}
+
       <p className="hs-rk-rodape">Ordenado por XP. Em caso de empate, fica na frente quem entrou primeiro.</p>
     </section>
   );
@@ -204,7 +212,7 @@ function Item({ l, lider }: { l: Linha; lider: number }) {
         </small>
       </span>
       <span className="hs-rk-barra" aria-hidden>
-        <i style={{ width: `${Math.max(2, Math.round((l.xp / lider) * 100))}%` }} />
+        <i style={{ width: `${l.xp > 0 ? Math.max(3, Math.round((l.xp / lider) * 100)) : 0}%` }} />
       </span>
       <span className="hs-rk-xp">
         {NUM.format(l.xp)} <small>XP</small>
