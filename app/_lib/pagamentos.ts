@@ -28,6 +28,7 @@ import { enviarUtmify } from "./utmify";
 import { avisarVenda } from "./avisoVenda";
 import type { Utm } from "./utm";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { ADICIONAL } from "./adicional";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { PRICE } from "./site";
 import { ITENS_PAGOS, itemPago } from "./loja";
@@ -40,6 +41,14 @@ export const VALOR_CENTAVOS: Record<PlanoAssinatura, number> = { mensal: PRICE.m
 export const PRODUTO: Record<PlanoAssinatura, string> = { mensal: "HOT SOCIETY Mensal", anual: "HOT SOCIETY Anual" };
 
 /** Nome do que foi vendido (plano ou item da loja). */
+// Convite do Discord do adicional (só servidor; mostrado só para quem pagou).
+export const ARSENAL_CONVITE = (process.env.ARSENAL_DISCORD_URL || "https://discord.gg/VWxpJGvuS").trim();
+
+// Nome com o adicional, para recibo, venda e Stripe.
+export function nomeVenda(p: { plano: Plano; item?: string | null; adicional?: string | null }) {
+  return p.adicional ? `${nomeProduto(p)} + ${ADICIONAL.titulo}` : nomeProduto(p);
+}
+
 export function nomeProduto(p: { plano: Plano; item?: string | null }) {
   if (p.plano === "loja") {
     const it = itemPago(p.item);
@@ -69,6 +78,8 @@ export type Pedido = {
   cupom?: string | null;
   split_centavos?: number | null;
   utm?: Utm | null;
+  adicional?: string | null; // "arsenal" quando o cliente marcou o adicional no checkout
+  adicional_centavos?: number | null;
 };
 
 /** Cobrança no formato do site, igual para qualquer gateway. */
@@ -289,17 +300,21 @@ async function stripeCheckoutCom(p: Pedido, c: Cliente, tipo: TipoStripe, parcel
           quantity: 1,
           price_data: {
             currency: "brl",
-            unit_amount: p.valor_centavos,
+            unit_amount: p.valor_centavos - (p.adicional_centavos ?? 0),
             ...(produtoStripe(p) && !semProduto ? { product: produtoStripe(p) } : { product_data: { name: nomeProduto(p) } }),
           },
         },
+        // Adicional marcado no checkout (Arsenal do Cappu + Networking).
+        ...(p.adicional && p.adicional_centavos
+          ? [{ quantity: 1, price_data: { currency: "brl", unit_amount: p.adicional_centavos, product_data: { name: ADICIONAL.titulo } } }]
+          : []),
       ],
       customer_email: c.email,
       client_reference_id: p.id,
       metadata: { pedido: p.id },
       payment_intent_data: {
-        metadata: { pedido: p.id, divisao: `${100 - repassePercentual(p.plano)}/${repassePercentual(p.plano)}` },
-        description: nomeProduto(p),
+        metadata: { pedido: p.id, divisao: `${100 - repassePercentual(p.plano)}/${repassePercentual(p.plano)}`, ...(p.adicional ? { adicional: p.adicional } : {}) },
+        description: nomeVenda(p),
         transfer_group: p.id,
       },
       success_url: volta,
@@ -922,7 +937,7 @@ export async function aplicarCobranca(sb: SupabaseClient, c: Cobranca): Promise<
       p: {
         pedido: c.id,
         plataforma: c.gateway,
-        produto: nomeProduto(p),
+        produto: nomeVenda(p),
         plano: p.plano,
         cliente_nome: p.nome,
         cliente_email: p.email,
@@ -952,12 +967,21 @@ async function enviarRecibo(p: Pedido, c: Cobranca) {
   <h2 style="margin:0 0 12px">Pagamento aprovado ✈️</h2>
   <p>Olá${p.nome ? ", " + esc(p.nome.split(" ")[0]) : ""}! ${loja ? "Sua compra já está no seu Inventário." : "Seu passaporte HOT SOCIETY está ativo."}</p>
   <table style="width:100%;border-collapse:collapse;font-size:14px">
-    <tr><td style="padding:6px 0;color:#666">Produto</td><td>${nomeProduto(p)}</td></tr>
+    <tr><td style="padding:6px 0;color:#666">Produto</td><td>${esc(nomeVenda(p))}</td></tr>
     <tr><td style="padding:6px 0;color:#666">Valor</td><td>${valor} (${meio})</td></tr>
     <tr><td style="padding:6px 0;color:#666">Data</td><td>${data}</td></tr>
     <tr><td style="padding:6px 0;color:#666">Pedido</td><td>${esc(c.id)}</td></tr>
   </table>
   <p><a href="${SITE}${loja ? "/dashboard/inventario" : "/dashboard"}" style="display:inline-block;background:#C9A24E;color:#141416;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold">${loja ? "Abrir meu Inventário" : "Entrar na área de membros"}</a></p>
+  ${
+    p.adicional
+      ? `<div style="margin:16px 0;padding:14px 16px;border:1px solid #e6c978;border-radius:10px;background:#fffaf0">
+    <b>🔓 ${esc(ADICIONAL.titulo)}</b><br><span style="font-size:13px;color:#555">Seu acesso ao Arsenal e à comunidade de networking é pelo Discord:</span>
+    <p style="margin:10px 0 0"><a href="${ARSENAL_CONVITE}" style="display:inline-block;background:#5865F2;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:bold">Entrar no Discord</a></p>
+    <p style="font-size:12px;color:#666;margin:8px 0 0">O convite também fica na sua área de membros.</p>
+  </div>`
+      : ""
+  }
   <p style="font-size:12px;color:#666">${loja ? "No Inventário você agenda a sua call. " : ""}Garantia de 7 dias: se se arrepender, peça o reembolso integral em Perfil → Acesso e compras.${loja ? "" : " Não há renovação automática."}</p>
 </div>`;
   await fetch("https://api.resend.com/emails", {
@@ -966,7 +990,7 @@ async function enviarRecibo(p: Pedido, c: Cobranca) {
     body: JSON.stringify({
       from: process.env.EMAIL_REMETENTE || "HOT SOCIETY <nao-responda@hotsociety.com.br>",
       to: [p.email],
-      subject: `Pagamento aprovado · ${nomeProduto(p)}`,
+      subject: `Pagamento aprovado · ${nomeVenda(p)}`,
       html,
     }),
     signal: AbortSignal.timeout(8000),

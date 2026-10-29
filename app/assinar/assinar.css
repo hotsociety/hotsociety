@@ -30,3 +30,23 @@
 .hs-as-cupom button{min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line2,#3a3a40);background:transparent;color:var(--neve,#ECEAE4);font:700 14px/1 var(--f-t);cursor:pointer}
 .hs-as-cupom button:disabled{opacity:.5;cursor:not-allowed}
 .hs-as-link{appearance:none;justify-self:start;border:0;background:none;padding:4px 0;color:var(--gold-t,#d9b566);font:600 13.5px/1 var(--f-t);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+
+/* Adicional no checkout (order bump): Arsenal do Cappu + Networking */
+.hs-as-bump{display:grid;gap:12px;border:2px dashed rgba(201,162,78,.65);border-radius:14px;background:#15130d;overflow:hidden}
+.hs-as-bump.on{border-style:solid;border-color:var(--gold,#c9a24e);background:#1c180e}
+.hs-as-bump-cab{margin:0;padding:11px 14px;text-align:center;font:800 14px/1.2 var(--f-d);letter-spacing:.02em;text-transform:uppercase;
+  color:var(--gold-t,#d9b566);background:rgba(201,162,78,.12);border-bottom:1px dashed rgba(201,162,78,.45)}
+.hs-as-bump-corpo{display:flex;gap:12px;padding:0 14px;align-items:flex-start}
+.hs-as-bump-img{width:76px;height:76px;border-radius:10px;object-fit:cover;flex:none}
+.hs-as-bump-t{display:block;font:800 14px/1.25 var(--f-d);color:var(--neve,#ECEAE4)}
+.hs-as-bump-tx{margin:5px 0 0;font-size:12.5px;line-height:1.45;color:var(--muted,#a9a69e)}
+.hs-as-bump-preco{display:flex;align-items:center;gap:8px;margin:8px 0 0;flex-wrap:wrap}
+.hs-as-bump-preco strong{font:800 19px/1 var(--f-d);color:#5bc98f}
+.hs-as-bump-preco s{color:var(--muted,#a9a69e);font-size:13px}
+.hs-as-bump-preco span{margin-left:auto;padding:4px 8px;border-radius:7px;background:#1f6b45;color:#eafff3;font:800 12px/1 var(--f-t)}
+.hs-as-bump-add{display:flex;align-items:center;gap:10px;margin:0 14px 14px;padding:12px 14px;border-radius:10px;background:rgba(201,162,78,.16);cursor:pointer;
+  font:800 15px/1 var(--f-d);color:var(--neve,#ECEAE4)}
+.hs-as-bump-add input{width:20px;height:20px;accent-color:#c9a24e;flex:none}
+.hs-as-bump.on .hs-as-bump-add{background:rgba(201,162,78,.32)}
+.hs-as-discord{display:grid;place-items:center;margin:0 14px 14px;min-height:46px;border-radius:10px;background:#5865F2;color:#fff;font:800 15px/1 var(--f-t);text-decoration:none}
+.hs-as-discord:hover{background:#4752c4}

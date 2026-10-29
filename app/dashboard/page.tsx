@@ -13,6 +13,7 @@ import { MISSOES_PLANO } from "../_lib/demo";
 import ProximaLive from "../_components/membros/ProximaLive";
 import { useOnline } from "../_components/membros/presenca";
 import Ranking from "../_components/membros/Ranking";
+import ArsenalCard from "../_components/membros/ArsenalCard";
 import { moduloAtual, proximaAula } from "../_lib/progresso";
 import { useProgresso } from "../_components/membros/Progresso";
 import { toast } from "../_components/membros/Toast";
@@ -169,6 +170,9 @@ export default function Inicio() {
           )}
         </div>
       </section>
+
+      {/* adicional comprado no checkout (convite do Discord) */}
+      <ArsenalCard />
 
       {/* números */}
       <div className={s.stats}>

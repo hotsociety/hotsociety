@@ -454,3 +454,16 @@
 @media (prefers-reduced-motion: reduce) {
   .hs-agora-eb i { animation: none; }
 }
+
+/* Adicional comprado: Arsenal do Cappu + Networking (convite do Discord) */
+.hs-arsenal{display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:14px;border:1px solid rgba(201,162,78,.45);
+  background:linear-gradient(120deg,rgba(201,162,78,.14),rgba(88,101,242,.10))}
+.hs-arsenal-img{width:72px;height:72px;border-radius:10px;object-fit:cover;flex:none}
+.hs-arsenal-tx{flex:1;min-width:0;display:grid;gap:3px}
+.hs-arsenal-tx small{font:700 11px/1 var(--f-t);letter-spacing:.1em;text-transform:uppercase;color:var(--gold-t)}
+.hs-arsenal-tx h2{margin:0;font:800 17px/1.2 var(--f-d)}
+.hs-arsenal-tx p{margin:0;font-size:13.5px;color:var(--muted)}
+.hs-arsenal-btn{flex:none;display:inline-flex;align-items:center;min-height:42px;padding:0 16px;border-radius:10px;background:#5865F2;color:#fff;
+  font:700 14px/1 var(--f-t);text-decoration:none}
+.hs-arsenal-btn:hover{background:#4752c4}
+@media (max-width:640px){.hs-arsenal{flex-wrap:wrap}.hs-arsenal-btn{width:100%;justify-content:center}}
