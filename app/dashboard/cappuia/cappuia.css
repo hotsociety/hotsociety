@@ -478,7 +478,54 @@
   font-size: 11px;
 }
 
+@media (max-width: 1024px) {
+  .hs-ia-credits {
+    display: grid;
+    padding: 10px 12px;
+  }
+  .hs-ia-anel {
+    width: 40px;
+    height: 40px;
+  }
+  .hs-ia-anel span {
+    width: 31px;
+    height: 31px;
+    font-size: 12px;
+  }
+}
 @media (max-width: 640px) {
+  .hs-ia-mode {
+    padding: 8px 12px 8px 8px;
+    gap: 9px;
+  }
+  .hs-ia-mic {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+  }
+  .hs-ia-mode small {
+    display: none;
+  }
+  .hs-ia-msgs {
+    padding: 14px 12px 6px;
+  }
+  .hs-ia-composer {
+    padding: 8px 10px 10px;
+  }
+  .hs-ia-chatHead {
+    padding: 10px 12px;
+  }
+  .hs-ia-chatHead small {
+    font-size: 11px;
+  }
+  .hs-ia-orb {
+    width: 66px;
+    height: 66px;
+  }
+  .hs-ia-sug {
+    padding: 11px 12px;
+    font-size: 13.5px;
+  }
   .hs-ia-dica span:first-child {
     display: none;
   }

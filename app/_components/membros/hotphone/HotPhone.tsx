@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { supabase } from "../../../_lib/supabase";
 import { useMembro } from "../MemberContext";
@@ -49,8 +49,9 @@ type Estado = {
   miss: Record<string, boolean>;
   rem: Record<string, boolean>;
   liked: Record<number, boolean>;
+  oculto: boolean; // escondido na aba lateral
 };
-const VAZIO: Estado = { done: false, color: "onix", tip: false, cofre: null, miss: {}, rem: {}, liked: {} };
+const VAZIO: Estado = { done: false, color: "onix", tip: false, cofre: null, miss: {}, rem: {}, liked: {}, oculto: false };
 
 function ler(chave: string): Estado {
   try {
@@ -151,6 +152,8 @@ export default function HotPhone() {
     return { ...local, done: local.done || !!meta?.done, color: meta?.cor ?? local.color };
   });
   const [aberto, setAberto] = useState(false);
+  const pathname = usePathname();
+  const naIA = !!pathname?.startsWith("/dashboard/cappuia"); // na própria CappuIA o celular vira aba (não cobre o campo)
   const [saindo, setSaindo] = useState(false); // animação de saída do presente
   const [dubai, setDubai] = useState(false);
   const cofreSync = useRef<"carregando" | "pronto">("carregando");
@@ -190,7 +193,11 @@ export default function HotPhone() {
   }, [chave, S]);
 
   useEffect(() => {
-    const abrir = () => S.done && setAberto(true);
+    const abrir = () => {
+      if (!S.done) return;
+      setS((s) => ({ ...s, oculto: false }));
+      setAberto(true);
+    };
     window.addEventListener(EVENTO, abrir);
     return () => window.removeEventListener(EVENTO, abrir);
   }, [S.done]);
@@ -234,23 +241,42 @@ export default function HotPhone() {
       {S.done && (
         <div className={h("hpdock")} style={varsCor(cor)}>
           {aberto ? (
-            <Celular
-              S={{ ...S, color: corAtiva }}
-              trava={trava}
-              nome={nome}
-              atualizar={atualizar}
-              onCor={(k) => {
-                atualizar({ color: k });
-                salvarNoPerfil(true, k);
-              }}
-              onRever={() => {
-                setAberto(false);
-                atualizar({ done: false });
-              }}
-              onFechar={() => setAberto(false)}
-            />
-          ) : (
             <>
+              <div className={h("fundo")} aria-hidden onClick={() => setAberto(false)} />
+              <Celular
+                S={{ ...S, color: corAtiva }}
+                trava={trava}
+                nome={nome}
+                atualizar={atualizar}
+                onCor={(k) => {
+                  atualizar({ color: k });
+                  salvarNoPerfil(true, k);
+                }}
+                onRever={() => {
+                  setAberto(false);
+                  atualizar({ done: false });
+                }}
+                onFechar={() => setAberto(false)}
+                onEsconder={() => {
+                  setAberto(false);
+                  atualizar({ oculto: true, tip: true });
+                }}
+              />
+            </>
+          ) : S.oculto || naIA ? (
+            <button type="button" className={h("aba")} aria-label="Mostrar o HOTPHONE" onClick={() => {
+                atualizar({ oculto: false });
+                if (naIA) setAberto(true);
+              }}>
+              <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden>
+                <rect x="6.5" y="2.5" width="11" height="19" rx="2.6" />
+                <path d="M10.5 5.5h3M11 18.5h2" />
+              </svg>
+              <span>HOTPHONE</span>
+              <i aria-hidden />
+            </button>
+          ) : (
+            <div className={h("miniw")}>
               <button className={h("hpmini")} aria-label="Abrir o HOTPHONE" onClick={() => setAberto(true)}>
                 <Frente w={78}>
                   <div
@@ -271,15 +297,23 @@ export default function HotPhone() {
                 </Frente>
                 <span className={h("bdg")}>2</span>
               </button>
+              <span className={h("rot")} aria-hidden>
+                Abrir HOTPHONE
+              </span>
+              <button type="button" className={h("esc")} aria-label="Esconder o HOTPHONE" title="Esconder (fica numa aba na lateral)" onClick={() => atualizar({ oculto: true, tip: true })}>
+                <svg viewBox="0 0 24 24" width={13} height={13} fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" aria-hidden>
+                  <path d="M6 6l12 12M18 6 6 18" />
+                </svg>
+              </button>
               {!S.tip && (
                 <div className={h("hptip")} role="status">
-                  Seu <b>HOTPHONE</b> fica aqui. Toque para abrir a CappuIA, o cofre e o feed.
+                  Seu <b>HOTPHONE</b> fica aqui. Toque para abrir a CappuIA, o cofre e o feed. No <b>×</b> ele vira uma aba na lateral.
                   <button type="button" aria-label="Fechar dica" onClick={() => atualizar({ tip: true })}>
                     ×
                   </button>
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       )}
@@ -590,6 +624,7 @@ function Celular({
   onCor,
   onRever,
   onFechar,
+  onEsconder,
 }: {
   S: Estado;
   trava: (k: string) => string | null;
@@ -598,6 +633,7 @@ function Celular({
   onCor: (k: string) => void;
   onRever: () => void;
   onFechar: () => void;
+  onEsconder: () => void;
 }) {
   const router = useRouter();
   const [app, setApp] = useState<App>("home");
@@ -634,9 +670,14 @@ function Celular({
 
   return (
     <div className={h("hpopen")} role="dialog" aria-label="HOTPHONE">
-      <button ref={minimizar} className={h("min")} type="button" aria-label="Minimizar o HOTPHONE" onClick={onFechar}>
-        –
-      </button>
+      <div className={h("topo")}>
+        <button ref={minimizar} className={h("min")} type="button" aria-label="Minimizar o HOTPHONE" onClick={onFechar}>
+          –
+        </button>
+        <button type="button" className={h("escb")} onClick={onEsconder}>
+          Esconder
+        </button>
+      </div>
       <Frente>
         <div className={h("os")}>
           {app === "home" ? (
