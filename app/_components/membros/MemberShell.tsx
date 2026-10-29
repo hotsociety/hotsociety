@@ -15,6 +15,7 @@ import SemAcesso, { type Acesso } from "./SemAcesso";
 import { ProgressoProvider, useProgresso } from "./Progresso";
 import Toaster from "./Toast";
 import HotPhone from "./hotphone/HotPhone";
+import PlayerMusica from "./musica/PlayerMusica";
 import "./shell.css";
 import "./proto.css";
 import "./polish.css";
@@ -327,6 +328,7 @@ function Casca({
           {children}
         </main>
         <Toaster />
+        <PlayerMusica />
         {!pathname.startsWith("/dashboard/painel") && <HotPhone />}
 
         {/* Barra inferior: só celular */}
