@@ -91,6 +91,8 @@ export async function POST(req: Request) {
   const adicional = !item && gateway === "stripe" ? adicionalValido(corpo.adicional) : null;
   const adicionalCentavos = adicional ? ADICIONAL.preco * 100 : 0;
   const valor = (item ? ITENS_PAGOS[item].preco * 100 : VALOR_CENTAVOS[plano as "mensal" | "anual"] - desconto) + adicionalCentavos;
+  // A Stripe não cobra R$ 0: com cupom de 100% no plano, só passa se houver o adicional no pedido.
+  if (valor < 100) return resp({ erro: "Com este cupom, marque o adicional (Arsenal do Cappu) para continuar." }, 400);
 
   // Já existe uma cobrança igual ainda válida? Reaproveita.
   const { data: aberto } = await sb

@@ -300,14 +300,19 @@ async function stripeCheckoutCom(p: Pedido, c: Cliente, tipo: TipoStripe, parcel
       // "todos": sem lista fixa, a Stripe mostra todas as formas ativas no painel (Pix, boleto, cartão, Apple Pay, Google Pay, Link…).
       ...(tipo === "todos" ? {} : { payment_method_types: [tipo] }),
       line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "brl",
-            unit_amount: p.valor_centavos - (p.adicional_centavos ?? 0),
-            ...(produtoStripe(p) && !semProduto ? { product: produtoStripe(p) } : { product_data: { name: nomeProduto(p) } }),
-          },
-        },
+        // Plano/item (fica de fora quando um cupom zera o plano e só o adicional é cobrado).
+        ...(p.valor_centavos - (p.adicional_centavos ?? 0) > 0
+          ? [
+              {
+                quantity: 1,
+                price_data: {
+                  currency: "brl",
+                  unit_amount: p.valor_centavos - (p.adicional_centavos ?? 0),
+                  ...(produtoStripe(p) && !semProduto ? { product: produtoStripe(p) } : { product_data: { name: nomeProduto(p) } }),
+                },
+              },
+            ]
+          : []),
         // Adicional marcado no checkout (Arsenal do Cappu + Networking).
         ...(p.adicional && p.adicional_centavos
           ? [
