@@ -38,14 +38,14 @@ export const CATEGORIAS: { cat: Categoria; t: string; d: string }[] = [
 
 export const insignia = (id: string) => INSIGNIAS.find((i) => i.id === id) ?? null;
 
-export type Metricas = { stop: number; missoes: number; faturado: number };
+export type Metricas = { stop: number; missoes: number; faturado: number; extra?: string[] }; // extra = concedidas à mão
 
 // Todas as liberadas (vitrine).
 export function liberadas(m: Metricas): Set<string> {
   const ok = new Set<string>();
   for (const i of INSIGNIAS) {
     const v = i.cat === "rota" ? m.stop : i.cat === "missoes" ? m.missoes : m.faturado;
-    if (v >= i.min) ok.add(i.id);
+    if (v >= i.min || m.extra?.includes(i.id)) ok.add(i.id);
   }
   return ok;
 }
