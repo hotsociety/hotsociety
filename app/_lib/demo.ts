@@ -575,6 +575,7 @@ export const PRODUTOS: Produto[] = [
   { id: "fn", cat: "Digitais", t: "Templates de funil", d: "Páginas, sequências e roteiros de recorrência editáveis.", rs: 67, img: IMG.funil, breve: true },
   { id: "pl", cat: "Ferramentas", t: "Planilha de operação", d: "Metas, custos, ROI por canal e controle de modelos.", rs: 37, img: IMG.planilha, breve: true },
   { id: "ct", cat: "Ferramentas", t: "Kit contrato e consentimento", d: "Modelos revisáveis por advogado para operar com modelo real.", rs: 57, img: IMG.contrato, breve: true },
+  { id: "ar", cat: "Digitais", t: "Arsenal do Cappu + Networking", d: "Funis validados, scripts, precificação, objeções, checklists e a comunidade de networking no Discord.", rs: 87, img: "/img/produtos/arsenal.jpg", compra: true, tag: "Disponível" },
   { id: "cs", cat: "Mentoria", t: "Consultoria 1:1", d: "Uma call de 60 minutos com o time para destravar sua operação.", rs: 497, img: IMG.consultoria, compra: true, tag: "Disponível" },
   { id: "ht", cat: "Mentoria", t: "Mentoria High Ticket", d: "Acompanhamento direto com o Cappu, turma pequena. Por aplicação.", rs: null, img: IMG.mentoria, aplicacao: true, breve: true },
   { id: "mo", cat: "Merch", t: "Moletom HOT SOCIETY", d: "Preto, bordado dourado, edição da temporada.", rs: 249, coins: 6000, img: IMG.moletom, breve: true },

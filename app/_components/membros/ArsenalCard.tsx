@@ -38,3 +38,32 @@ export default function ArsenalCard() {
     </section>
   );
 }
+
+// Botão do Inventário: busca o convite só no clique e abre o Discord.
+export function BotaoDiscord() {
+  const [abrindo, setAbrindo] = useState(false);
+  async function abrir() {
+    setAbrindo(true);
+    // Abre a aba já no clique (senão o navegador bloqueia como pop-up) e só depois põe o convite.
+    const janela = window.open("about:blank", "_blank");
+    if (janela) janela.opener = null;
+    try {
+      const { data } = await supabase.auth.getSession();
+      const r = await fetch("/api/adicionais", { headers: { authorization: `Bearer ${data.session?.access_token ?? ""}` }, cache: "no-store" });
+      const j = (await r.json().catch(() => null)) as { arsenal?: string | null } | null;
+      if (j?.arsenal) {
+        if (janela) janela.location.href = j.arsenal;
+        else window.location.href = j.arsenal;
+      } else janela?.close();
+    } catch {
+      janela?.close();
+    } finally {
+      setAbrindo(false);
+    }
+  }
+  return (
+    <button type="button" className="hs-arsenal-btn" onClick={abrir} disabled={abrindo}>
+      {abrindo ? "Abrindo…" : "Entrar no Discord"}
+    </button>
+  );
+}

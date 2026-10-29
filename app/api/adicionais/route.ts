@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     .select("id")
     .eq("user_id", user.id)
     .eq("status", "pago")
-    .eq("adicional", "arsenal")
+    .or("adicional.eq.arsenal,and(plano.eq.loja,item.eq.ar)")
     .limit(1);
   return resp({ arsenal: data?.length ? ARSENAL_CONVITE : null });
 }

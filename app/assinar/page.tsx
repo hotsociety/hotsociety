@@ -273,7 +273,7 @@ function Assinar() {
                   <div className="hs-as-planos">
                     <div className="hs-as-plano" aria-checked="true" role="radio">
                       <b>{loja.titulo}</b>
-                      <small>Hot Store · fica no seu Inventário</small>
+                      <small>{item === "ar" ? "Hot Store · acesso pelo Discord logo após o pagamento" : "Hot Store · fica no seu Inventário"}</small>
                       <strong>{BRL.format(loja.preco)}</strong>
                     </div>
                   </div>
@@ -489,7 +489,9 @@ function Assinar() {
                   {daBiblioteca
                     ? "Acesso liberado. Vamos quebrar essa corrente?"
                     : loja
-                      ? "Sua compra já está no seu Inventário. É por lá que você agenda a call."
+                      ? item === "ar"
+                        ? "Seu Arsenal do Cappu está liberado. Entre no Discord pelo botão abaixo."
+                        : "Sua compra já está no seu Inventário. É por lá que você agenda a call."
                       : "Seu passaporte está ativo. Boa viagem!"}
                 </p>
                 {pedido?.convite && (
