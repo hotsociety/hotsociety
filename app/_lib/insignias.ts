@@ -22,9 +22,9 @@ export const INSIGNIAS: Insignia[] = [
   { id: "m100", cat: "missoes", nome: "Cartão Gold", regra: "100 missões concluídas", min: 100 },
   { id: "m300", cat: "missoes", nome: "Cartão Black", regra: "300 missões concluídas", min: 300 },
 
-  { id: "c1k", cat: "capital", nome: "Civic", regra: "R$ 1 mil de capital comprovado", min: 1_000 },
-  { id: "c10k", cat: "capital", nome: "Audi TT", regra: "R$ 10 mil de capital comprovado", min: 10_000 },
-  { id: "c50k", cat: "capital", nome: "GT3 RS", regra: "R$ 50 mil de capital comprovado", min: 50_000 },
+  { id: "c1k", cat: "capital", nome: "Honda Civic", regra: "R$ 1 mil de capital comprovado", min: 1_000 },
+  { id: "c10k", cat: "capital", nome: "Audi TT Roadster", regra: "R$ 10 mil de capital comprovado", min: 10_000 },
+  { id: "c50k", cat: "capital", nome: "Porsche GT3 RS", regra: "R$ 50 mil de capital comprovado", min: 50_000 },
   { id: "c100k", cat: "capital", nome: "Iate", regra: "R$ 100 mil de capital comprovado", min: 100_000 },
   { id: "c500k", cat: "capital", nome: "Helicóptero", regra: "R$ 500 mil de capital comprovado", min: 500_000 },
   { id: "c1m", cat: "capital", nome: "Jatinho", regra: "R$ 1 milhão de capital comprovado", min: 1_000_000 },
