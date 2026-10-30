@@ -8,6 +8,8 @@ import { IMG, NIVEIS_AFILIADO } from "../../_lib/demo";
 import { qrSvgPath } from "../../_lib/qrcode";
 import { PRICE } from "../../_lib/site";
 import { supabase } from "../../_lib/supabase";
+import { useMembro } from "../../_components/membros/MemberContext";
+import { useSearchParams } from "next/navigation";
 
 type VendaAfiliado = { data: string; cliente: string; plano: string; tipo: "primeira" | "renovacao"; status: "pago" | "garantia" | "reemb"; valor: number };
 type Dados = {
@@ -70,7 +72,7 @@ const Qr = () => (
   </svg>
 );
 
-export default function Afiliados() {
+function Afiliados() {
   const [d, setD] = useState<Dados | null>(null);
   const [erro, setErro] = useState(false);
   const [slug, setSlug] = useState("");
@@ -675,5 +677,35 @@ function QrLink({ texto }: { texto: string }) {
       <rect width={qr.tamanho} height={qr.tamanho} fill="#fff" />
       <path d={qr.d} fill="#000" />
     </svg>
+  );
+}
+
+// Programa de afiliados ainda não aberto para os alunos: mostra "em breve".
+// A equipe consegue ver a prévia em /dashboard/afiliados?previa=1.
+export default function AfiliadosEmBreve() {
+  const { cargo } = useMembro();
+  const previa = useSearchParams().get("previa") === "1";
+  if (cargo && previa) return <Afiliados />;
+  return (
+    <section className={m("view")} aria-label="Afiliados">
+      <div className={m("card")} style={{ display: "grid", justifyItems: "center", textAlign: "center", gap: 12, padding: "56px 24px" }}>
+        <span
+          aria-hidden
+          style={{ display: "grid", placeItems: "center", width: 64, height: 64, borderRadius: "50%", border: "1px solid rgba(201,162,78,.5)", background: "rgba(201,162,78,.1)", color: "var(--gold-t)", fontSize: 28 }}
+        >
+          🤝
+        </span>
+        <p style={{ margin: 0, font: "800 11px/1 var(--f-t)", letterSpacing: ".16em", textTransform: "uppercase", color: "var(--gold-t)" }}>Em breve</p>
+        <h1 style={{ margin: 0, font: "900 clamp(26px,4vw,40px)/1.05 var(--f-d)", fontStretch: "112%", textTransform: "uppercase" }}>Programa de afiliados</h1>
+        <p style={{ margin: 0, maxWidth: 480, color: "var(--muted)", fontSize: 14.5, lineHeight: 1.5 }}>
+          Logo você vai poder indicar a HOT SOCIETY com o seu link e ganhar comissão por cada nova assinatura. Avisamos aqui e no feed assim que abrir.
+        </p>
+        {cargo && (
+          <a href="/dashboard/afiliados?previa=1" style={{ marginTop: 6, color: "var(--gold-t)", fontSize: 12.5 }}>
+            Equipe: ver a prévia da página
+          </a>
+        )}
+      </div>
+    </section>
   );
 }
