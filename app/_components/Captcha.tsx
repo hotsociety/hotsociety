@@ -107,8 +107,8 @@ export default function Captcha({ onToken, versao }: { onToken: (t: string | nul
       {falhou && (
         <div role="alert" style={{ display: "grid", gap: 8, padding: "10px 12px", borderRadius: 10, border: "1px solid rgba(230,201,120,.45)", background: "rgba(201,162,78,.08)", fontSize: 13, lineHeight: 1.45 }}>
           <span>
-            A verificação de segurança não carregou. Se você usa bloqueador de anúncios, VPN ou o navegador Brave, libere este site ou tente outra rede (por
-            exemplo, os dados do celular).
+            A verificação de segurança não passou neste navegador. Tente de novo; se continuar, entre com o <b>Google</b> logo abaixo, desligue VPN ou
+            bloqueador de anúncios, confira se a data e a hora do aparelho estão certas ou use outra rede (por exemplo, os dados do celular).
           </span>
           <button
             type="button"
