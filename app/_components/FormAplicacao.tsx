@@ -2,7 +2,7 @@
 
 import "./form-aplicacao.css";
 import { useState } from "react";
-import { APLICACAO_VAZIA, ESCOLHAS, mascaraWpp, validarAplicacao, type Aplicacao } from "../_lib/aplicacao";
+import { APLICACAO_VAZIA, ESCOLHAS, PERGUNTA_INVEST, mascaraWpp, validarAplicacao, type Aplicacao } from "../_lib/aplicacao";
 import { supabase } from "../_lib/supabase";
 
 // Formulário de aplicação da Mentoria High Ticket (mesmas perguntas do site do Cappu).
@@ -21,6 +21,7 @@ export default function FormAplicacao({ onEnviado, compacto }: { onEnviado?: () 
     const v = validarAplicacao({ ...f });
     if (!v.ok) return setErro(v.erro);
     for (const q of ESCOLHAS) if (!f[q.campo]) return setErro(`Responda: ${q.t}`);
+    if (f.invest.trim().length < 1) return setErro(`Responda: ${PERGUNTA_INVEST}`);
     setEnviando(true);
     try {
       const { data } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
@@ -79,6 +80,11 @@ export default function FormAplicacao({ onEnviado, compacto }: { onEnviado?: () 
       <label className="hs-apl-fld">
         Qual a sua maior trava hoje?
         <textarea value={f.trava} onChange={(e) => mudar("trava", e.target.value)} placeholder="O que mais te impede de crescer agora?" maxLength={1500} required />
+      </label>
+
+      <label className="hs-apl-fld">
+        {PERGUNTA_INVEST}
+        <input value={f.invest} onChange={(e) => mudar("invest", e.target.value)} placeholder="Escreva com suas palavras" maxLength={80} required />
       </label>
 
       {ESCOLHAS.slice(2).map((q) => (

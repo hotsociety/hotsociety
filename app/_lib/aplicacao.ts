@@ -18,11 +18,13 @@ export type Aplicacao = {
 
 export const APLICACAO_VAZIA: Aplicacao = { nome: "", ig: "", wpp: "", trabalho: "", momento: "", operacao: "", trava: "", invest: "", pc: "", tempo: "", maior: false };
 
+// Investimento: resposta aberta (o lead escreve com as próprias palavras).
+export const PERGUNTA_INVEST = "Quanto você estaria disposto a investir?";
+
 // Perguntas de múltipla escolha (texto da pergunta e opções iguais às do site do Cappu).
-export const ESCOLHAS: { campo: "momento" | "operacao" | "invest" | "pc" | "tempo"; t: string; opcoes: string[] }[] = [
+export const ESCOLHAS: { campo: "momento" | "operacao" | "pc" | "tempo"; t: string; opcoes: string[] }[] = [
   { campo: "momento", t: "Em que momento você está?", opcoes: ["Começando do zero", "Já opero, até R$ 10 mil/mês", "Entre R$ 10 e 50 mil/mês", "Acima de R$ 50 mil/mês"] },
   { campo: "operacao", t: "Qual é o seu tipo de operação?", opcoes: ["Modelo de IA", "Modelo real", "As duas", "Agência OFM", "Ainda não decidi", "Não sou do digital"] },
-  { campo: "invest", t: "Quanto você estaria disposto a investir?", opcoes: ["Até R$ 1.000", "R$ 1.000 a R$ 3.000", "R$ 3.000 a R$ 5.000", "Acima de R$ 5.000"] },
   { campo: "pc", t: "Você tem computador ou notebook em casa?", opcoes: ["Sim, notebook", "Sim, computador", "Não, só celular"] },
   { campo: "tempo", t: "Você tem tempo para aplicar a mentoria?", opcoes: ["Sim, mais de 2h por dia", "Entre 1h e 2h por dia", "Menos de 1h por dia"] },
 ];
