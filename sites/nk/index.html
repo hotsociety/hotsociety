@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NK Ferreira · DevOps</title>
+<meta name="description" content="NK Ferreira (@nk.ferreiraa). DevOps by HotScty. Links, Hot Society e contato.">
+<meta name="theme-color" content="#07080b">
+<meta property="og:title" content="NK Ferreira · DevOps by HotScty">
+<meta property="og:description" content="Pugna pro aliquo aut pro nihilo morere.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2307080b'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='15' font-weight='700' fill='%23ff6a1a' text-anchor='middle'%3ENK%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Unbounded:wght@500;700;900&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07080b;
+  --s1: #0e1015;
+  --s2: #141720;
+  --line: rgba(255, 255, 255, .08);
+  --line2: rgba(255, 255, 255, .14);
+  --fg: #eceef2;
+  --muted: #8b90a0;
+  --or: #ff6a1a;
+  --or2: #ffb27a;
+  --cy: #6fd3ff;
+  --ok: #4be08a;
+  --f-d: "Unbounded", system-ui, sans-serif;
+  --f-t: "Inter Tight", system-ui, sans-serif;
+  --f-m: "JetBrains Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); color-scheme: dark; -webkit-text-size-adjust: 100%; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--fg); font: 400 15px/1.5 var(--f-t); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+
+/* fundo */
+.atmo { position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(70% 45% at 50% -5%, rgba(255, 106, 26, .16), transparent 70%),
+    radial-gradient(50% 40% at 100% 100%, rgba(111, 211, 255, .07), transparent 70%),
+    linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px) 0 0 / 100% 4px;
+}
+.atmo::after { content: ""; position: absolute; inset: 0; background: radial-gradient(120% 80% at 50% 40%, transparent 55%, rgba(0,0,0,.65)); }
+
+.wrap { position: relative; z-index: 1; width: 100%; max-width: 520px; margin: 0 auto; padding: max(18px, env(safe-area-inset-top)) 16px 40px; display: grid; gap: 18px; }
+
+/* barra de status */
+.bar { display: flex; justify-content: space-between; align-items: center; font: 500 11px/1 var(--f-m); color: var(--muted); letter-spacing: .04em; }
+.pill { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 99px; background: rgba(255,255,255,.02); }
+.pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(75,224,138,.6); animation: pulse 2s infinite; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 7px rgba(75,224,138,0); } 100% { box-shadow: 0 0 0 0 rgba(75,224,138,0); } }
+
+/* cockpit */
+.cockpit { position: relative; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,106,26,.28); background: #050608; aspect-ratio: 4 / 3.1; box-shadow: 0 30px 60px -30px rgba(255,106,26,.35), inset 0 0 0 1px rgba(255,255,255,.03); }
+.cockpit canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hud { position: absolute; font: 500 10.5px/1.2 var(--f-m); color: rgba(236,238,242,.75); letter-spacing: .05em; text-shadow: 0 1px 6px rgba(0,0,0,.8); }
+.hud b { color: var(--or2); font-weight: 700; }
+.hud-tl { top: 12px; left: 14px; }
+.hud-tr { top: 12px; right: 14px; text-align: right; }
+.term { position: absolute; left: 12px; right: 12px; bottom: 12px; padding: 10px 12px; border-radius: 12px; background: rgba(7,8,11,.72); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); font: 500 11.5px/1.55 var(--f-m); color: #c9cdd8; min-height: 74px; }
+.term .l { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.term .p { color: var(--or); }
+.term .ok { color: var(--ok); }
+.term .cy { color: var(--cy); }
+.term .cur { display: inline-block; width: 7px; height: 13px; background: var(--or); vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* identidade */
+.id { display: grid; gap: 10px; padding: 4px 2px 0; }
+.handle { margin: 0; font: 500 12px/1 var(--f-m); color: var(--or); letter-spacing: .06em; }
+.mark { margin: 0; font: 900 clamp(40px, 13vw, 60px)/.88 var(--f-d); letter-spacing: -.02em; text-transform: uppercase; }
+.mark span { display: block; background: linear-gradient(90deg, var(--or), var(--or2) 60%, #fff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.role { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 0; padding: 0; list-style: none; }
+.role li { font: 500 11.5px/1 var(--f-m); padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line2); color: #d4d7e0; background: rgba(255,255,255,.02); }
+.role li.hl { border-color: rgba(255,106,26,.5); color: var(--or2); background: rgba(255,106,26,.08); }
+.motto { margin: 6px 0 0; padding: 12px 14px; border-left: 2px solid var(--or); background: linear-gradient(90deg, rgba(255,106,26,.08), transparent); border-radius: 0 12px 12px 0; }
+.motto q { display: block; font: 600 15px/1.35 var(--f-t); font-style: italic; quotes: "“" "”"; }
+.motto small { display: block; margin-top: 4px; color: var(--muted); font: 400 12px/1.4 var(--f-m); }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.stats li { padding: 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--s1); display: grid; gap: 4px; }
+.stats b { font: 700 18px/1 var(--f-d); }
+.stats b em { font-style: normal; color: var(--or); }
+.stats span { font: 400 10.5px/1.2 var(--f-m); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+/* links */
+.sec { display: flex; justify-content: space-between; align-items: center; font: 500 10.5px/1 var(--f-m); color: var(--muted); letter-spacing: .14em; text-transform: uppercase; margin-top: 4px; }
+.sec::after { content: ""; flex: 1; height: 1px; background: var(--line); margin-left: 12px; }
+.links { display: grid; gap: 10px; }
+.card { position: relative; border-radius: 18px; border: 1px solid var(--line); background: var(--s1); overflow: hidden; transition: border-color .2s, transform .2s; }
+.card::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s;
+  background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%), rgba(255,106,26,.12), transparent 70%); }
+.card:hover::before, .card.open::before { opacity: 1; }
+.card:hover { border-color: rgba(255,106,26,.35); }
+.card.open { border-color: rgba(255,106,26,.5); }
+.head { appearance: none; width: 100%; border: 0; background: none; display: grid; grid-template-columns: 44px minmax(0,1fr) auto; align-items: center; gap: 14px; padding: 14px 16px 14px 14px; text-align: left; cursor: pointer; }
+.ico { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--s2); border: 1px solid var(--line2); color: var(--or); }
+.ico svg { width: 22px; height: 22px; }
+.ht { display: grid; gap: 3px; min-width: 0; }
+.ht small { font: 500 10px/1 var(--f-m); color: var(--muted); letter-spacing: .12em; text-transform: uppercase; }
+.ht b { font: 700 17px/1.1 var(--f-d); letter-spacing: -.01em; }
+.ht b em { font-style: normal; color: var(--or); }
+.tog { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--line2); position: relative; transition: transform .3s, background .3s; }
+.tog::before, .tog::after { content: ""; position: absolute; left: 50%; top: 50%; width: 10px; height: 1.5px; background: currentColor; transform: translate(-50%,-50%); }
+.tog::after { transform: translate(-50%,-50%) rotate(90deg); transition: transform .3s; }
+.card.open .tog { background: var(--or); border-color: var(--or); color: #120700; }
+.card.open .tog::after { transform: translate(-50%,-50%) rotate(0); }
+.panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s ease; }
+.card.open .panel { grid-template-rows: 1fr; }
+.panel > div { overflow: hidden; }
+.pin { padding: 0 16px 16px; display: grid; gap: 12px; }
+.pin p { margin: 0; color: #b9bdc9; font-size: 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { font: 500 11px/1 var(--f-m); padding: 6px 8px; border-radius: 6px; background: rgba(111,211,255,.08); color: var(--cy); }
+.cta { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; border-radius: 13px; text-decoration: none; background: linear-gradient(90deg, var(--or), #ff8c45); color: #140800; font: 700 14.5px/1 var(--f-t); transition: filter .15s, transform .15s; }
+.cta:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.cta small { font: 500 11px/1 var(--f-m); opacity: .7; margin-right: 6px; }
+.cta svg { width: 18px; height: 18px; vertical-align: -4px; }
+.fine { color: var(--muted); font: 400 11px/1.4 var(--f-m); }
+
+/* canais */
+.nets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.net { display: grid; justify-items: center; gap: 6px; padding: 14px 8px; border-radius: 14px; border: 1px solid var(--line); background: var(--s1); text-decoration: none; transition: border-color .2s, transform .2s; text-align: center; }
+.net:hover { border-color: rgba(255,106,26,.4); transform: translateY(-2px); }
+.net svg { width: 22px; height: 22px; color: var(--or); }
+.net b { font: 600 12px/1.1 var(--f-t); overflow-wrap: anywhere; }
+.net span { font: 400 10px/1 var(--f-m); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+
+footer { margin-top: 10px; display: grid; gap: 6px; justify-items: center; text-align: center; color: var(--muted); font: 400 11px/1.5 var(--f-m); }
+footer .sig { font: 900 13px/1 var(--f-d); color: var(--fg); letter-spacing: .1em; }
+footer .sig b { color: var(--or); }
+
+/* entrada */
+.wrap > * { animation: up .6s cubic-bezier(.2,.8,.2,1) both; }
+.wrap > *:nth-child(2) { animation-delay: .05s; }
+.wrap > *:nth-child(3) { animation-delay: .12s; }
+.wrap > *:nth-child(4) { animation-delay: .18s; }
+.wrap > *:nth-child(5) { animation-delay: .24s; }
+.wrap > *:nth-child(6) { animation-delay: .3s; }
+.wrap > *:nth-child(n+7) { animation-delay: .36s; }
+@keyframes up { from { opacity: 0; transform: translateY(14px); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+@media (max-width: 380px) { .stats b { font-size: 15px; } .term { font-size: 10.5px; } }
+</style>
+</head>
+<body>
+<div class="atmo" aria-hidden="true"></div>
+
+<main class="wrap">
+  <div class="bar">
+    <span class="pill"><i></i>sistema online</span>
+    <span>SP · <b id="clock">--:--</b></span>
+  </div>
+
+  <section class="cockpit" aria-label="Painel noturno">
+    <canvas id="drive" aria-hidden="true"></canvas>
+    <div class="hud hud-tl">NIGHT DRIVE<br><b id="kmh">000</b> km/h</div>
+    <div class="hud hud-tr">uptime<br><b id="up">00:00:00</b></div>
+    <div class="term" id="term" aria-live="off"></div>
+  </section>
+
+  <section class="id">
+    <p class="handle">@nk.ferreiraa</p>
+    <h1 class="mark">NK<span>Ferreira</span></h1>
+    <ul class="role">
+      <li class="hl">DevOps by HotScty 🏆</li>
+      <li>Infra · Deploy · Automação</li>
+      <li>💍</li>
+    </ul>
+    <blockquote class="motto">
+      <q>Pugna pro aliquo aut pro nihilo morere.</q>
+      <small>Lute por algo ou morra por nada.</small>
+    </blockquote>
+  </section>
+
+  <ul class="stats" aria-label="Resumo">
+    <li><b>1,2 mil</b><span>seguidores</span></li>
+    <li><b>Hot<em>Scty</em></b><span>time</span></li>
+    <li><b>24/7</b><span>no ar</span></li>
+  </ul>
+
+  <div class="sec"><span>Acessos</span></div>
+
+  <nav class="links" aria-label="Links">
+    <article class="card">
+      <button class="head" type="button" aria-expanded="false" aria-controls="p1">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg></span>
+        <span class="ht"><small>Comece aqui</small><b>Hot <em>Society</em></b></span>
+        <span class="tog" aria-hidden="true"></span>
+      </button>
+      <div class="panel" id="p1"><div><div class="pin">
+        <p>A plataforma que eu ajudo a construir e manter no ar: Hot Academy, comunidade, ferramentas de IA, lives e ranking. Tudo num lugar só.</p>
+        <div class="chips"><span>Hot Academy</span><span>CappuIA</span><span>Comunidade</span><span>Games</span></div>
+        <a class="cta" href="https://hotsociety.com.br/" target="_blank" rel="noopener">Entrar na Hot Society <span><small>acesso imediato</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></a>
+      </div></div></div>
+    </article>
+
+    <article class="card">
+      <button class="head" type="button" aria-expanded="false" aria-controls="p2">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></span>
+        <span class="ht"><small>Mentoria</small><b>Primeira <em>Classe</em></b></span>
+        <span class="tog" aria-hidden="true"></span>
+      </button>
+      <div class="panel" id="p2"><div><div class="pin">
+        <p>A mentoria do Cappu: acompanhamento direto para estruturar a operação, ajustar o funil e escalar com método. A aplicação leva 2 minutos.</p>
+        <a class="cta" href="https://capputino-hq.vercel.app/#aplicar" target="_blank" rel="noopener">Aplicar para a mentoria <span><small>2 min</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></a>
+      </div></div></div>
+    </article>
+
+    <article class="card">
+      <button class="head" type="button" aria-expanded="false" aria-controls="p3">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".9" fill="currentColor"/></svg></span>
+        <span class="ht"><small>Comunidade</small><b>@hot<em>scty</em></b></span>
+        <span class="tog" aria-hidden="true"></span>
+      </button>
+      <div class="panel" id="p3"><div><div class="pin">
+        <p>O perfil oficial da Hot Society: bastidores, avisos de lives e tudo que entra de novo na plataforma.</p>
+        <a class="cta" href="https://www.instagram.com/hotscty/" target="_blank" rel="noopener">Seguir @hotscty <span><small>Instagram</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></a>
+      </div></div></div>
+    </article>
+
+    <article class="card">
+      <button class="head" type="button" aria-expanded="false" aria-controls="p4">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17 10 11 4 5"/><path d="M12 19h8"/></svg></span>
+        <span class="ht"><small>Fale comigo</small><b>Abrir <em>ticket</em></b></span>
+        <span class="tog" aria-hidden="true"></span>
+      </button>
+      <div class="panel" id="p4"><div><div class="pin">
+        <p>Dúvida sobre acesso, plataforma ou parceria? Me chama no direct. Respondo assim que o deploy deixar.</p>
+        <a class="cta" href="https://ig.me/m/nk.ferreiraa" target="_blank" rel="noopener">Mandar direct <span><small>@nk.ferreiraa</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></a>
+      </div></div></div>
+    </article>
+  </nav>
+
+  <div class="sec"><span>Canais</span></div>
+
+  <section class="nets" aria-label="Canais">
+    <a class="net" href="https://www.instagram.com/nk.ferreiraa/" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".9" fill="currentColor"/></svg>
+      <b>@nk.ferreiraa</b><span>Instagram</span>
+    </a>
+    <a class="net" href="https://www.threads.net/@nk.ferreiraa" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M16.5 11.2c-.3-2.6-2-3.9-4.4-3.9-2 0-3.4 1-4 2.5"/><path d="M16.6 11.4c2.7 1 3.3 3.3 2.4 5.3-1 2.3-3.6 3.8-7 3.8C7 20.5 4 17.6 4 12s3-8.5 8-8.5c3.6 0 6.2 1.6 7.3 4.6"/><path d="M16.6 11.4c-1.6-.6-4.4-.7-5.6.4-1.2 1-.8 3 1.3 3 2.4 0 4.1-1.4 4.3-3.4z"/></svg>
+      <b>@nk.ferreiraa</b><span>Threads</span>
+    </a>
+    <a class="net" href="https://hotsociety.com.br/" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>
+      <b>hotsociety.com.br</b><span>Site</span>
+    </a>
+  </section>
+
+  <footer>
+    <span class="sig">NK<b>.</b>FERREIRA</span>
+    <span>São Paulo, Brasil · 2026 · build <span id="build">—</span></span>
+  </footer>
+</main>
+
+<script>
+(() => {
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // relógio de São Paulo + uptime da visita
+  const clock = document.getElementById('clock');
+  const fmt = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+  const t0 = Date.now();
+  const up = document.getElementById('up');
+  const pad = n => String(n).padStart(2, '0');
+  const tick = () => {
+    clock.textContent = fmt.format(new Date());
+    const s = Math.floor((Date.now() - t0) / 1000);
+    up.textContent = pad(Math.floor(s / 3600)) + ':' + pad(Math.floor(s / 60) % 60) + ':' + pad(s % 60);
+  };
+  tick(); setInterval(tick, 1000);
+  document.getElementById('build').textContent = Math.random().toString(16).slice(2, 9);
+
+  // acordeão
+  const cards = [...document.querySelectorAll('.card')];
+  const setOpen = (c, o) => {
+    c.classList.toggle('open', o);
+    c.querySelector('.head').setAttribute('aria-expanded', String(o));
+    c.querySelector('.panel').inert = !o;
+  };
+  cards.forEach(c => {
+    setOpen(c, false);
+    c.querySelector('.head').addEventListener('click', () => {
+      const o = !c.classList.contains('open');
+      cards.forEach(x => x !== c && setOpen(x, false));
+      setOpen(c, o);
+    });
+    c.addEventListener('pointermove', e => {
+      const r = c.getBoundingClientRect();
+      c.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+  });
+
+  // terminal
+  const term = document.getElementById('term');
+  const LINHAS = [
+    ['<span class="p">nk@hq</span>:~$ git push origin main', 0],
+    ['<span class="cy">▸</span> build hotsociety.com.br …', 500],
+    ['<span class="ok">✓</span> deploy pronto em 41s · produção', 900],
+    ['<span class="p">nk@hq</span>:~$ status --all', 700],
+    ['<span class="ok">●</span> api <span class="ok">ok</span>  ● db <span class="ok">ok</span>  ● cdn <span class="ok">ok</span>', 600],
+    ['<span class="p">nk@hq</span>:~$ echo "pugna pro aliquo"', 900],
+    ['pugna pro aliquo', 400],
+  ];
+  const render = (n, cursor) => {
+    const vis = LINHAS.slice(0, n).slice(-3).map(l => '<div class="l">' + l[0] + '</div>');
+    if (cursor) vis.push('<div class="l"><span class="p">nk@hq</span>:~$ <span class="cur"></span></div>');
+    term.innerHTML = vis.slice(-3).join('');
+  };
+  if (RM) render(LINHAS.length, true);
+  else {
+    let n = 0;
+    const step = () => {
+      n++;
+      render(n, n === LINHAS.length);
+      if (n < LINHAS.length) setTimeout(step, LINHAS[n][1] + 300);
+      else setTimeout(() => { n = 0; step(); }, 6000);
+    };
+    setTimeout(step, 600);
+  }
+
+  // night drive: estrada em perspectiva, postes passando, luz laranja do painel
+  const cv = document.getElementById('drive');
+  const cx = cv.getContext('2d');
+  const kmh = document.getElementById('kmh');
+  let W = 0, H = 0, DPR = 1;
+  const size = () => {
+    DPR = Math.min(2, devicePixelRatio || 1);
+    const r = cv.getBoundingClientRect();
+    W = r.width; H = r.height;
+    cv.width = W * DPR; cv.height = H * DPR;
+    cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  };
+  size(); addEventListener('resize', size);
+
+  const stars = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random() * .42, r: Math.random() * 1.1 + .2, t: Math.random() * 6 }));
+  const city = Array.from({ length: 46 }, (_, i) => ({ x: i / 46 + Math.random() * .01, h: .02 + Math.random() * .07, w: .012 + Math.random() * .02, lit: Math.random() }));
+  let z = 0, speed = 0, alvo = 1;
+
+  const frame = t => {
+    const hor = H * .5, vx = W / 2;
+    cx.clearRect(0, 0, W, H);
+
+    const sky = cx.createLinearGradient(0, 0, 0, hor);
+    sky.addColorStop(0, '#04050a'); sky.addColorStop(1, '#1a0f0c');
+    cx.fillStyle = sky; cx.fillRect(0, 0, W, hor);
+    stars.forEach(s => { cx.globalAlpha = .35 + .35 * Math.sin(t / 900 + s.t); cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(s.x * W, s.y * H, s.r, 0, 7); cx.fill(); });
+    cx.globalAlpha = 1;
+
+    const glow = cx.createRadialGradient(vx, hor, 0, vx, hor, W * .6);
+    glow.addColorStop(0, 'rgba(255,120,40,.35)'); glow.addColorStop(1, 'rgba(255,120,40,0)');
+    cx.fillStyle = glow; cx.fillRect(0, 0, W, H);
+
+    city.forEach(b => {
+      const bh = b.h * H, bx = b.x * W;
+      cx.fillStyle = '#0b0b10'; cx.fillRect(bx, hor - bh, b.w * W, bh);
+      if (b.lit > .45) { cx.fillStyle = 'rgba(255,190,120,.55)'; for (let k = 0; k < 3; k++) cx.fillRect(bx + 2 + k * 3, hor - bh + 3 + (k % 2) * 5, 1.2, 1.6); }
+    });
+
+    const ground = cx.createLinearGradient(0, hor, 0, H);
+    ground.addColorStop(0, '#0d0a0a'); ground.addColorStop(1, '#030304');
+    cx.fillStyle = ground; cx.fillRect(0, hor, W, H - hor);
+
+    const roadTop = W * .02, roadBot = W * .9;
+    cx.fillStyle = '#121216';
+    cx.beginPath(); cx.moveTo(vx - roadTop, hor); cx.lineTo(vx + roadTop, hor); cx.lineTo(vx + roadBot, H); cx.lineTo(vx - roadBot, H); cx.fill();
+
+    speed += (alvo - speed) * .02;
+    if (!RM) z = (z + speed * .018) % 1;
+    for (let i = 0; i < 14; i++) {
+      const p = ((i / 14 + z) % 1);
+      const d = p * p;
+      const y1 = hor + (H - hor) * d, y2 = hor + (H - hor) * Math.min(1, d + .035 * (p + .2));
+      const w1 = 1 + 5 * d;
+      cx.fillStyle = 'rgba(255,214,150,' + (.15 + .6 * p) + ')';
+      cx.fillRect(vx - w1 / 2, y1, w1, y2 - y1);
+    }
+    [-1, 1].forEach(s => {
+      cx.strokeStyle = 'rgba(255,255,255,.18)'; cx.lineWidth = 1.2;
+      cx.beginPath(); cx.moveTo(vx + s * roadTop * .9, hor); cx.lineTo(vx + s * roadBot * .92, H); cx.stroke();
+    });
+    for (let i = 0; i < 6; i++) {
+      const p = ((i / 6 + z * .9) % 1), d = p * p;
+      [-1, 1].forEach(s => {
+        const x = vx + s * (roadTop + (roadBot * 1.25 - roadTop) * d), y = hor + (H - hor) * d;
+        const hgt = 6 + 120 * d;
+        cx.strokeStyle = 'rgba(160,160,175,' + (.2 + .5 * p) + ')'; cx.lineWidth = .6 + 2 * d;
+        cx.beginPath(); cx.moveTo(x, y); cx.lineTo(x, y - hgt); cx.stroke();
+        const lg = cx.createRadialGradient(x, y - hgt, 0, x, y - hgt, 6 + 40 * d);
+        lg.addColorStop(0, 'rgba(255,170,90,' + (.55 * p + .1) + ')'); lg.addColorStop(1, 'rgba(255,170,90,0)');
+        cx.fillStyle = lg; cx.beginPath(); cx.arc(x, y - hgt, 6 + 40 * d, 0, 7); cx.fill();
+      });
+    }
+
+    // painel/capô
+    const dash = cx.createLinearGradient(0, H * .78, 0, H);
+    dash.addColorStop(0, 'rgba(0,0,0,0)'); dash.addColorStop(.35, 'rgba(20,8,2,.92)'); dash.addColorStop(1, '#0a0503');
+    cx.fillStyle = dash;
+    cx.beginPath(); cx.moveTo(0, H * .86); cx.quadraticCurveTo(vx, H * .76, W, H * .86); cx.lineTo(W, H); cx.lineTo(0, H); cx.fill();
+    cx.strokeStyle = 'rgba(255,106,26,.55)'; cx.lineWidth = 1.5;
+    cx.beginPath(); cx.moveTo(0, H * .86); cx.quadraticCurveTo(vx, H * .76, W, H * .86); cx.stroke();
+
+    kmh.textContent = String(Math.round(speed * 112 + Math.sin(t / 700) * 2)).padStart(3, '0');
+    if (!RM) requestAnimationFrame(frame);
+  };
+  setInterval(() => { alvo = .7 + Math.random() * .6; }, 3500);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
