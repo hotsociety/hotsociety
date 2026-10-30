@@ -5,3 +5,5 @@ com **Root Directory = `sites/capputino`** (sem build). Toda alteração nesta p
 
 O formulário "Aplicar para a mentoria" manda uma cópia das respostas para
 `https://hotsociety.com.br/api/mentoria/aplicacao` (Painel → Mentoria, "lead insta cappu").
+
+Publicado pela Vercel a partir deste repositório desde 29/10/2026.
