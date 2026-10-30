@@ -60,6 +60,10 @@ export default function AreaDeMembros() {
   const proxima = andamento.aulas[iProx];
   const dadosProx = proxima ? info?.get(proxima.id) : undefined;
   const capaProx = capaDoVideo(dadosProx?.video_url) ?? andamento.img;
+  const seguintes = andamento.aulas
+    .map((a, i) => ({ a, i }))
+    .filter(({ a, i }) => i > iProx && !feitas.has(a.id))
+    .slice(0, 2);
   const pctModulo = Math.round((andamento.feitas / Math.max(1, andamento.aulas.length)) * 100);
 
   const totalAulas = modulos.reduce((a, x) => a + x.aulas.length, 0);
@@ -131,6 +135,22 @@ export default function AreaDeMembros() {
                 Ver todos os módulos
               </Link>
             </div>
+            {seguintes.length > 0 && (
+              <div className="hs-am2-seg">
+                <span>A seguir</span>
+                <ol>
+                  {seguintes.map(({ a, i }) => (
+                    <li key={a.id}>
+                      <Link href={`/dashboard/aulas/${andamento.slug}?aula=${i + 1}`}>
+                        <em>{String(i + 1).padStart(2, "0")}</em>
+                        <b>{a.t}</b>
+                        {info?.get(a.id)?.duracao && <small>{info.get(a.id)!.duracao}</small>}
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
           </div>
           <Link className="hs-am2-video" href={`/dashboard/aulas/${andamento.slug}?aula=${iProx + 1}`} aria-label={`Assistir: ${proxima.t}`}>
             <span className="cv" style={{ backgroundImage: `url(${capaProx})` }} />
@@ -211,7 +231,9 @@ export default function AreaDeMembros() {
 function Cartao({ c, largo }: { c: Card; largo?: boolean }) {
   const corpo = (
     <>
-      <span className="cv" style={{ backgroundImage: `url(${c.img})` }} aria-hidden />
+      <span className="im" aria-hidden>
+        <span className="cv" style={{ backgroundImage: `url(${c.img})` }} />
+      </span>
       {c.tag && <span className={"tg " + (c.tagCor ?? "")}>{c.tag}</span>}
       {c.lock && <span className="lk">{CADEADO}</span>}
       <span className="tx">
