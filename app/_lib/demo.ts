@@ -583,38 +583,6 @@ export const PRODUTOS: Produto[] = [
   { id: "hp", cat: "Digitais", t: "HOTPHONE Edição Dubai", d: "Cor exclusiva do seu HOTPHONE. Só com Cappu Coins.", rs: null, coins: 2500, soCoins: true, img: IMG.hotphoneDubai, breve: true },
 ];
 
-/* ===================== Games ===================== */
-
-export const JOGOS = [
-  { k: "quiz", t: "Quiz relâmpago", d: "6 perguntas sobre as aulas, 15 segundos cada.", xp: "até 60 XP", ic: "?" },
-  { k: "hook", t: "Gancho ou mico", d: "Esse gancho segura o scroll ou é mico? Você decide.", xp: "até 60 XP", ic: "!" },
-  { k: "funil", t: "Monte o funil", d: "Coloque as etapas na ordem certa, o mais rápido possível.", xp: "até 50 XP", ic: "→" },
-  { k: "soon", t: "Desafio da persona", d: "Em breve: monte a persona perfeita para cada nicho.", xp: "em breve", ic: "★", soon: true },
-] as const;
-
-// [pergunta, opções, índice certo, explicação]
-export const QUIZ: [string, string[], number, string][] = [
-  ["Qual é o primeiro passo para criar uma modelo IA?", ["Gerar o rosto direto", "Definir a persona", "Comprar tráfego"], 1, "Persona primeiro: nome, idade aparente sempre adulta, estilo e história. O rosto vem depois."],
-  ["O que é obrigatório antes de fotografar uma modelo real?", ["Só um combinado no WhatsApp", "Contrato, prova de 18+ e consentimento por escrito", "Nada, se ela topar"], 1, "Contrato assinado, documento que comprove 18+ e consentimento escrito do que pode ser publicado."],
-  ["Para quem está começando, qual tráfego vem primeiro?", ["Orgânico", "Pago", "Os dois juntos"], 0, "Orgânico valida a persona sem queimar dinheiro e sem risco de bloqueio."],
-  ["Conteúdo feito com IA deve…", ["Fingir ser pessoa real", "Ser identificado como IA", "Usar rosto de famosa"], 1, "Sempre identificado como IA. Nada de rosto real nem deepfake."],
-  ["Quanto faturamento verificado carimba o Chile?", ["R$ 1 mil", "R$ 10 mil", "R$ 100 mil"], 1, "R$ 10 mil verificados carimbam o Chile e liberam a placa 10K."],
-  ["Qual métrica mostra se a assinatura está saudável?", ["Seguidores", "Cancelamento mensal (churn)", "Curtidas"], 1, "Recorrência vive de retenção: acompanhe quantos cancelam por mês."],
-];
-
-// [gancho, 1 = gancho / 0 = mico, explicação]
-export const GANCHOS: [string, 0 | 1, string][] = [
-  ["“Ninguém te conta isso sobre a primeira semana…”", 1, "Curiosidade + promessa de bastidor. Segura o scroll."],
-  ["“Oi gente, tudo bem? Hoje vou falar um pouquinho sobre…”", 0, "Começo lento. Os primeiros 2 segundos precisam de tensão, não de saudação."],
-  ["“3 erros que fazem sua persona parecer falsa”", 1, "Número + dor específica. Clássico que funciona."],
-  ["“Compra aí que é bom”", 0, "Sem contexto, sem desejo, sem prova. Mico."],
-  ["“O print que eu não queria mostrar”", 1, "Quebra de expectativa e bastidor. Gancho forte (só com print real)."],
-  ["“Post de hoje é sobre motivação”", 0, "Genérico. Não diz por que a pessoa deveria parar."],
-];
-
-export const FUNIL_ETAPAS = ["Conteúdo gratuito no perfil", "Link na bio", "Página da persona", "Assinatura na plataforma", "Upsell de pacote"];
-
-
 /* ===================== Afiliados ===================== */
 
 export const NIVEIS_AFILIADO = [
