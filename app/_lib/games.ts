@@ -17,7 +17,7 @@ export type InfoJogo = {
 
 export const CATALOGO: InfoJogo[] = [
   { k: "quiz", t: "Quiz relâmpago", d: "6 perguntas sobre as aulas, 15 segundos cada. Responda rápido.", max: 6, ic: "⚡", cat: "Conhecimento", dur: "2 min", cor: "#C9A24E" },
-  { k: "hook", t: "Gancho ou mico", d: "Esse gancho segura o scroll ou é mico? Arraste a decisão.", max: 6, ic: "🎣", cat: "Conteúdo", dur: "1 min", cor: "#E0714F" },
+  { k: "hook", t: "Gancho ou mico", d: "Esse gancho segura o scroll ou é mico? Você decide.", max: 6, ic: "🎣", cat: "Conteúdo", dur: "1 min", cor: "#E0714F" },
   { k: "funil", t: "Monte o funil", d: "Coloque as etapas na ordem certa. Cada erro custa um ponto.", max: 5, ic: "🧩", cat: "Vendas", dur: "1 min", cor: "#5BA3E0" },
   { k: "persona", t: "Desafio da persona", d: "Leia o briefing do público e escolha a persona que vai converter.", max: 6, ic: "🎭", cat: "Conteúdo", dur: "3 min", cor: "#B47BE0", novo: true },
   { k: "chat", t: "Objeção na DM", d: "O lead mandou mensagem. Escolha a resposta que fecha a venda.", max: 6, ic: "💬", cat: "Vendas", dur: "3 min", cor: "#3ECF72", novo: true },
