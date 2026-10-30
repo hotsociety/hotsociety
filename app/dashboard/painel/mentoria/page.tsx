@@ -27,7 +27,7 @@ type StatusApl = "novo" | "contato" | "aprovado" | "recusado";
 type Aplic = {
   id: string;
   criado_em: string;
-  origem: "insta_cappu" | "plataforma";
+  origem: "insta_cappu" | "plataforma" | "ferreira";
   comentario: string;
   nome: string;
   instagram: string;
@@ -79,7 +79,7 @@ export default function PainelMentoria() {
   const [editE, setEditE] = useState<Encontro | "novo" | null>(null);
   const [conversa, setConversa] = useState<{ id: string; titulo: string } | null>(null);
   const [apl, setApl] = useState<Aplic[] | null>(null);
-  const [filtroApl, setFiltroApl] = useState<"todas" | "insta_cappu" | "plataforma" | StatusApl>("todas");
+  const [filtroApl, setFiltroApl] = useState<"todas" | "insta_cappu" | "plataforma" | "ferreira" | StatusApl>("todas");
   const [verApl, setVerApl] = useState<Aplic | null>(null);
   const [leadLink, setLeadLink] = useState<string | null>(null);
   const linksRef = useRef<HTMLElement>(null);
@@ -198,6 +198,7 @@ export default function PainelMentoria() {
               <option value="todas">Todas ({apl.length})</option>
               <option value="insta_cappu">Lead insta cappu ({apl.filter((a) => a.origem === "insta_cappu").length})</option>
               <option value="plataforma">Lead plataforma ({apl.filter((a) => a.origem === "plataforma").length})</option>
+              <option value="ferreira">Lead ferreira ({apl.filter((a) => a.origem === "ferreira").length})</option>
               {(Object.keys(STATUS_APL) as StatusApl[]).map((k) => (
                 <option key={k} value={k}>
                   {STATUS_APL[k].t} ({apl.filter((a) => a.status === k).length})
@@ -235,7 +236,7 @@ export default function PainelMentoria() {
                         </small>
                       </td>
                       <td>
-                        <span className={"hs-pn-st " + (a.origem === "insta_cappu" ? "pendente" : "ativo")}>{a.comentario}</span>
+                        <span className={"hs-pn-st " + (a.origem === "insta_cappu" ? "pendente" : a.origem === "ferreira" ? "equipe" : "ativo")}>{a.comentario}</span>
                       </td>
                       <td style={{ maxWidth: 220 }}>
                         {a.momento ?? "—"}
@@ -259,7 +260,7 @@ export default function PainelMentoria() {
                   ))}
               </tbody>
             </table>
-            {apl.length === 0 && <p className="hs-pn-vazio">Nenhuma aplicação ainda. Chegam aqui as do site do Cappu (lead insta cappu) e as da plataforma (lead plataforma).</p>}
+            {apl.length === 0 && <p className="hs-pn-vazio">Nenhuma aplicação ainda. Chegam aqui as do site do Cappu (lead insta cappu), do site do NK (lead ferreira) e as da plataforma (lead plataforma).</p>}
           </div>
         </>
       )}
