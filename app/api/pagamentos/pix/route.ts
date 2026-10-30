@@ -45,6 +45,54 @@ function publico(p: Pedido) {
   };
 }
 
+// Pedido de cortesia (cupom de 100% em tudo): grava como cortesia e confirma na hora pelo mesmo caminho do pagamento
+// (libera o acesso, o convite do Discord, o recibo por e-mail e lança nas vendas com valor zero).
+async function cortesia(
+  req: Request,
+  sb: ReturnType<typeof admin>,
+  user: { id: string; email?: string },
+  o: { plano: Plano; nome: string; codigo: string; desconto: number; adicional: string | null; utm: unknown },
+) {
+  const { data: pedido, error } = await sb
+    .from("pedidos")
+    .insert({
+      user_id: user.id,
+      email: user.email!,
+      nome: o.nome,
+      plano: o.plano,
+      item: null,
+      valor_centavos: 0,
+      gateway: "cortesia",
+      metodo: "pix",
+      split_centavos: 0,
+      charge_id: `cortesia-${crypto.randomUUID()}`,
+      expira_em: new Date(Date.now() + 3600e3).toISOString(),
+      aceite_termos_em: new Date().toISOString(),
+      versao_termos: SITE.versaoTermos,
+      utm: limparUtm(o.utm),
+      cupom: o.codigo,
+      desconto_centavos: o.desconto,
+      ...(o.adicional ? { adicional: o.adicional, adicional_centavos: 0 } : {}),
+    })
+    .select("*")
+    .single<Pedido>();
+  if (error || !pedido) {
+    console.error("criar pedido cortesia:", error?.message);
+    return resp({ erro: "Não deu para liberar agora. Tente de novo." }, 500);
+  }
+  const pago = await aplicarCobranca(sb, {
+    gateway: "cortesia",
+    id: pedido.charge_id!,
+    status: "pago",
+    valor: 0,
+    referencia: pedido.id,
+    pago_em: new Date().toISOString(),
+  });
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+  console.log(`cortesia ${pedido.id} (${o.codigo}) para ${user.id} ip=${ip ?? "-"}`);
+  return resp(publico(pago ?? pedido));
+}
+
 export async function POST(req: Request) {
   const cfg = configurado();
   if (!cfg.ok) {
@@ -80,18 +128,22 @@ export async function POST(req: Request) {
   // Cupom de desconto (conferido no banco, nunca pelo navegador).
   const codigo = (corpo.cupom ?? "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20);
   let desconto = 0;
+  let cuponCobreAdicional = false;
   if (codigo && plano === "loja") return resp({ erro: "Cupom não vale para itens da loja." }, 400);
   if (codigo && plano !== "loja") {
     const { data: c } = await sb.rpc("conferir_cupom", { p_codigo: codigo, p_plano: plano });
-    const r = c as { ok: boolean; desconto?: number } | null;
+    const r = c as { ok: boolean; desconto?: number; adicional?: boolean } | null;
     if (!r?.ok) return resp({ erro: "Cupom inválido, vencido ou esgotado." }, 400);
     desconto = Math.round((VALOR_CENTAVOS[plano] * (r.desconto ?? 0)) / 100);
+    cuponCobreAdicional = r.adicional === true && r.desconto === 100;
   }
   // Adicional (Arsenal do Cappu + Networking): só nos planos e só pela Stripe (uma página com os dois itens).
   const adicional = !item && gateway === "stripe" ? adicionalValido(corpo.adicional) : null;
-  const adicionalCentavos = adicional ? ADICIONAL.preco * 100 : 0;
+  const adicionalCentavos = adicional && !cuponCobreAdicional ? ADICIONAL.preco * 100 : 0;
   const valor = (item ? ITENS_PAGOS[item].preco * 100 : VALOR_CENTAVOS[plano as "mensal" | "anual"] - desconto) + adicionalCentavos;
-  // A Stripe não cobra R$ 0: com cupom de 100% no plano, só passa se houver o adicional no pedido.
+  // Cupom que zera tudo: pedido "cortesia", confirmado na hora (sem gateway), com a mesma entrega de um pago.
+  if (valor === 0) return cortesia(req, sb, user, { plano, nome, codigo, desconto, adicional, utm: corpo.utm });
+  // A Stripe não cobra menos de R$ 1.
   if (valor < 100) return resp({ erro: "Com este cupom, marque o adicional (Arsenal do Cappu) para continuar." }, 400);
 
   // Já existe uma cobrança igual ainda válida? Reaproveita.
