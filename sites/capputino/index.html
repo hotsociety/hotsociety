@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="CAPPUTINO Digital HQ: Hot Society, Mentoria Primeira Classe, YouTube e canais oficiais do Cappu.">
+<meta name="theme-color" content="#040302">
+<meta property="og:title" content="CAPPUTINO™ · Digital HQ">
+<meta property="og:description" content="Hot Society, Mentoria Primeira Classe e os canais oficiais do Cappu.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23040302'/%3E%3Cpath d='M10 24c8-6 36-6 44 0 2 6 1 14-4 18-6 3-10 1-13-3-2-3-8-3-10 0-3 4-7 6-13 3-5-4-6-12-4-18z' fill='%23ff5a1f'/%3E%3C/svg%3E">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>CAPPUTINO™ · Digital HQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=Geist+Mono:wght@400;500&family=Hanken+Grotesk:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap">
+<style>
+:root{
+  --void:#040302;
+  --graphite:#110e0c;
+  --oxblood:#140604;
+  --ember:#ff5a1f;
+  --amber:#ffc27a;
+  --iris:#ff2d6f;
+  --titanium:#c9ccd1;
+  --ice:#f5f3f1;
+  --muted:#9b928b;
+  --line:rgba(255,194,122,.13);
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --serif:"Instrument Serif","Times New Roman",serif;
+  --body:"Hanken Grotesk","Helvetica Neue",Arial,sans-serif;
+  --mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--void)}
+body{background:var(--void);color:var(--ice);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:8px}
+
+.atmo{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(120% 60% at 50% -8%,rgba(255,90,31,.26),transparent 62%),
+    radial-gradient(90% 50% at 50% 108%,rgba(20,6,4,1),transparent 70%),
+    linear-gradient(var(--void),var(--oxblood) 55%,var(--void));}
+.atmo::after{content:"";position:absolute;inset:0;opacity:.07;mix-blend-mode:screen;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");}
+
+.hq{position:relative;z-index:1;max-width:480px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:14px 40px;display:flex;flex-direction:column;gap:28px}
+
+.top{display:flex;justify-content:space-between;align-items:center}
+.status{font:500 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--amber);display:flex;align-items:center;gap:8px}
+.status i{width:6px;height:6px;border-radius:50%;background:var(--ember);box-shadow:0 0 0 3px rgba(255,90,31,.22),0 0 12px var(--ember);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(255,90,31,0),0 0 18px var(--ember)}}
+.share{display:flex;align-items:center;gap:8px;height:34px;padding:0 14px 0 12px;border-radius:999px;border:1px solid var(--line);background:rgba(17,14,12,.6);color:var(--ice);font:500 10.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;backdrop-filter:blur(8px);transition:border-color .2s,background .2s}
+.share:hover{border-color:rgba(255,194,122,.38);background:rgba(17,14,12,.9)}
+.share svg{width:14px;height:14px}
+
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.visor{position:relative;width:100%}
+.visor canvas{display:block;width:100%;max-width:100%;aspect-ratio:2/1;animation:rise 1s var(--ease) both}
+.hud{position:absolute;font:500 9.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:rgba(255,194,122,.6);white-space:nowrap}
+.hud-tl{left:2px;top:2px}
+.hud-tr{right:2px;top:2px;font-variant-numeric:tabular-nums}
+.hud-b{left:50%;bottom:-4px;transform:translateX(-50%);color:rgba(255,194,122,.42)}
+.hud b{color:var(--ice);font-weight:500}
+@keyframes rise{from{opacity:.0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+
+.handle{margin:18px 0 0;font:500 11px/1 var(--mono);letter-spacing:.32em;text-transform:uppercase;color:var(--muted)}
+.mark{margin:0;font-family:var(--display);font-stretch:125%;font-weight:800;font-size:clamp(31px,10.4vw,52px);line-height:.95;letter-spacing:-.015em;
+  background:linear-gradient(100deg,var(--ice) 0%,var(--ice) 38%,#ffffff 46%,var(--amber) 52%,var(--ice) 60%,var(--ice) 100%);background-size:250% 100%;background-position:100% 0;
+  -webkit-background-clip:text;background-clip:text;color:transparent;animation:glint 2.2s .5s var(--ease) both}
+.mark sup{font-size:.28em;font-weight:500;vertical-align:top;position:relative;top:.35em;margin-left:.08em;-webkit-text-fill-color:var(--muted)}
+@keyframes glint{from{background-position:100% 0}to{background-position:0 0}}
+.sub{margin:4px 0 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;color:var(--muted);font-size:13.5px}
+.sub em{font-family:var(--serif);font-style:italic;font-size:22px;color:var(--amber);letter-spacing:.01em}
+.sub .sep{width:18px;height:1px;background:var(--line)}
+
+.read{list-style:none;margin:18px 0 0;padding:0;width:100%;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.read li{padding:12px 6px;display:flex;flex-direction:column;gap:4px;align-items:center}
+.read li+li{border-left:1px solid var(--line)}
+.read b{font:700 19px/1 var(--display);font-stretch:112%;font-variant-numeric:tabular-nums;color:var(--ice)}
+.read span{font:500 9.5px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+.vault{display:flex;flex-direction:column;gap:10px}
+.vault-label{display:flex;justify-content:space-between;font:500 10px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);padding:0 4px 4px}
+.card{--c-bg:var(--graphite);--c-fg:var(--ice);--c-sub:var(--muted);--c-line:var(--line);--c-spot:rgba(255,194,122,.14);
+  position:relative;isolation:isolate;border-radius:22px;overflow:hidden;background:var(--c-bg);color:var(--c-fg);border:1px solid var(--c-line);
+  animation:rise .8s var(--ease) both;transition:transform .35s var(--ease),border-color .3s}
+.card:nth-child(2){animation-delay:.08s}.card:nth-child(3){animation-delay:.14s}.card:nth-child(4){animation-delay:.2s}.card:nth-child(5){animation-delay:.26s}
+.card::before{content:"";position:absolute;inset:0;z-index:-1;opacity:0;transition:opacity .3s;
+  background:radial-gradient(260px circle at var(--mx,50%) var(--my,0%),var(--c-spot),transparent 70%)}
+.card:hover::before{opacity:1}
+.card:hover{transform:translateY(-1px)}
+
+.c-society{--c-bg:radial-gradient(120% 140% at 100% 0%,rgba(255,194,122,.9),rgba(255,90,31,.85) 22%,rgba(200,30,60,.55) 48%,transparent 74%),linear-gradient(160deg,#3a0b06,#0b0403 70%);--c-line:rgba(255,150,90,.4);--c-sub:rgba(255,236,222,.76);--c-spot:rgba(255,220,180,.24)}
+.c-first{--c-bg:linear-gradient(170deg,#1a1512,#0b0908 70%);--c-sub:#a69c94}
+.c-academy{--c-bg:linear-gradient(165deg,#f4f5f6,#d3d6da 55%,#a9aeb5);--c-fg:#070605;--c-sub:#4a4d53;--c-line:rgba(255,255,255,.6);--c-spot:rgba(255,255,255,.6)}
+.c-scty{--c-bg:linear-gradient(180deg,#0a0605,#040302);--c-line:rgba(255,90,31,.45);--c-sub:#a1968e}
+
+.card-head{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:14px;width:100%;padding:20px 16px 20px 22px;cursor:pointer;border-radius:22px}
+.card-head:focus-visible{outline:2px solid var(--amber);outline-offset:-4px}
+.ch-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+.kicker{font:500 10px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--c-sub)}
+.title{font-family:var(--display);font-stretch:118%;font-weight:800;font-size:clamp(23px,6.6vw,28px);line-height:1;letter-spacing:-.02em;text-wrap:balance}
+.title em{font-family:var(--serif);font-style:italic;font-weight:400;font-stretch:normal;letter-spacing:0;font-size:1.12em;opacity:.78}
+.glyph{width:40px;height:40px;flex:none;opacity:.42;transition:opacity .3s,transform .5s var(--ease)}
+.card:hover .glyph,.card.open .glyph{opacity:.8}
+.card.open .glyph{transform:rotate(-8deg) scale(1.06)}
+.tog{width:34px;height:34px;flex:none;border-radius:50%;border:1px solid color-mix(in srgb,var(--c-fg) 28%,transparent);display:grid;place-items:center;position:relative}
+.tog::before,.tog::after{content:"";position:absolute;width:12px;height:1.5px;background:var(--c-fg);border-radius:2px;transition:transform .45s var(--ease)}
+.tog::after{transform:rotate(90deg)}
+.card.open .tog::after{transform:rotate(0)}
+.card.open .tog::before{transform:rotate(180deg)}
+
+.panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .55s var(--ease)}
+.card.open .panel{grid-template-rows:1fr}
+.panel>div{overflow:hidden;min-height:0}
+.panel-in{padding:0 22px 22px;display:flex;flex-direction:column;gap:16px}
+.panel-in p{margin:0;color:var(--c-sub);font-size:14.5px;max-width:60ch}
+.fine{font:400 10.5px/1.5 var(--mono);letter-spacing:.04em;color:var(--c-sub);opacity:.8}
+
+.cta{display:flex;align-items:center;justify-content:space-between;gap:12px;text-decoration:none;padding:15px 16px 15px 18px;border-radius:14px;background:var(--ice);color:var(--void);font:700 15px/1.1 var(--display);font-stretch:108%;letter-spacing:-.005em;transition:transform .25s var(--ease),box-shadow .25s}
+.cta small{font:500 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;opacity:.6}
+.cta .arr{display:flex;align-items:center;gap:10px}
+.cta svg{width:16px;height:16px;transition:transform .3s var(--ease)}
+.cta:hover{transform:translateY(-1px);box-shadow:0 10px 30px -10px rgba(255,90,31,.7)}
+.cta:hover svg{transform:translate(2px,-2px)}
+.c-academy .cta{background:var(--void);color:var(--ice)}
+.c-academy .cta:hover{box-shadow:0 10px 30px -12px rgba(7,6,5,.55)}
+
+.route{position:relative;display:grid;grid-template-columns:repeat(6,1fr);padding-top:4px}
+.route::before{content:"";position:absolute;left:8.33%;right:8.33%;top:9px;height:1px;background:linear-gradient(90deg,var(--amber),rgba(255,194,122,.12))}
+.stop{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px}
+.stop i{width:11px;height:11px;border-radius:50%;border:1px solid rgba(255,194,122,.6);background:#2a0905}
+.stop:first-child i{background:var(--amber);box-shadow:0 0 12px var(--amber)}
+.stop b{font:500 11px/1 var(--mono);letter-spacing:.06em;color:var(--ice)}
+.stop span{font:400 9.5px/1 var(--mono);color:var(--c-sub)}
+
+.pass{position:relative;border-radius:14px;background:#eeeff1;color:#070605;display:grid;grid-template-columns:1fr auto;overflow:hidden}
+.pass-main{padding:14px 16px;display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:6px}
+.pass-main .k{font:500 9px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:#5b5e64}
+.pass-main .v{font:800 26px/1 var(--display);font-stretch:120%;letter-spacing:-.02em}
+.pass-main .city{font:400 10px/1.2 var(--mono);color:#5b5e64}
+.pass-main .fly{align-self:center;color:var(--ember)}
+.pass-main .fly svg{width:20px;height:20px;transform:rotate(90deg)}
+.pass-main .right{text-align:right}
+.pass-row{grid-column:1/-1;display:flex;justify-content:space-between;border-top:1px dashed #b9bcc2;padding-top:10px;margin-top:6px}
+.pass-row div{display:flex;flex-direction:column;gap:4px}
+.pass-row b{font:600 12px/1 var(--mono);letter-spacing:.06em}
+.stub{width:58px;border-left:1px dashed #b9bcc2;background:repeating-linear-gradient(0deg,#070605 0 2px,transparent 2px 4px,#070605 4px 5px,transparent 5px 8px,#070605 8px 11px,transparent 11px 13px);background-clip:content-box;padding:14px 16px;position:relative}
+.stub::before,.stub::after{content:"";position:absolute;left:-7px;width:14px;height:14px;border-radius:50%;background:#0f0c0a}
+.stub::before{top:-7px}.stub::after{bottom:-7px}
+
+.nets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.net{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:14px;border-radius:16px;border:1px solid var(--line);background:rgba(17,14,12,.55);text-decoration:none;transition:border-color .25s,background .25s;min-width:0}
+.net:hover{border-color:rgba(255,194,122,.38);background:rgba(17,14,12,.85)}
+.net svg{width:18px;height:18px;color:var(--amber)}
+.net b{font:600 13px/1.1 var(--body);overflow-wrap:anywhere}
+.net span{font:500 9px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+footer{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding-top:8px}
+footer .sig{font:800 13px/1 var(--display);font-stretch:125%;letter-spacing:.24em;color:var(--muted)}
+footer p{margin:0;font:400 10.5px/1.5 var(--mono);color:#6b625c;max-width:40ch}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:20;padding:10px 16px;border-radius:999px;background:var(--ice);color:var(--void);font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;box-shadow:0 10px 30px -8px rgba(255,90,31,.6)}
+
+button.cta{border:0;width:100%;cursor:pointer;text-align:left}
+.sheet{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center;background:rgba(4,3,2,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:fade .3s ease both}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(24px);opacity:0}}
+.sheet-box{width:100%;max-width:520px;max-height:94dvh;overflow:auto;overscroll-behavior:contain;background:linear-gradient(180deg,#1a1411,#0c0908 40%);border:1px solid var(--line);border-bottom:0;border-radius:26px 26px 0 0;
+  padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));padding-block:10px calc(24px + env(safe-area-inset-bottom,0px));animation:up .45s var(--ease) both}
+@media (min-width:640px){.sheet{align-items:center}.sheet-box{border-radius:26px;border-bottom:1px solid var(--line);max-height:88dvh}}
+.grab{width:40px;height:4px;border-radius:4px;background:rgba(255,194,122,.25);margin:0 auto 14px}
+.sheet-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
+.sheet-top h2{margin:6px 0 0;font:800 26px/1 var(--display);font-stretch:118%;letter-spacing:-.02em}
+.sheet-top h2 em{font-family:var(--serif);font-style:italic;font-weight:400;font-stretch:normal;letter-spacing:0;color:var(--amber)}
+.sheet-top p{margin:8px 0 0;color:var(--muted);font-size:14px}
+.x{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ice);cursor:pointer;display:grid;place-items:center}
+.x svg{width:14px;height:14px}
+.apply{display:flex;flex-direction:column;gap:18px}
+.fld{display:flex;flex-direction:column;gap:8px;border:0;padding:0;margin:0;min-width:0}
+.fld>label,.fld>legend{font:500 10px/1.2 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--amber);padding:0}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.row2{grid-template-columns:1fr}}
+.inp{width:100%;font:500 15px/1.3 var(--body);color:var(--ice);background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:13px 14px;transition:border-color .2s,background .2s}
+.inp::placeholder{color:#6b625c}
+.inp:focus{outline:none;border-color:var(--amber);background:rgba(255,194,122,.05)}
+textarea.inp{min-height:92px;resize:vertical}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips input{position:absolute;opacity:0;pointer-events:none}
+.chips label{cursor:pointer;padding:10px 14px;border-radius:999px;border:1px solid var(--line);font:500 13.5px/1.1 var(--body);color:#d9d2cc;transition:all .2s}
+.chips label:hover{border-color:rgba(255,194,122,.4)}
+.chips input:checked+label{border-color:var(--ember);background:rgba(255,90,31,.16);color:var(--ice)}
+.chips input:focus-visible+label{outline:2px solid var(--amber);outline-offset:2px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:#cfc7c1;cursor:pointer}
+.check input{accent-color:var(--ember);width:18px;height:18px;margin:1px 0 0;flex:none}
+.err{font:500 11px/1.3 var(--mono);color:#ff8a6a;min-height:0}
+.fld.bad .inp{border-color:#ff6a45}
+.apply .cta{margin-top:4px}
+.done{display:flex;flex-direction:column;gap:16px}
+.done .pass{margin-top:4px}
+.copybox{width:100%;min-height:150px;font:400 12px/1.5 var(--mono);color:#cfc7c1;background:rgba(255,255,255,.03);border:1px dashed var(--line);border-radius:12px;padding:12px;resize:none}
+.ghost{all:unset;box-sizing:border-box;text-align:center;cursor:pointer;padding:13px;border-radius:14px;border:1px solid var(--line);font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
+.ghost:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+@media (max-width:380px){.nets{grid-template-columns:1fr 1fr}.glyph{display:none}.pass-main .v{font-size:22px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.mark{background-position:0 0}}
+</style>
+</head>
+<body>
+
+<div class="atmo" aria-hidden="true"></div>
+
+<main class="hq">
+  <header class="top">
+    <span class="status"><i></i>HQ online</span>
+  </header>
+
+  <section class="hero">
+    <div class="visor">
+      <canvas id="visor" aria-label="Visor espelhado refletindo montanhas de neve"></canvas>
+      <div class="hud hud-tl">Valle Nevado · <b>3.025 m</b></div>
+      <div class="hud hud-tr">São Paulo · <b id="clock">--:--</b></div>
+      <div class="hud hud-b">GRU → SCL → LIS → DXB → JFK → MCM</div>
+    </div>
+    <p class="handle">@capputin0</p>
+    <h1 class="mark">CAPPUTINO<sup>™</sup></h1>
+    <p class="sub"><em>Digital HQ</em><span class="sep" aria-hidden="true"></span>Direct response · Nicho hot · IA</p>
+    <ul class="read">
+      <li><b>68 mil</b><span>seguidores</span></li>
+      <li><b>+5.000</b><span>alunos</span></li>
+      <li><b>Garantia</b><span>de entrega</span></li>
+    </ul>
+  </section>
+
+  <nav class="vault" aria-label="Acessos">
+    <div class="vault-label"><span>Acessos</span><span>04</span></div>
+
+    <article class="card c-society">
+      <button class="card-head" type="button" aria-expanded="false" aria-controls="p1">
+        <span class="ch-text"><span class="kicker">Comece aqui</span><span class="title">Hot <em>Society</em></span></span>
+        <svg class="glyph" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="24" cy="24" r="4" fill="currentColor"/><ellipse cx="24" cy="24" rx="20" ry="8" transform="rotate(-25 24 24)"/><ellipse cx="24" cy="24" rx="20" ry="8" transform="rotate(35 24 24)"/></svg>
+        <span class="tog" aria-hidden="true"></span>
+      </button>
+      <div class="panel" id="p1"><div><div class="panel-in">
+        <p>O ecossistema completo para quem quer construir operação no digital: a Hot Academy completa, comunidade, ferramentas de IA, lives e networking. Você avança pela rota no seu ritmo.</p>
+        <div class="route" aria-label="Rota de níveis">
+          <div class="stop"><i></i><b>GRU</b><span>início</span></div>
+          <div class="stop"><i></i><b>SCL</b><span>10K</span></div>
+          <div class="stop"><i></i><b>LIS</b><span>50K</span></div>
+          <div class="stop"><i></i><b>DXB</b><span>100K</span></div>
+          <div class="stop"><i></i><b>JFK</b><span>500K</span></div>
+          <div class="stop"><i></i><b>MCM</b><span>1M</span></div>
+        </div>
+        <a class="cta" href="https://hotsociety.com.br/" target="_blank" rel="noopener">Entrar na Hot Society <span class="arr"><small>Acesso imediato</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></a>
+        <span class="fine">As metas da rota marcam etapas de evolução. Não são promessa de ganho.</span>
+      </div></div></div>
+    </article>
+
+    <article class="card c-first">
+      <button class="card-head" type="button" aria-expanded="false" aria-controls="p2">
+        <span class="ch-text"><span class="kicker">Mentoria individual</span><span class="title">Primeira <em>Classe</em></span></span>
+        <svg class="glyph" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
+        <span class="tog" aria-hidden="true"></span>
+      </button>
+      <div class="panel" id="p2"><div><div class="panel-in">
+        <p>Acompanhamento direto comigo, em grupo ou individual, para estruturar sua operação, ajustar o funil e escalar com método.</p>
+        <div class="pass" aria-label="Cartão de embarque Primeira Classe">
+          <div class="pass-main">
+            <div><div class="k">De</div><div class="v">GRU</div><div class="city">São Paulo</div></div>
+            <div class="fly"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+            <div class="right"><div class="k">Para</div><div class="v">MCM</div><div class="city">Mônaco</div></div>
+            <div class="pass-row">
+              <div><span class="k">Passageiro</span><b>VOCÊ</b></div>
+              <div><span class="k">Classe</span><b>1ª</b></div>
+              <div><span class="k">Portão</span><b>DIRECT</b></div>
+            </div>
+          </div>
+          <div class="stub" aria-hidden="true"></div>
+        </div>
+        <button class="cta" type="button" data-open-apply>Aplicar para a mentoria <span class="arr"><small>2 min</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></button>
+      </div></div></div>
+    </article>
+
+    <article class="card c-academy">
+      <button class="card-head" type="button" aria-expanded="false" aria-controls="p3">
+        <span class="ch-text"><span class="kicker">Canal no YouTube</span><span class="title">Cappu<em>lider</em></span></span>
+        <svg class="glyph" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="6" y="9" width="36" height="30" rx="7"/><path d="M20 18v12l10-6z" fill="currentColor" stroke="none"/></svg>
+        <span class="tog" aria-hidden="true"></span>
+      </button>
+      <div class="panel" id="p3"><div><div class="panel-in">
+        <p>Meus vídeos longos: operação, IA, tráfego e os bastidores do digital, com mais profundidade do que cabe num reel.</p>
+        <a class="cta" href="https://www.youtube.com/@Cappulider" target="_blank" rel="noopener">Assistir no YouTube <span class="arr"><small>@Cappulider</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></a>
+      </div></div></div>
+    </article>
+
+    <article class="card c-scty">
+      <button class="card-head" type="button" aria-expanded="false" aria-controls="p4">
+        <span class="ch-text"><span class="kicker">Comunidade</span><span class="title">@hot<em>scty</em></span></span>
+        <svg class="glyph" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="8" y="8" width="32" height="32" rx="10"/><circle cx="24" cy="24" r="7.5"/><circle cx="33.5" cy="14.5" r="1.6" fill="currentColor"/></svg>
+        <span class="tog" aria-hidden="true"></span>
+      </button>
+      <div class="panel" id="p4"><div><div class="panel-in">
+        <p>O perfil oficial da Hot Society: bastidores da comunidade, avisos de lives e tudo que entra de novo na plataforma.</p>
+        <a class="cta" href="https://www.instagram.com/hotscty/" target="_blank" rel="noopener">Seguir @hotscty <span class="arr"><small>Instagram</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></a>
+      </div></div></div>
+    </article>
+  </nav>
+
+  <section class="nets" aria-label="Canais">
+    <a class="net" href="https://www.instagram.com/capputin0/" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".9" fill="currentColor"/></svg>
+      <b>@capputin0</b><span>Instagram</span>
+    </a>
+    <a class="net" href="https://www.tiktok.com/@capputtin0" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2.2 4.4 5 4.7"/></svg>
+      <b>@capputtin0</b><span>TikTok</span>
+    </a>
+    <a class="net" href="https://www.youtube.com/@Cappulider" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="M10 9v6l5-3z" fill="currentColor" stroke="none"/></svg>
+      <b>@Cappulider</b><span>YouTube</span>
+    </a>
+  </section>
+
+  <footer>
+    <span class="sig">CAPPUTINO™</span>
+    <p>São Paulo, Brasil · 2026. Conteúdo educativo. Nenhuma meta ou número desta página é promessa de ganho.</p>
+  </footer>
+</main>
+
+<div class="sheet" id="apply" role="dialog" aria-modal="true" aria-labelledby="apply-title" hidden>
+  <div class="sheet-box">
+    <div class="grab" aria-hidden="true"></div>
+    <div class="sheet-top">
+      <div>
+        <span class="kicker">Check-in · Mentoria individual</span>
+        <h2 id="apply-title">Primeira <em>Classe</em></h2>
+        <p>Responde com sinceridade. Eu leio cada aplicação e te chamo se fizer sentido para o seu momento.</p>
+      </div>
+      <button class="x" type="button" data-close-apply aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+
+    <form class="apply" id="apply-form" novalidate>
+      <div class="row2">
+        <div class="fld"><label for="f-nome">Nome</label><input class="inp" id="f-nome" name="nome" autocomplete="name" placeholder="Seu nome" required><span class="err" hidden>Coloca seu nome.</span></div>
+        <div class="fld"><label for="f-ig">Instagram</label><input class="inp" id="f-ig" name="ig" autocomplete="off" autocapitalize="off" placeholder="@seuperfil" required><span class="err" hidden>Coloca seu @.</span></div>
+      </div>
+      <div class="fld"><label for="f-wpp">WhatsApp com DDD</label><input class="inp" id="f-wpp" name="wpp" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 99999-9999" required><span class="err" hidden>Coloca um WhatsApp válido, com DDD.</span></div>
+      <div class="fld"><label for="f-trab">Hoje você trabalha com o quê?</label><input class="inp" id="f-trab" name="trabalho" autocomplete="organization-title" placeholder="Ex.: CLT no comércio, autônomo, já opero no digital…" required><span class="err" hidden>Conta com o que você trabalha hoje.</span></div>
+
+      <fieldset class="fld"><legend>Em que momento você está?</legend>
+        <div class="chips">
+          <input type="radio" name="momento" id="m1" value="Começando do zero"><label for="m1">Começando do zero</label>
+          <input type="radio" name="momento" id="m2" value="Já opero, até R$ 10 mil/mês"><label for="m2">Já opero, até 10K/mês</label>
+          <input type="radio" name="momento" id="m3" value="Entre R$ 10 e 50 mil/mês"><label for="m3">10K a 50K/mês</label>
+          <input type="radio" name="momento" id="m4" value="Acima de R$ 50 mil/mês"><label for="m4">Acima de 50K/mês</label>
+        </div><span class="err" hidden>Escolhe uma opção.</span>
+      </fieldset>
+
+      <fieldset class="fld"><legend>Qual é o seu tipo de operação?</legend>
+        <div class="chips">
+          <input type="radio" name="operacao" id="o1" value="Modelo de IA"><label for="o1">Modelo de IA</label>
+          <input type="radio" name="operacao" id="o2" value="Modelo real"><label for="o2">Modelo real</label>
+          <input type="radio" name="operacao" id="o3" value="As duas"><label for="o3">As duas</label>
+          <input type="radio" name="operacao" id="o5" value="Agência OFM"><label for="o5">Agência OFM</label>
+          <input type="radio" name="operacao" id="o4" value="Ainda não decidi"><label for="o4">Ainda não decidi</label>
+          <input type="radio" name="operacao" id="o6" value="Não sou do digital"><label for="o6">Não sou do digital</label>
+        </div><span class="err" hidden>Escolhe uma opção.</span>
+      </fieldset>
+
+      <div class="fld"><label for="f-trava">Qual a sua maior trava hoje?</label><textarea class="inp" id="f-trava" name="trava" placeholder="Tráfego, funil, conversão, produção de conteúdo, escala…" required></textarea><span class="err" hidden>Conta em poucas palavras.</span></div>
+
+      <div class="fld"><label for="f-invest">Quanto você estaria disposto a investir?</label><input class="inp" id="f-invest" name="invest" maxlength="80" autocomplete="off" placeholder="Escreve com suas palavras" required><span class="err" hidden>Conta quanto você estaria disposto a investir.</span></div>
+
+      <fieldset class="fld"><legend>Você tem computador ou notebook em casa?</legend>
+        <div class="chips">
+          <input type="radio" name="pc" id="c1" value="Sim, notebook"><label for="c1">Sim, notebook</label>
+          <input type="radio" name="pc" id="c2" value="Sim, computador"><label for="c2">Sim, computador</label>
+          <input type="radio" name="pc" id="c3" value="Não, só celular"><label for="c3">Não, só celular</label>
+        </div><span class="err" hidden>Escolhe uma opção.</span>
+      </fieldset>
+
+      <fieldset class="fld"><legend>Você tem tempo para aplicar a mentoria?</legend>
+        <div class="chips">
+          <input type="radio" name="tempo" id="t1" value="Sim, mais de 2h por dia"><label for="t1">Sim, mais de 2h por dia</label>
+          <input type="radio" name="tempo" id="t2" value="Entre 1h e 2h por dia"><label for="t2">1h a 2h por dia</label>
+          <input type="radio" name="tempo" id="t3" value="Menos de 1h por dia"><label for="t3">Menos de 1h por dia</label>
+        </div><span class="err" hidden>Escolhe uma opção.</span>
+      </fieldset>
+
+      <div class="fld"><label class="check"><input type="checkbox" id="f-18" name="maior" required> Confirmo que tenho 18 anos ou mais.</label><span class="err" hidden>A mentoria é só para maiores de 18.</span></div>
+
+      <button class="cta" type="submit">Emitir cartão de embarque <span class="arr"><small>Enviar</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></button>
+    </form>
+
+    <div class="done" id="apply-done" hidden>
+      <div class="pass" aria-label="Seu cartão de embarque">
+        <div class="pass-main">
+          <div><div class="k">De</div><div class="v">GRU</div><div class="city">São Paulo</div></div>
+          <div class="fly"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+          <div class="right"><div class="k">Para</div><div class="v">MCM</div><div class="city">Mônaco</div></div>
+          <div class="pass-row">
+            <div><span class="k">Passageiro</span><b id="pass-name">VOCÊ</b></div>
+            <div><span class="k">Classe</span><b>1ª</b></div>
+            <div><span class="k">Status</span><b>EM ANÁLISE</b></div>
+          </div>
+        </div>
+        <div class="stub" aria-hidden="true"></div>
+      </div>
+      <p style="margin:0;color:var(--muted);font-size:14px">Último passo: envia sua aplicação no meu direct. As respostas já foram copiadas, é só colar e mandar.</p>
+      <a class="cta" id="apply-send" href="https://ig.me/m/capputin0" target="_blank" rel="noopener">Enviar aplicação no direct <span class="arr"><small>Instagram</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></a>
+      <label class="kicker" for="apply-msg">Sua aplicação</label>
+      <textarea class="copybox" id="apply-msg" readonly></textarea>
+      <button class="ghost" type="button" id="apply-copy">Copiar respostas</button>
+      <button class="ghost" type="button" id="apply-edit">Editar respostas</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden>Link copiado</div>
+
+<script>
+(() => {
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const clock = document.getElementById('clock');
+  const fmt = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+  const tick = () => { clock.textContent = fmt.format(new Date()); };
+  tick(); setInterval(tick, 15000);
+
+  const cards = [...document.querySelectorAll('.card')];
+  const setOpen = (c, o) => {
+    c.classList.toggle('open', o);
+    c.querySelector('.card-head').setAttribute('aria-expanded', String(o));
+    c.querySelector('.panel').inert = !o;
+  };
+  cards.forEach(c => {
+    setOpen(c, c.classList.contains('open'));
+    c.querySelector('.card-head').addEventListener('click', () => {
+      const o = !c.classList.contains('open');
+      cards.forEach(x => x !== c && setOpen(x, false));
+      setOpen(c, o);
+    });
+    c.addEventListener('pointermove', e => {
+      const r = c.getBoundingClientRect();
+      c.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+  });
+
+  const toast = document.getElementById('toast');
+  let tt;
+  const show = msg => { toast.textContent = msg; toast.hidden = false; clearTimeout(tt); tt = setTimeout(() => toast.hidden = true, 1800); };
+
+  const WHATSAPP = '';
+  const sheetEl = document.getElementById('apply');
+  const form = document.getElementById('apply-form');
+  const done = document.getElementById('apply-done');
+  const msgBox = document.getElementById('apply-msg');
+  const sendBtn = document.getElementById('apply-send');
+  let lastFocus = null, message = '';
+
+  const openApply = () => {
+    lastFocus = document.activeElement;
+    sheetEl.hidden = false;
+    document.documentElement.style.overflow = 'hidden';
+    setTimeout(() => (form.hidden ? sendBtn : document.getElementById('f-nome')).focus({ preventScroll: true }), 60);
+  };
+  const closeApply = () => {
+    sheetEl.hidden = true;
+    document.documentElement.style.overflow = '';
+    if (location.hash === '#aplicar') location.hash = '';
+    if (lastFocus) lastFocus.focus({ preventScroll: true });
+  };
+  document.querySelectorAll('[data-open-apply]').forEach(b => b.addEventListener('click', openApply));
+  document.querySelectorAll('[data-close-apply]').forEach(b => b.addEventListener('click', closeApply));
+  sheetEl.addEventListener('click', e => { if (e.target === sheetEl) closeApply(); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && !sheetEl.hidden) closeApply(); });
+  const fromHash = () => { if (location.hash === '#aplicar' && sheetEl.hidden) openApply(); };
+  addEventListener('hashchange', fromHash); fromHash();
+
+  const setErr = (fld, bad) => { fld.classList.toggle('bad', bad); const e = fld.querySelector('.err'); if (e) e.hidden = !bad; };
+  const val = n => (form.elements[n] && form.elements[n].value || '').trim();
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const checks = [
+      ['f-nome', val('nome').length > 1],
+      ['f-ig', val('ig').replace('@', '').length > 1],
+      ['f-wpp', val('wpp').replace(/\D/g, '').length >= 10],
+      ['f-trab', val('trabalho').length > 2],
+      ['m1', !!val('momento')],
+      ['o1', !!val('operacao')],
+      ['f-trava', val('trava').length > 2],
+      ['f-invest', val('invest').length > 0],
+      ['c1', !!val('pc')],
+      ['t1', !!val('tempo')],
+      ['f-18', document.getElementById('f-18').checked],
+    ];
+    let first = null;
+    checks.forEach(([id, ok]) => {
+      const el = document.getElementById(id);
+      setErr(el.closest('.fld'), !ok);
+      if (!ok && !first) first = el;
+    });
+    if (first) { first.closest('.fld').scrollIntoView({ block: 'center', behavior: 'smooth' }); first.focus({ preventScroll: true }); return; }
+
+    const ig = '@' + val('ig').replace(/^@+/, '');
+    message = [
+      'APLICAÇÃO · MENTORIA PRIMEIRA CLASSE',
+      '',
+      'Nome: ' + val('nome'),
+      'Instagram: ' + ig,
+      'WhatsApp: ' + val('wpp'),
+      'Trabalha com: ' + val('trabalho'),
+      'Momento: ' + val('momento'),
+      'Operação: ' + val('operacao'),
+      'Maior trava: ' + val('trava'),
+      'Disposto a investir: ' + val('invest'),
+      'Computador/notebook: ' + val('pc'),
+      'Tempo para aplicar: ' + val('tempo'),
+      'Maior de 18: sim',
+    ].join('\n');
+    msgBox.value = message;
+    enviarHotSociety();
+    document.getElementById('pass-name').textContent = val('nome').split(/\s+/)[0].toUpperCase().slice(0, 14);
+    if (WHATSAPP) {
+      sendBtn.href = 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(message);
+      sendBtn.querySelector('small').textContent = 'WhatsApp';
+      sendBtn.firstChild.textContent = 'Enviar aplicação no WhatsApp ';
+      done.querySelector('p').textContent = 'Último passo: envia sua aplicação no meu WhatsApp. A mensagem já vai pronta.';
+    }
+    form.hidden = true; done.hidden = false;
+    sheetEl.querySelector('.sheet-box').scrollTop = 0;
+    copyMsg(false);
+  });
+
+  // Cópia da aplicação para o Painel → Mentoria da HOT SOCIETY ("lead insta cappu"). Não muda o fluxo acima.
+  let enviadoHS = '';
+  const enviarHotSociety = () => {
+    const dados = {
+      nome: val('nome'), ig: val('ig'), wpp: val('wpp'), trabalho: val('trabalho'),
+      momento: val('momento'), operacao: val('operacao'), trava: val('trava'),
+      invest: val('invest'), pc: val('pc'), tempo: val('tempo'),
+      maior: document.getElementById('f-18').checked,
+    };
+    const corpo = JSON.stringify(dados);
+    if (corpo === enviadoHS) return;
+    enviadoHS = corpo;
+    try {
+      fetch('https://hotsociety.com.br/api/mentoria/aplicacao', {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: corpo, keepalive: true,
+      }).catch(() => {});
+    } catch (err) {}
+  };
+
+  const copyMsg = loud => {
+    try {
+      navigator.clipboard.writeText(message).then(() => loud && show('Respostas copiadas'), () => { msgBox.select(); loud && show('Selecionei o texto, é só copiar'); });
+    } catch (err) { msgBox.select(); }
+  };
+  sendBtn.addEventListener('click', () => { if (!WHATSAPP) copyMsg(true); });
+  document.getElementById('apply-copy').addEventListener('click', () => copyMsg(true));
+  document.getElementById('apply-edit').addEventListener('click', () => { done.hidden = true; form.hidden = false; document.getElementById('f-nome').focus(); });
+  form.querySelectorAll('input,textarea').forEach(el => el.addEventListener('input', () => setErr(el.closest('.fld'), false)));
+  form.querySelectorAll('input[type=radio]').forEach(el => el.addEventListener('change', () => setErr(el.closest('.fld'), false)));
+
+  const cv = document.getElementById('visor');
+  const ctx = cv.getContext('2d');
+  let W = 0, H = 0, px = 0, py = 0, tx = 0, ty = 0;
+
+  const size = () => {
+    const r = cv.getBoundingClientRect();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = r.width; H = r.height;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+
+  const lens = () => {
+    const l = W * .12, r = W * .88, t = H * .15, b = H * .9, cx = W / 2, lw = r - l, nw = W * .085;
+    ctx.beginPath();
+    ctx.moveTo(l + lw * .07, t + H * .05);
+    ctx.bezierCurveTo(l + lw * .3, t - H * .07, r - lw * .3, t - H * .07, r - lw * .07, t + H * .05);
+    ctx.bezierCurveTo(r + lw * .015, t + H * .12, r + lw * .02, b - H * .28, r - lw * .05, b - H * .07);
+    ctx.bezierCurveTo(r - lw * .15, b + H * .02, cx + nw * 1.7, b + H * .01, cx + nw, b - H * .05);
+    ctx.bezierCurveTo(cx + nw * .45, b - H * .21, cx - nw * .45, b - H * .21, cx - nw, b - H * .05);
+    ctx.bezierCurveTo(cx - nw * 1.7, b + H * .01, l + lw * .15, b + H * .02, l + lw * .05, b - H * .07);
+    ctx.bezierCurveTo(l - lw * .02, b - H * .28, l - lw * .015, t + H * .12, l + lw * .07, t + H * .05);
+    ctx.closePath();
+  };
+
+  const rid = (x, s) => { let v = 0, a = 1, f = 1; for (let i = 0; i < 4; i++) { v += a * Math.pow(1 - Math.abs(Math.sin(x * f + s * (i + 1))), 2); a *= .5; f *= 2.1; } return v / 1.875; };
+  const ridge = (base, amp, freq, seed, shift, fill) => {
+    ctx.beginPath(); ctx.moveTo(0, H);
+    for (let x = 0; x <= W + 4; x += 3) {
+      const n = (x - W / 2) / W;
+      ctx.lineTo(x, base + n * n * H * .38 - amp * rid(x / W * freq + shift, seed));
+    }
+    ctx.lineTo(W, H); ctx.closePath(); ctx.fillStyle = fill; ctx.fill();
+  };
+
+  const frame = t => {
+    px += (tx - px) * .05; py += (ty - py) * .05;
+    const ox = px + (RM ? 0 : Math.sin(t / 7000) * .25), oy = py;
+    ctx.clearRect(0, 0, W, H);
+
+    const cy = H * .52, sh = H * .17, sy = cy - sh / 2;
+    const sg = ctx.createLinearGradient(0, sy, 0, sy + sh);
+    sg.addColorStop(0, '#1d1714'); sg.addColorStop(.5, '#0e0b09'); sg.addColorStop(1, '#050302');
+    ctx.fillStyle = sg; ctx.fillRect(0, sy, W, sh);
+    ctx.save();
+    ctx.font = '500 ' + Math.max(8, sh * .34) + 'px "Geist Mono", ui-monospace, monospace';
+    ctx.fillStyle = 'rgba(255,194,122,.28)'; ctx.textBaseline = 'middle';
+    const word = 'CAPPUTINO™   ', ww = ctx.measureText(word).width;
+    for (let x = -ww + (RM ? 0 : (t / 70) % ww); x < W; x += ww) ctx.fillText(word, x, cy + 1);
+    ctx.restore();
+
+    lens(); ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(10, W * .03); ctx.strokeStyle = '#0b0807'; ctx.stroke();
+
+    ctx.save(); lens(); ctx.clip();
+    const hz = H * (.5 + oy * .04);
+    const sky = ctx.createLinearGradient(0, H * .05, 0, hz);
+    sky.addColorStop(0, '#0a0201'); sky.addColorStop(.42, '#5c0b16'); sky.addColorStop(.78, '#ff4a1a'); sky.addColorStop(1, '#ffc98a');
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+
+    const sx = W * (.66 - ox * .06), sy2 = hz - H * .13;
+    const sun = ctx.createRadialGradient(sx, sy2, 0, sx, sy2, W * .35);
+    sun.addColorStop(0, 'rgba(255,255,255,.95)'); sun.addColorStop(.06, 'rgba(255,236,200,.75)');
+    sun.addColorStop(.3, 'rgba(255,150,60,.2)'); sun.addColorStop(1, 'rgba(255,90,31,0)');
+    ctx.fillStyle = sun; ctx.fillRect(0, 0, W, H);
+
+    ridge(hz + H * .02, H * .22, 3.2, 1.3, -ox * .25, 'rgba(255,120,80,.5)');
+    const mg = ctx.createLinearGradient(0, hz - H * .2, 0, hz + H * .15);
+    mg.addColorStop(0, '#fff6ec'); mg.addColorStop(.6, '#ffc49a'); mg.addColorStop(1, '#c4512b');
+    ridge(hz + H * .1, H * .24, 2.2, 4.1, -ox * .5, mg);
+
+    const ax = W * .1 - ox * W * .04, ay = hz - H * .02, bx = W * .95 - ox * W * .04, by = hz + H * .2;
+    ctx.strokeStyle = 'rgba(40,8,3,.7)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    ctx.fillStyle = 'rgba(40,8,3,.8)';
+    for (let i = 0; i < 7; i++) {
+      const u = (i / 7 + (RM ? 0 : t / 60000)) % 1;
+      const cx2 = ax + (bx - ax) * u, cy2 = ay + (by - ay) * u;
+      ctx.fillRect(cx2 - .5, cy2, 1, H * .025); ctx.fillRect(cx2 - 3, cy2 + H * .025, 6, H * .012);
+    }
+
+    const ng = ctx.createLinearGradient(0, hz + H * .1, 0, H);
+    ng.addColorStop(0, '#ffe6d0'); ng.addColorStop(.5, '#d65a2e'); ng.addColorStop(1, '#2a0805');
+    ridge(hz + H * .32, H * .12, 1.4, 7.7, -ox * .9, ng);
+
+    ctx.globalCompositeOperation = 'overlay';
+    const tint = ctx.createLinearGradient(0, 0, W, H);
+    tint.addColorStop(0, 'rgba(255,45,111,.75)'); tint.addColorStop(.5, 'rgba(60,10,4,.2)'); tint.addColorStop(1, 'rgba(255,194,122,.65)');
+    ctx.fillStyle = tint; ctx.fillRect(0, 0, W, H);
+
+    ctx.globalCompositeOperation = 'screen';
+    const p = RM ? .35 : (t / 6500) % 1, bx2 = -W * .7 + p * W * 2.4 + ox * W * .05;
+    const sw = ctx.createLinearGradient(bx2, 0, bx2 + W * .35, H * .7);
+    sw.addColorStop(0, 'rgba(255,255,255,0)'); sw.addColorStop(.5, 'rgba(255,255,255,.3)'); sw.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = sw; ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'source-over';
+
+    const vg = ctx.createRadialGradient(W / 2, H * .5, W * .15, W / 2, H * .5, W * .5);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(12,3,2,.6)');
+    ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+    const top = ctx.createLinearGradient(0, H * .05, 0, H * .36);
+    top.addColorStop(0, 'rgba(0,0,0,.55)'); top.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = top; ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+
+    lens(); ctx.lineWidth = 1.25;
+    const rim = ctx.createLinearGradient(0, 0, W, 0);
+    rim.addColorStop(0, 'rgba(255,90,31,.7)'); rim.addColorStop(.5, 'rgba(255,240,225,.92)'); rim.addColorStop(1, 'rgba(255,45,111,.6)');
+    ctx.strokeStyle = rim; ctx.stroke();
+
+    if (!RM) requestAnimationFrame(frame);
+  };
+
+  addEventListener('pointermove', e => {
+    tx = (e.clientX / innerWidth - .5) * 2;
+    ty = (e.clientY / innerHeight - .5) * 2;
+  }, { passive: true });
+
+  size();
+  new ResizeObserver(() => { size(); if (RM) frame(0); }).observe(cv);
+  if (RM) { (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => frame(0)); }
+  else requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
