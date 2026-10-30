@@ -1,168 +1,268 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRef } from "react";
 import { abrirHotphone } from "../../_components/membros/hotphone/HotPhone";
-import { m } from "../../_components/membros/proto";
-import { IMG, MODULOS, type Modulo } from "../../_lib/demo";
+import { IMG, type Modulo } from "../../_lib/demo";
 import { moduloAtual, proximaAula } from "../../_lib/progresso";
 import { useProgresso } from "../../_components/membros/Progresso";
+import { useAulasInfo } from "../../_components/membros/useAulasInfo";
+import { capaDoVideo } from "../../_lib/video";
+import "./area.css";
 
 type Card = {
   t: string;
   s: string;
   ir: string; // rota ou "hotphone"
-  img?: string;
-  gfx?: string;
+  img: string;
   tag?: string;
   tagCor?: "ok" | "am";
   pct?: number;
   lock?: boolean;
+  cta?: string;
 };
 
-type Linha = { t: string; s: string; largo?: boolean; cards: Card[] };
+const PLAY = (
+  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+    <path fill="currentColor" d="M8 5v14l11-7z" />
+  </svg>
+);
+const SETA = (
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+);
+const CADEADO = (
+  <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+    <path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1.5v11h-13V10H7Zm2.5 0h5V7a2.5 2.5 0 0 0-5 0v3Z" />
+  </svg>
+);
 
-function linhas(mods: Modulo[]): Linha[] {
-  const pctAcademy = Math.round(
-    (mods.reduce((a, x) => a + x.feitas, 0) / mods.reduce((a, x) => a + x.aulas.length, 0)) * 100,
-  );
-  return [
-  {
-    t: "Meus produtos",
-    s: "3 ativos",
-    largo: true,
-    cards: [
-      { img: IMG.academy, t: "Hot Academy", s: `Curso completo · ${MODULOS.length} módulos`, tag: "Ativo", tagCor: "ok", ir: "/dashboard/aulas", pct: pctAcademy },
-      { img: IMG.hotphone, t: "HOTPHONE", s: "CappuIA, Cofre e Feed no canto da tela", tag: "Ativo", tagCor: "ok", ir: "hotphone" },
-      { img: IMG.comunidade, t: "Comunidade", s: "Feed, canais e lives", tag: "Ativo", tagCor: "ok", ir: "/dashboard/feed" },
-    ],
-  },
-  {
-    t: "Hot Academy",
-    s: `${MODULOS.length} módulos`,
-    cards: mods.map((x) => {
-      const pct = Math.round((x.feitas / x.aulas.length) * 100);
-      const lock = x.status === "bloqueado";
-      return {
-        img: x.img,
-        t: x.t,
-        s: `Módulo ${x.n} · ${x.aulas.length} aulas`,
-        ir: lock ? "/dashboard/aulas" : `/dashboard/aulas/${x.slug}`,
-        pct: lock ? undefined : pct,
-        lock,
-        tag: pct === 100 ? "Concluído" : pct > 0 ? "Em andamento" : undefined,
-        tagCor: pct === 100 ? "ok" : "am",
-      } satisfies Card;
-    }),
-  },
-  {
-    t: "Bônus da assinatura",
-    s: "Liberados",
-    cards: [
-      { img: IMG.prompts, t: "Pack de prompts", s: "Personas e cenários", ir: "/dashboard/ferramentas" },
-      { img: IMG.planilha, t: "Planilha de operação", s: "Funil e metas", ir: "/dashboard/ferramentas" },
-      { img: IMG.lives, t: "Lives", s: "Agenda e gravações", ir: "/dashboard/feed" },
-      { img: IMG.placas, t: "Guia das placas", s: "Como pedir sua placa", ir: "/dashboard/jornada" },
-    ],
-  },
-  {
-    t: "Libere mais",
-    s: "Na Hot Store",
-    cards: [
-      { img: IMG.mentoria, t: "Mentoria High Ticket", s: "Acompanhamento com o Cappu", lock: true, ir: "/dashboard/store" },
-      { img: IMG.consultoria, t: "Consultoria", s: "Uma call de 60 min", lock: true, ir: "/dashboard/store" },
-      { img: IMG.funil, t: "Funis prontos", s: "Templates editáveis", lock: true, ir: "/dashboard/store" },
-    ],
-  },
+const BONUS: Card[] = [
+  { img: IMG.prompts, t: "Pack de prompts", s: "Personas e cenários prontos para copiar", ir: "/dashboard/ferramentas", cta: "Abrir" },
+  { img: IMG.planilha, t: "Planilha de operação", s: "Funil, metas e números da semana", ir: "/dashboard/ferramentas", cta: "Abrir" },
+  { img: IMG.lives, t: "Lives", s: "Agenda e gravações das lives", ir: "/dashboard/feed", cta: "Ver agenda" },
+  { img: IMG.placas, t: "Guia das placas", s: "Como comprovar e pedir sua placa", ir: "/dashboard/jornada", cta: "Ver guia" },
 ];
-}
+const LOJA: Card[] = [
+  { img: IMG.mentoria, t: "Mentoria High Ticket", s: "Acompanhamento direto com o Cappu", lock: true, ir: "/dashboard/store", cta: "Ver na Hot Store" },
+  { img: IMG.consultoria, t: "Consultoria", s: "Uma call de 60 min sobre a sua operação", lock: true, ir: "/dashboard/store", cta: "Ver na Hot Store" },
+  { img: IMG.funil, t: "Funis prontos", s: "Templates editáveis de funil", lock: true, ir: "/dashboard/store", cta: "Ver na Hot Store" },
+];
 
 export default function AreaDeMembros() {
-  const router = useRouter();
   const { modulos, feitas } = useProgresso();
+  const info = useAulasInfo();
+  const trilho = useRef<HTMLDivElement>(null);
+
   const andamento = moduloAtual(modulos);
   const iProx = proximaAula(andamento, feitas);
   const proxima = andamento.aulas[iProx];
-  const LINHAS = linhas(modulos);
-  const ir = (destino: string) => (destino === "hotphone" ? abrirHotphone() : router.push(destino));
+  const dadosProx = proxima ? info?.get(proxima.id) : undefined;
+  const capaProx = capaDoVideo(dadosProx?.video_url) ?? andamento.img;
+  const pctModulo = Math.round((andamento.feitas / Math.max(1, andamento.aulas.length)) * 100);
+
+  const totalAulas = modulos.reduce((a, x) => a + x.aulas.length, 0);
+  const totalFeitas = modulos.reduce((a, x) => a + x.feitas, 0);
+  const pctAcademy = Math.round((totalFeitas / Math.max(1, totalAulas)) * 100);
+  const comecou = totalFeitas > 0;
+
+  const produtos: Card[] = [
+    { img: IMG.academy, t: "Hot Academy", s: `${modulos.length} módulos · ${totalAulas} aulas`, tag: "Ativo", tagCor: "ok", ir: "/dashboard/aulas", pct: pctAcademy, cta: comecou ? "Continuar" : "Começar" },
+    { img: IMG.hotphone, t: "HOTPHONE", s: "CappuIA, Cofre e Feed no canto da tela", tag: "Ativo", tagCor: "ok", ir: "hotphone", cta: "Abrir" },
+    { img: IMG.comunidade, t: "Comunidade", s: "Feed, canais e lives com a turma", tag: "Ativo", tagCor: "ok", ir: "/dashboard/feed", cta: "Entrar" },
+  ];
+
+  const rolar = (dir: number) => trilho.current?.scrollBy({ left: dir * trilho.current.clientWidth * 0.8, behavior: "smooth" });
 
   return (
-    <section className={m("view")} aria-label="Área de Membros">
-      <div className={m("top")}>
+    <section className="hs-am2" aria-label="Área de Membros">
+      <header className="hs-am2-cab">
         <div>
-          <h1>Área de Membros</h1>
-          <p className={m("sub")}>Todos os seus produtos, aulas e bônus num lugar só.</p>
+          <p className="hs-am2-eb">Sua conta</p>
+          <h1>
+            Área de <span>Membros</span>
+          </h1>
+          <p className="hs-am2-sub">Todos os seus produtos, aulas e bônus num lugar só.</p>
         </div>
-        <div className={m("chips")}>
-          <span className={m("chip")}>
-            <i style={{ color: "var(--ok)" }}>●</i> Assinatura ativa
+        <ul className="hs-am2-kpis" aria-label="Resumo">
+          <li>
+            <b>{pctAcademy}%</b>
+            <span>da Academy</span>
+          </li>
+          <li>
+            <b>
+              {totalFeitas}/{totalAulas}
+            </b>
+            <span>aulas vistas</span>
+          </li>
+          <li className="ok">
+            <b>
+              <i aria-hidden /> Ativa
+            </b>
+            <span>assinatura</span>
+          </li>
+        </ul>
+      </header>
+
+      {/* Continue de onde parou */}
+      {proxima && (
+        <div className="hs-am2-hero hs-escuro">
+          <span className="hs-am2-hero-bg" style={{ backgroundImage: `url(${andamento.img})` }} aria-hidden />
+          <div className="hs-am2-hero-tx">
+            <p className="hs-am2-eb">{comecou ? "Continue de onde parou" : "Comece por aqui"}</p>
+            <p className="hs-am2-mod">
+              Módulo {andamento.n} · {andamento.t}
+            </p>
+            <h2>{proxima.t}</h2>
+            <div className="hs-am2-prog">
+              <span>
+                <i style={{ width: `${pctModulo}%` }} />
+              </span>
+              <small>
+                Aula {iProx + 1} de {andamento.aulas.length} · {pctModulo}% do módulo
+              </small>
+            </div>
+            <div className="hs-am2-acoes">
+              <Link className="hs-am2-btn p" href={`/dashboard/aulas/${andamento.slug}?aula=${iProx + 1}`}>
+                {PLAY} {comecou ? "Continuar aula" : "Assistir agora"}
+              </Link>
+              <Link className="hs-am2-btn s" href="/dashboard/aulas">
+                Ver todos os módulos
+              </Link>
+            </div>
+          </div>
+          <Link className="hs-am2-video" href={`/dashboard/aulas/${andamento.slug}?aula=${iProx + 1}`} aria-label={`Assistir: ${proxima.t}`}>
+            <span className="cv" style={{ backgroundImage: `url(${capaProx})` }} />
+            <span className="pl">{PLAY}</span>
+            {dadosProx?.duracao && <span className="du">{dadosProx.duracao}</span>}
+          </Link>
+        </div>
+      )}
+
+      {/* Meus produtos */}
+      <div className="hs-am2-sec">
+        <div className="hs-am2-sec-cab">
+          <h2>Meus produtos</h2>
+          <small>{produtos.length} ativos</small>
+        </div>
+        <div className="hs-am2-prods">
+          {produtos.map((c) => (
+            <Cartao key={c.t} c={c} largo />
+          ))}
+        </div>
+      </div>
+
+      {/* Módulos */}
+      <div className="hs-am2-sec">
+        <div className="hs-am2-sec-cab">
+          <h2>Hot Academy</h2>
+          <small>
+            {modulos.length} módulos · {pctAcademy}% concluído
+          </small>
+          <span className="hs-am2-nav">
+            <button type="button" aria-label="Voltar" onClick={() => rolar(-1)}>
+              ‹
+            </button>
+            <button type="button" aria-label="Avançar" onClick={() => rolar(1)}>
+              ›
+            </button>
           </span>
         </div>
-      </div>
-
-      <div className={m("am-hero")} style={{ backgroundImage: `url(${andamento.img})` }}>
-        <div className={m("in")}>
-          <p className={m("eb")} style={{ color: "var(--red-t)" }}>
-            Continue de onde parou
-          </p>
-          <h2 className={m("stack")} style={proxima.t.length > 28 ? { fontSize: proxima.t.length > 48 ? "clamp(24px,2.6vw,34px)" : "clamp(28px,3.2vw,44px)" } : undefined}>
-            <span className={m("s")}>
-              Módulo {andamento.n} · Aula {iProx + 1}
-            </span>
-            <span>{proxima.t.split(" ").slice(0, -1).join(" ") || proxima.t}</span>
-            {proxima.t.includes(" ") && <span style={{ color: "var(--red-t)" }}>{proxima.t.split(" ").slice(-1)}.</span>}
-          </h2>
-          <div className={m("pr")}>
-            <div className={m("prog")}>
-              <i style={{ width: `${Math.round((andamento.feitas / andamento.aulas.length) * 100)}%` }} />
-            </div>
-            {andamento.feitas} de {andamento.aulas.length} aulas
-          </div>
-          <div className={m("row")}>
-            <button className={m("btn btn-p")} type="button" onClick={() => router.push(`/dashboard/aulas/${andamento.slug}`)}>
-              Continuar aula
-            </button>
-            <button className={m("btn btn-s")} type="button" onClick={() => router.push("/dashboard/ferramentas")}>
-              Prompts da aula
-            </button>
-          </div>
+        <div className="hs-am2-trilho" ref={trilho}>
+          {modulos.map((x) => (
+            <ModuloCard key={x.slug} x={x} atual={x.slug === andamento.slug} />
+          ))}
         </div>
       </div>
 
-      {LINHAS.map((l) => (
-        <div key={l.t} className={m("am-row")}>
-          <h2>
-            {l.t} <small>{l.s}</small>
-          </h2>
-          <div className={m("am-sc" + (l.largo ? " wide" : ""))}>
-            {l.cards.map((c) => (
-              <button
-                key={c.t}
-                type="button"
-                className={m("am-c" + (c.lock ? " lock" : "") + (c.gfx ? " gfx" : ""))}
-                style={c.img ? { backgroundImage: `url(${c.img})` } : undefined}
-                onClick={() => ir(c.ir)}
-              >
-                {c.gfx && <span className={m("big")}>{c.gfx}</span>}
-                {c.tag && <span className={m("tag tg " + (c.tagCor ?? ""))}>{c.tag}</span>}
-                {c.lock && (
-                  <span className={m("lk")} aria-hidden="true">
-                    🔒
-                  </span>
-                )}
-                <span className={m("in")}>
-                  <b>{c.t}</b>
-                  <small>{c.s}</small>
-                  {c.pct !== undefined && (
-                    <span className={m("prog")} style={{ display: "block" }}>
-                      <i style={{ width: `${c.pct}%` }} />
-                    </span>
-                  )}
-                </span>
-              </button>
-            ))}
-          </div>
+      {/* Bônus */}
+      <div className="hs-am2-sec">
+        <div className="hs-am2-sec-cab">
+          <h2>Bônus da assinatura</h2>
+          <small>Liberados</small>
         </div>
-      ))}
+        <div className="hs-am2-grade">
+          {BONUS.map((c) => (
+            <Cartao key={c.t} c={c} />
+          ))}
+        </div>
+      </div>
+
+      {/* Hot Store */}
+      <div className="hs-am2-sec">
+        <div className="hs-am2-sec-cab">
+          <h2>Libere mais</h2>
+          <small>Na Hot Store</small>
+          <Link className="hs-am2-mais" href="/dashboard/store">
+            Abrir a Hot Store {SETA}
+          </Link>
+        </div>
+        <div className="hs-am2-grade">
+          {LOJA.map((c) => (
+            <Cartao key={c.t} c={c} />
+          ))}
+        </div>
+      </div>
     </section>
+  );
+}
+
+function Cartao({ c, largo }: { c: Card; largo?: boolean }) {
+  const corpo = (
+    <>
+      <span className="cv" style={{ backgroundImage: `url(${c.img})` }} aria-hidden />
+      {c.tag && <span className={"tg " + (c.tagCor ?? "")}>{c.tag}</span>}
+      {c.lock && <span className="lk">{CADEADO}</span>}
+      <span className="tx">
+        <b>{c.t}</b>
+        <small>{c.s}</small>
+        {c.pct !== undefined && (
+          <span className="pg" aria-label={`${c.pct}% concluído`}>
+            <i style={{ width: `${c.pct}%` }} />
+          </span>
+        )}
+        {c.cta && (
+          <span className="ct">
+            {c.cta} {SETA}
+          </span>
+        )}
+      </span>
+    </>
+  );
+  const cls = "hs-am2-card" + (largo ? " largo" : "") + (c.lock ? " lock" : "");
+  if (c.ir === "hotphone")
+    return (
+      <button type="button" className={cls} onClick={() => abrirHotphone()}>
+        {corpo}
+      </button>
+    );
+  return (
+    <Link className={cls} href={c.ir}>
+      {corpo}
+    </Link>
+  );
+}
+
+function ModuloCard({ x, atual }: { x: Modulo; atual: boolean }) {
+  const lock = x.status === "bloqueado";
+  const pct = Math.round((x.feitas / Math.max(1, x.aulas.length)) * 100);
+  const tag = lock ? null : pct === 100 ? ["Concluído", "ok"] : pct > 0 ? ["Em andamento", "am"] : atual ? ["Próximo", "am"] : null;
+  return (
+    <Link className={"hs-am2-mod" + (lock ? " lock" : "") + (atual ? " atual" : "")} href={lock ? "/dashboard/aulas" : `/dashboard/aulas/${x.slug}`}>
+      <span className="cv" style={{ backgroundImage: `url(${x.img})` }} aria-hidden />
+      <span className="nu">{x.n}</span>
+      {tag && <span className={"tg " + tag[1]}>{tag[0]}</span>}
+      {lock && <span className="lk">{CADEADO}</span>}
+      <span className="tx">
+        <b>{x.t}</b>
+        <small>{lock ? (x.trava ?? "Bloqueado") : `${x.aulas.length} aulas${pct > 0 ? ` · ${pct}%` : ""}`}</small>
+        {!lock && (
+          <span className="pg">
+            <i style={{ width: `${pct}%` }} />
+          </span>
+        )}
+      </span>
+    </Link>
   );
 }
