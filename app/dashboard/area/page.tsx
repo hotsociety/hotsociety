@@ -111,7 +111,7 @@ export default function AreaDeMembros() {
           <span className="hs-am2-hero-bg" style={{ backgroundImage: `url(${andamento.img})` }} aria-hidden />
           <div className="hs-am2-hero-tx">
             <p className="hs-am2-eb">{comecou ? "Continue de onde parou" : "Comece por aqui"}</p>
-            <p className="hs-am2-mod">
+            <p className="hs-am2-hmod">
               Módulo {andamento.n} · {andamento.t}
             </p>
             <h2>{proxima.t}</h2>
