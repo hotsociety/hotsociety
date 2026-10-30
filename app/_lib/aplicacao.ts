@@ -29,7 +29,7 @@ export const ESCOLHAS: { campo: "momento" | "operacao" | "pc" | "tempo"; t: stri
   { campo: "tempo", t: "Você tem tempo para aplicar a mentoria?", opcoes: ["Sim, mais de 2h por dia", "Entre 1h e 2h por dia", "Menos de 1h por dia"] },
 ];
 
-export const ROTULO_ORIGEM = { insta_cappu: "lead insta cappu", plataforma: "lead plataforma" } as const;
+export const ROTULO_ORIGEM = { insta_cappu: "lead insta cappu", plataforma: "lead plataforma", ferreira: "lead ferreira" } as const;
 
 const txt = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
 

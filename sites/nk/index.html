@@ -35,6 +35,7 @@
   --ease: cubic-bezier(.2, .8, .2, 1);
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { background: var(--bg); color-scheme: dark; -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 400 15px/1.5 var(--f-t); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 a { color: inherit; }
@@ -101,6 +102,11 @@ img { display: block; max-width: 100%; }
 .btn.p:hover { transform: translateY(-2px); box-shadow: 0 20px 50px -14px rgba(143,193,255,.95); }
 .btn.s { justify-content: center; width: 56px; padding: 0; background: rgba(10,21,52,.6); border: 1px solid var(--line2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .btn svg { width: 18px; height: 18px; flex: none; }
+.apl { appearance: none; justify-self: start; display: inline-flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 13px; border: 1px solid rgba(255,45,63,.45); background: rgba(255,45,63,.08); color: #ffd9dd; font: 600 14px/1 var(--f-t); cursor: pointer; transition: background .2s, transform .2s var(--ease); }
+.apl:hover { background: rgba(255,45,63,.16); transform: translateY(-1px); }
+.apl em { font: 500 10.5px/1 var(--f-m); font-style: normal; color: #ff8a95; letter-spacing: .08em; }
+.apl .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); box-shadow: 0 0 10px var(--red); animation: pisca 1.4s ease-in-out infinite; }
+@keyframes pisca { 50% { opacity: .35; } }
 .cue { display: flex; align-items: center; gap: 10px; color: var(--muted); font: 500 10.5px/1 var(--f-m); letter-spacing: .2em; text-transform: uppercase; }
 .cue i { width: 1px; height: 26px; background: linear-gradient(var(--led), transparent); animation: cue 1.8s ease-in-out infinite; transform-origin: top; }
 @keyframes cue { 0% { transform: scaleY(0); } 50% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
@@ -289,6 +295,66 @@ footer { position: relative; z-index: 2; max-width: 1180px; margin: 90px auto 0;
   .sec { padding-top: 60px; }
   .lb .pv, .lb .nx { top: auto; bottom: 50px; transform: none; }
 }
+/* ---------- Aplicação (mentoria) ---------- */
+.sheet { position: fixed; inset: 0; z-index: 96; display: grid; align-items: end; justify-items: center; background: rgba(2,5,14,.72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: fade .3s ease; }
+.sheet[hidden] { display: none; }
+@keyframes fade { from { opacity: 0; } }
+.sheet-box { position: relative; width: 100%; max-width: 620px; max-height: 92svh; overflow-y: auto; overscroll-behavior: contain; padding: 10px 18px max(22px, env(safe-area-inset-bottom)); border-radius: 26px 26px 0 0; border: 1px solid var(--line2); border-bottom: 0;
+  background: radial-gradient(90% 40% at 100% 0%, rgba(143,193,255,.14), transparent 70%), radial-gradient(60% 30% at 0% 0%, rgba(255,45,63,.08), transparent 70%), linear-gradient(180deg, #0b1636, #060d24);
+  box-shadow: 0 -30px 80px -20px rgba(0,0,0,.8); animation: subir .45s var(--ease); }
+@keyframes subir { from { transform: translateY(40px); opacity: .4; } }
+@media (min-width: 700px) { .sheet { align-items: center; padding: 24px; } .sheet-box { border-radius: 26px; border-bottom: 1px solid var(--line2); padding-top: 22px; } .grab { display: none; } }
+.grab { width: 44px; height: 4px; border-radius: 4px; background: var(--line2); margin: 0 auto 14px; }
+.sheet-top { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; margin-bottom: 18px; }
+.sheet-top .k { font: 500 10.5px/1 var(--f-m); letter-spacing: .18em; text-transform: uppercase; color: var(--led); }
+.sheet-top h2 { margin: 8px 0 6px; font: 900 44px/.85 var(--f-d); text-transform: uppercase; }
+.sheet-top h2 em { font: italic 400 .7em/1 var(--f-s); text-transform: none; color: var(--led2); }
+.sheet-top p { margin: 0; color: #a9b7d6; font-size: 14px; }
+.x { appearance: none; width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line2); background: rgba(10,21,52,.7); cursor: pointer; display: grid; place-items: center; }
+.x svg { width: 18px; height: 18px; }
+.prog { display: flex; gap: 4px; margin: 0 0 18px; }
+.prog i { flex: 1; height: 4px; border-radius: 4px; background: rgba(143,193,255,.12); transition: background .3s; }
+.prog i.on { background: linear-gradient(90deg, var(--led), var(--led2)); }
+.apply { display: grid; gap: 16px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 480px) { .row2 { grid-template-columns: 1fr; } }
+.fld { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.fld label, .fld legend { font: 600 13px/1.3 var(--f-t); color: #dbe5fb; padding: 0; }
+.fld legend { margin-bottom: 8px; }
+.inp { width: 100%; appearance: none; padding: 14px 15px; border-radius: 13px; border: 1px solid var(--line2); background: rgba(3,7,22,.65); color: var(--fg); font: 400 15px/1.3 var(--f-t); transition: border-color .2s, box-shadow .2s; }
+.inp::placeholder { color: #5f6e91; }
+.inp:focus { outline: none; border-color: var(--led); box-shadow: 0 0 0 4px rgba(143,193,255,.14); }
+textarea.inp { min-height: 96px; resize: vertical; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.opts input { position: absolute; opacity: 0; pointer-events: none; }
+.opts label { padding: 11px 13px; border-radius: 11px; border: 1px solid var(--line2); background: rgba(3,7,22,.5); font: 500 13px/1.1 var(--f-t); color: #c6d3ef; cursor: pointer; transition: all .18s; }
+.opts label:hover { border-color: rgba(143,193,255,.45); }
+.opts input:checked + label { background: linear-gradient(135deg, #e8f0ff, #9cc6ff); border-color: transparent; color: #061030; font-weight: 700; box-shadow: 0 8px 22px -10px rgba(143,193,255,.8); }
+.opts input:focus-visible + label { outline: 2px solid var(--led); outline-offset: 2px; }
+.check { display: flex; gap: 10px; align-items: center; cursor: pointer; font-weight: 500 !important; }
+.check input { width: 20px; height: 20px; accent-color: #8fc1ff; }
+.err { color: #ff8a95; font: 500 12px/1.2 var(--f-t); }
+.fld.bad .inp { border-color: rgba(255,45,63,.6); }
+.fld.bad .opts label { border-color: rgba(255,45,63,.35); }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+button.cta { width: 100%; border: 0; cursor: pointer; }
+button.cta[disabled] { opacity: .65; cursor: progress; }
+.form-erro { margin: 0; padding: 12px 14px; border-radius: 12px; background: rgba(255,45,63,.1); border: 1px solid rgba(255,45,63,.35); color: #ffb3ba; font-size: 13.5px; }
+.fine { color: var(--muted); font: 400 11px/1.4 var(--f-m); text-align: center; }
+
+/* ticket de sucesso */
+.done { display: grid; gap: 14px; }
+.tk { position: relative; border-radius: 20px; overflow: hidden; border: 1px solid rgba(143,193,255,.35); background: #030716; }
+.tk-top { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: linear-gradient(90deg, rgba(143,193,255,.16), transparent); border-bottom: 1px dashed var(--line2); font: 500 11px/1 var(--f-m); letter-spacing: .12em; color: var(--led2); }
+.tk-top b { color: var(--ok); }
+.tk-body { padding: 16px; font: 500 12.5px/1.8 var(--f-m); color: #b9c6e4; }
+.tk-body .p { color: var(--led); }
+.tk-body .ok { color: var(--ok); }
+.tk-name { display: block; margin: 4px 0 2px; font: 900 46px/.9 var(--f-d); text-transform: uppercase; color: var(--fg); letter-spacing: .01em; }
+.tk::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--red), transparent); box-shadow: 0 0 18px var(--red); }
+.ghost { appearance: none; width: 100%; padding: 13px; border-radius: 13px; border: 1px solid var(--line2); background: transparent; cursor: pointer; font: 600 14px/1 var(--f-t); }
+.ghost:hover { border-color: var(--led); }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .rv { opacity: 1; transform: none; }
@@ -324,6 +390,7 @@ footer { position: relative; z-index: 2; max-width: 1180px; margin: 90px auto 0;
       <a class="btn p" href="https://hotsociety.com.br/" target="_blank" rel="noopener">Entrar na Hot Society <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
       <a class="btn s" href="https://ig.me/m/nk.ferreiraa" target="_blank" rel="noopener" aria-label="Mandar direct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4 3 11l7 2 2 7z"/><path d="m10 13 4-4"/></svg></a>
     </div>
+    <button class="apl" type="button" data-open-apply><span class="dot"></span>Aplicar para a mentoria <em>2 min</em></button>
     <span class="cue"><i></i>Role</span>
   </div>
 </header>
@@ -353,13 +420,14 @@ footer { position: relative; z-index: 2; max-width: 1180px; margin: 90px auto 0;
       <article class="card rv">
         <span class="num" aria-hidden="true">02</span>
         <button class="head" type="button" aria-expanded="false" aria-controls="p2">
-          <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></span>
-          <span class="ht"><small>Mentoria</small><b>Primeira <em>Classe</em></b></span>
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg></span>
+          <span class="ht"><small>Mentoria High Ticket</small><b>Aplicar <em>agora</em></b></span>
           <span class="tog" aria-hidden="true"></span>
         </button>
         <div class="panel" id="p2"><div><div class="pin">
-          <p>A mentoria do Cappu: acompanhamento direto para estruturar a operação, ajustar o funil e escalar com método. A aplicação leva 2 minutos.</p>
-          <a class="cta" href="https://capputino-hq.vercel.app/#aplicar" target="_blank" rel="noopener">Aplicar para a mentoria <span><small>2 min</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></a>
+          <p>Acompanhamento direto para estruturar a operação, ajustar o funil e escalar com método. Responde em 2 minutos e a equipe te chama se fizer sentido para o seu momento.</p>
+          <div class="chips"><span>Funil</span><span>Tráfego</span><span>Operação</span><span>Escala</span></div>
+          <button class="cta" type="button" data-open-apply>Fazer minha aplicação <span><small>2 min</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></button>
         </div></div></div>
       </article>
       <article class="card rv">
@@ -463,6 +531,73 @@ footer { position: relative; z-index: 2; max-width: 1180px; margin: 90px auto 0;
   <div class="foot"><span>São Paulo, Brasil · 2026</span><span>Pugna pro aliquo · build <span id="build">—</span></span></div>
 </footer>
 
+<div class="sheet" id="apply" role="dialog" aria-modal="true" aria-labelledby="apply-title" hidden>
+  <div class="sheet-box">
+    <div class="grab" aria-hidden="true"></div>
+    <div class="sheet-top">
+      <div>
+        <span class="k">Ticket · Mentoria High Ticket</span>
+        <h2 id="apply-title">Deploy da sua <em>operação</em></h2>
+        <p>Responde com sinceridade. Cada aplicação é lida e, se fizer sentido para o seu momento, a equipe te chama no WhatsApp.</p>
+      </div>
+      <button class="x" type="button" data-close-apply aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+
+    <form class="apply" id="apply-form" novalidate>
+      <div class="prog" aria-hidden="true" id="prog"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <input class="hp" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="row2">
+        <div class="fld"><label for="f-nome">Nome</label><input class="inp" id="f-nome" name="nome" autocomplete="name" placeholder="Seu nome" required><span class="err" hidden>Coloca seu nome.</span></div>
+        <div class="fld"><label for="f-ig">Instagram</label><input class="inp" id="f-ig" name="ig" autocomplete="off" autocapitalize="off" placeholder="@seuperfil" required><span class="err" hidden>Coloca seu @.</span></div>
+      </div>
+      <div class="fld"><label for="f-wpp">WhatsApp com DDD</label><input class="inp" id="f-wpp" name="wpp" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 99999-9999" required><span class="err" hidden>Coloca um WhatsApp válido, com DDD.</span></div>
+      <div class="fld"><label for="f-trab">Hoje você trabalha com o quê?</label><input class="inp" id="f-trab" name="trabalho" placeholder="Ex.: CLT, autônomo, já opero no digital…" required><span class="err" hidden>Conta com o que você trabalha hoje.</span></div>
+
+      <fieldset class="fld" id="g-momento"><legend>Em que momento você está?</legend>
+        <div class="opts"><input type="radio" name="momento" id="momento1" value="Começando do zero"><label for="momento1">Começando do zero</label><input type="radio" name="momento" id="momento2" value="Já opero, até R$ 10 mil/mês"><label for="momento2">Já opero, até 10K/mês</label><input type="radio" name="momento" id="momento3" value="Entre R$ 10 e 50 mil/mês"><label for="momento3">10K a 50K/mês</label><input type="radio" name="momento" id="momento4" value="Acima de R$ 50 mil/mês"><label for="momento4">Acima de 50K/mês</label></div><span class="err" hidden>Escolhe uma opção.</span>
+      </fieldset>
+
+      <fieldset class="fld" id="g-operacao"><legend>Qual é o seu tipo de operação?</legend>
+        <div class="opts"><input type="radio" name="operacao" id="operacao1" value="Modelo de IA"><label for="operacao1">Modelo de IA</label><input type="radio" name="operacao" id="operacao2" value="Modelo real"><label for="operacao2">Modelo real</label><input type="radio" name="operacao" id="operacao3" value="As duas"><label for="operacao3">As duas</label><input type="radio" name="operacao" id="operacao4" value="Agência OFM"><label for="operacao4">Agência OFM</label><input type="radio" name="operacao" id="operacao5" value="Ainda não decidi"><label for="operacao5">Ainda não decidi</label><input type="radio" name="operacao" id="operacao6" value="Não sou do digital"><label for="operacao6">Não sou do digital</label></div><span class="err" hidden>Escolhe uma opção.</span>
+      </fieldset>
+
+      <div class="fld"><label for="f-trava">Qual a sua maior trava hoje?</label><textarea class="inp" id="f-trava" name="trava" placeholder="Tráfego, funil, conversão, produção de conteúdo, escala…" required></textarea><span class="err" hidden>Conta em poucas palavras.</span></div>
+
+      <div class="fld"><label for="f-invest">Quanto você estaria disposto a investir?</label><input class="inp" id="f-invest" name="invest" maxlength="80" autocomplete="off" placeholder="Escreve com suas palavras" required><span class="err" hidden>Conta quanto você estaria disposto a investir.</span></div>
+
+      <fieldset class="fld" id="g-pc"><legend>Você tem computador ou notebook em casa?</legend>
+        <div class="opts"><input type="radio" name="pc" id="pc1" value="Sim, notebook"><label for="pc1">Sim, notebook</label><input type="radio" name="pc" id="pc2" value="Sim, computador"><label for="pc2">Sim, computador</label><input type="radio" name="pc" id="pc3" value="Não, só celular"><label for="pc3">Não, só celular</label></div><span class="err" hidden>Escolhe uma opção.</span>
+      </fieldset>
+
+      <fieldset class="fld" id="g-tempo"><legend>Você tem tempo para aplicar a mentoria?</legend>
+        <div class="opts"><input type="radio" name="tempo" id="tempo1" value="Sim, mais de 2h por dia"><label for="tempo1">Sim, mais de 2h por dia</label><input type="radio" name="tempo" id="tempo2" value="Entre 1h e 2h por dia"><label for="tempo2">1h a 2h por dia</label><input type="radio" name="tempo" id="tempo3" value="Menos de 1h por dia"><label for="tempo3">Menos de 1h por dia</label></div><span class="err" hidden>Escolhe uma opção.</span>
+      </fieldset>
+
+      <div class="fld"><label class="check"><input type="checkbox" id="f-18" name="maior" required> Confirmo que tenho 18 anos ou mais.</label><span class="err" hidden>A mentoria é só para maiores de 18.</span></div>
+
+      <p class="form-erro" id="apply-err" hidden></p>
+      <button class="cta" type="submit" id="apply-btn">Fazer o deploy da aplicação <span><small>enviar</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></button>
+      <p class="fine">Seus dados vão só para a equipe da mentoria. Nada de spam.</p>
+    </form>
+
+    <div class="done" id="apply-done" hidden>
+      <div class="tk">
+        <div class="tk-top"><span>TICKET <span id="tk-id">#NK-0000</span></span><b>● RECEBIDO</b></div>
+        <div class="tk-body">
+          <span class="p">nk@hq</span> ~ % aplicacao --status<br>
+          <span class="tk-name" id="tk-name">VOCÊ</span>
+          <span class="ok">✓</span> aplicação recebida pela equipe<br>
+          <span class="ok">✓</span> status: <b>em análise</b><br>
+          <span class="p">▸</span> próximo passo: contato no seu WhatsApp
+        </div>
+      </div>
+      <p style="margin:0;color:#a9b7d6;font-size:14px">Fechou. Sua aplicação já está com a equipe. Se quiser adiantar, me chama no direct.</p>
+      <a class="cta" href="https://ig.me/m/nk.ferreiraa" target="_blank" rel="noopener">Me chamar no direct <span><small>@nk.ferreiraa</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></a>
+      <button class="ghost" type="button" data-close-apply>Voltar para o site</button>
+    </div>
+  </div>
+</div>
+
 <div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Foto ampliada">
   <img id="lb-img" alt="">
   <p id="lb-cap"></p>
@@ -561,6 +696,70 @@ footer { position: relative; z-index: 2; max-width: 1180px; margin: 90px auto 0;
   let sx = null;
   lb.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
   lb.addEventListener('touchend', e => { if (sx === null) return; const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 50) mostrar(atual + (dx < 0 ? 1 : -1)); sx = null; });
+
+  // aplicação da mentoria → Painel → Mentoria da HOT SOCIETY ("lead ferreira")
+  const API = 'https://hotsociety.com.br/api/mentoria/aplicacao';
+  const sheet = $('#apply'), form = $('#apply-form'), done = $('#apply-done'), errBox = $('#apply-err'), btn = $('#apply-btn');
+  let antes = null;
+  const abrirApl = () => { antes = document.activeElement; sheet.hidden = false; document.documentElement.style.overflow = 'hidden'; setTimeout(() => (form.hidden ? done.querySelector('a') : $('#f-nome')).focus({ preventScroll: true }), 80); };
+  const fecharApl = () => { sheet.hidden = true; document.documentElement.style.overflow = ''; if (location.hash === '#aplicar') history.replaceState(null, '', location.pathname + location.search); antes && antes.focus({ preventScroll: true }); };
+  document.querySelectorAll('[data-open-apply]').forEach(b => b.addEventListener('click', abrirApl));
+  document.querySelectorAll('[data-close-apply]').forEach(b => b.addEventListener('click', fecharApl));
+  sheet.addEventListener('click', e => { if (e.target === sheet) fecharApl(); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && !sheet.hidden) fecharApl(); });
+  const pelaUrl = () => { if (location.hash === '#aplicar' && sheet.hidden) abrirApl(); };
+  addEventListener('hashchange', pelaUrl); pelaUrl();
+
+  const val = n => (form.elements[n] && form.elements[n].value || '').trim();
+  const CAMPOS = [
+    ['f-nome', () => val('nome').length > 1],
+    ['f-ig', () => val('ig').replace(/@/g, '').length > 1],
+    ['f-wpp', () => val('wpp').replace(/\D/g, '').length >= 10],
+    ['f-trab', () => val('trabalho').length > 2],
+    ['g-momento', () => !!val('momento')],
+    ['g-operacao', () => !!val('operacao')],
+    ['f-trava', () => val('trava').length > 2],
+    ['f-invest', () => val('invest').length > 0],
+    ['g-pc', () => !!val('pc')],
+    ['g-tempo', () => !!val('tempo')],
+  ];
+  const barras = [...document.querySelectorAll('#prog i')];
+  const progresso = () => CAMPOS.forEach(([, ok], i) => barras[i].classList.toggle('on', ok()));
+  form.addEventListener('input', progresso); form.addEventListener('change', progresso);
+  const marcar = (el, ruim) => { const f = el.closest('.fld'); f.classList.toggle('bad', ruim); const e = f.querySelector('.err'); if (e) e.hidden = !ruim; };
+  const wpp = $('#f-wpp');
+  wpp.addEventListener('input', () => {
+    const d = wpp.value.replace(/\D/g, '').slice(0, 11);
+    wpp.value = d.length > 6 ? `(${d.slice(0, 2)}) ${d.slice(2, d.length - 4)}-${d.slice(-4)}` : d.length > 2 ? `(${d.slice(0, 2)}) ${d.slice(2)}` : d;
+  });
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    errBox.hidden = true;
+    let primeiro = null;
+    CAMPOS.forEach(([id, ok]) => { const el = $('#' + id); const r = !ok(); marcar(el, r); if (r && !primeiro) primeiro = el; });
+    const maior = $('#f-18');
+    marcar(maior, !maior.checked); if (!maior.checked && !primeiro) primeiro = maior;
+    if (primeiro) { primeiro.scrollIntoView({ block: 'center', behavior: 'smooth' }); (primeiro.matches('fieldset') ? primeiro.querySelector('input') : primeiro).focus({ preventScroll: true }); return; }
+
+    const dados = { nome: val('nome'), ig: val('ig'), wpp: val('wpp'), trabalho: val('trabalho'), momento: val('momento'), operacao: val('operacao'),
+      trava: val('trava'), invest: val('invest'), pc: val('pc'), tempo: val('tempo'), maior: true, site: val('site') };
+    btn.disabled = true; btn.firstChild.textContent = 'Fazendo o deploy… ';
+    try {
+      const r = await fetch(API, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(dados) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.erro || 'Não deu para enviar agora. Tente de novo.');
+      $('#tk-name').textContent = dados.nome.split(/\s+/)[0].slice(0, 14);
+      $('#tk-id').textContent = '#NK-' + String(j.id || Date.now()).replace(/[^a-z0-9]/gi, '').slice(-4).toUpperCase();
+      form.hidden = true; done.hidden = false; sheet.querySelector('.sheet-box').scrollTop = 0;
+      done.querySelector('a').focus({ preventScroll: true });
+    } catch (err) {
+      errBox.textContent = err.message === 'Failed to fetch' ? 'Sem conexão agora. Confere a internet e tenta de novo.' : err.message;
+      errBox.hidden = false; errBox.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    } finally {
+      btn.disabled = false; btn.firstChild.textContent = 'Fazer o deploy da aplicação ';
+    }
+  });
 
   // terminal
   const term = $('#term');

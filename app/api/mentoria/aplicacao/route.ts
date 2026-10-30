@@ -1,6 +1,7 @@
 // Aplicação para a Mentoria High Ticket → Painel → Mentoria.
 // Recebe de dois lugares:
 //   • site do Cappu (capputino-hq.vercel.app), sem login  → comentário "lead insta cappu"
+//   • site do NK (nk-ferreiraa.vercel.app), sem login      → comentário "lead ferreira"
 //   • a própria plataforma (logado ou na página /mentoria) → comentário "lead plataforma"
 // POST JSON com os campos do formulário (nome, ig, wpp, trabalho, momento, operacao, trava, invest, pc, tempo, maior).
 import { createHash } from "node:crypto";
@@ -11,10 +12,13 @@ import { SITE } from "../../../_lib/site";
 
 // Sites do sócio autorizados a enviar (lead insta cappu). Dá para somar outros pela variável CAPPU_ORIGENS (separados por vírgula).
 const ORIGENS_CAPPU = ["https://capputino-hq.vercel.app", ...(process.env.CAPPU_ORIGENS ?? "").split(",").map((s) => s.trim()).filter(Boolean)];
+// Site do NK (lead ferreira). Outros endereços pela variável FERREIRA_ORIGENS.
+const ORIGENS_FERREIRA = ["https://nk-ferreiraa.vercel.app", ...(process.env.FERREIRA_ORIGENS ?? "").split(",").map((s) => s.trim()).filter(Boolean)];
+const EXTERNAS = [...ORIGENS_CAPPU, ...ORIGENS_FERREIRA];
 const PROPRIO = [SITE_URL, "https://hotsociety.com.br", "https://www.hotsociety.com.br"];
 
 function cors(origem: string | null): Record<string, string> {
-  if (!origem || !ORIGENS_CAPPU.includes(origem)) return {};
+  if (!origem || !EXTERNAS.includes(origem)) return {};
   return { "access-control-allow-origin": origem, "access-control-allow-methods": "POST, OPTIONS", "access-control-allow-headers": "content-type", vary: "origin" };
 }
 const resp = (corpo: object, status: number, origem: string | null) =>
@@ -22,7 +26,7 @@ const resp = (corpo: object, status: number, origem: string | null) =>
 
 export function OPTIONS(req: Request) {
   const origem = req.headers.get("origin");
-  return new Response(null, { status: ORIGENS_CAPPU.includes(origem ?? "") ? 204 : 403, headers: { ...cors(origem), "access-control-max-age": "86400" } });
+  return new Response(null, { status: EXTERNAS.includes(origem ?? "") ? 204 : 403, headers: { ...cors(origem), "access-control-max-age": "86400" } });
 }
 
 function erroDoBanco(m: string) {
@@ -36,9 +40,10 @@ function erroDoBanco(m: string) {
 export async function POST(req: Request) {
   const origem = req.headers.get("origin");
   const doCappu = !!origem && ORIGENS_CAPPU.includes(origem);
+  const doFerreira = !!origem && ORIGENS_FERREIRA.includes(origem);
   const user = await usuarioDoPedido(req).catch(() => null);
-  // Sem login, só aceita do próprio site ou do site do Cappu (o navegador manda a origem, outros sites ficam de fora).
-  if (!doCappu && !user && !(origem && PROPRIO.includes(origem))) return resp({ erro: "Origem não autorizada." }, 403, origem);
+  // Sem login, só aceita do próprio site ou dos sites do Cappu e do NK (o navegador manda a origem, outros sites ficam de fora).
+  if (!doCappu && !doFerreira && !user && !(origem && PROPRIO.includes(origem))) return resp({ erro: "Origem não autorizada." }, 403, origem);
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return resp({ erro: "Não deu para enviar agora. Tente de novo." }, 503, origem);
 
   let corpo: Record<string, unknown>;
@@ -54,7 +59,7 @@ export async function POST(req: Request) {
   const v = validarAplicacao(corpo);
   if (!v.ok) return resp({ erro: v.erro }, 400, origem);
   const a = v.a;
-  const tipo = doCappu ? "insta_cappu" : "plataforma";
+  const tipo = doCappu ? "insta_cappu" : doFerreira ? "ferreira" : "plataforma";
   const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim();
   const ipHash = ip ? createHash("sha256").update(`hs-aplic:${ip}`).digest("hex").slice(0, 32) : null;
 
