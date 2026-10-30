@@ -36,7 +36,7 @@ import { ITENS_PAGOS, itemPago } from "./loja";
 export type PlanoAssinatura = "mensal" | "anual";
 export type Plano = PlanoAssinatura | "loja"; // "loja" = item avulso da Hot Store (não mexe no acesso)
 export type Metodo = "pix" | "cartao";
-export type Gateway = "stripe" | "novus" | "transfeer";
+export type Gateway = "stripe" | "novus" | "transfeer" | "cortesia"; // cortesia: cupom de 100% (nada a cobrar)
 export const VALOR_CENTAVOS: Record<PlanoAssinatura, number> = { mensal: PRICE.mensal * 100, anual: PRICE.anual * 100 };
 export const PRODUTO: Record<PlanoAssinatura, string> = { mensal: "HOT SOCIETY Mensal", anual: "HOT SOCIETY Anual" };
 
@@ -873,7 +873,7 @@ export async function criarCobranca(p: Pedido, c: Cliente, metodo: Metodo): Prom
 
 // Status atual de um pedido direto no gateway em que ele foi criado.
 export async function consultarPedido(p: Pedido): Promise<Cobranca | null> {
-  if (!p.charge_id) return null;
+  if (!p.charge_id || p.gateway === "cortesia") return null;
   if (p.gateway === "stripe") return stripeConsultar(p);
   if ((p.gateway ?? "transfeer") === "novus") {
     return p.metodo === "cartao" ? novusConsultarSessao(p.charge_id, p.id) : novusConsultarFatura(p.charge_id);
@@ -930,10 +930,12 @@ export async function aplicarCobranca(sb: SupabaseClient, c: Cobranca): Promise<
   } else if (atual && c.gateway === "stripe" && (novo === "reembolsado" || novo === "chargeback")) {
     await stripeEstornarRepasse(atual, c.id).catch((e) => console.error(`estorno repasse pedido ${atual.id}:`, (e as Error).message));
   }
-  if (atual && ["pago", "reembolsado", "chargeback", "falhou"].includes(novo)) await enviarUtmify(atual);
+  // Cortesia (cupom de 100%) não é venda de verdade: fica fora do rastreio de anúncios e de comissão.
+  const cortesia = c.gateway === "cortesia";
+  if (atual && !cortesia && ["pago", "reembolsado", "chargeback", "falhou"].includes(novo)) await enviarUtmify(atual);
   // Afiliados: pago gera a comissão de quem indicou; reembolso ou contestação cancela.
   // Itens da loja não geram comissão de afiliado.
-  if (atual && p.plano === "loja") {
+  if (atual && (p.plano === "loja" || cortesia)) {
     // nada
   } else if (atual && novo === "pago") {
     const { error } = await sb.rpc("hs_registrar_comissao", { p_pedido: atual.id });
@@ -979,7 +981,7 @@ async function enviarRecibo(p: Pedido, c: Cobranca) {
   const valor = (p.valor_centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const data = new Date(c.pago_em ?? Date.now()).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
   const esc = (t: string) => t.replace(/[&<>"]/g, (x) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[x]!);
-  const meio = p.metodo === "cartao" ? "Cartão" : "Pix";
+  const meio = p.gateway === "cortesia" ? "Cortesia" : p.metodo === "cartao" ? "Cartão" : "Pix";
   const loja = p.plano === "loja";
   const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#141416">
   <h2 style="margin:0 0 12px">Pagamento aprovado ✈️</h2>

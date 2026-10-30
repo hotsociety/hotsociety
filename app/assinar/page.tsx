@@ -68,7 +68,7 @@ function Assinar() {
   const [agora, setAgora] = useState(0);
   const [jaAtivo, setJaAtivo] = useState<string | null>(null);
   const [cupomTxt, setCupomTxt] = useState(() => (params.get("cupom") ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20));
-  const [cupom, setCupom] = useState<{ codigo: string; desconto: number; plano: Plano } | null>(null);
+  const [cupom, setCupom] = useState<{ codigo: string; desconto: number; plano: Plano; adicional?: boolean } | null>(null);
   const [cupomErro, setCupomErro] = useState("");
   const [abrirCupom, setAbrirCupom] = useState(() => !!params.get("cupom"));
   const [metodo, setMetodo] = useState<"pix" | "cartao">("pix");
@@ -222,16 +222,17 @@ function Assinar() {
     const codigo = cupomTxt.trim();
     if (!codigo) return;
     const { data } = await supabase.rpc("conferir_cupom", { p_codigo: codigo, p_plano: plano });
-    const r = data as { ok: boolean; codigo?: string; desconto?: number } | null;
+    const r = data as { ok: boolean; codigo?: string; desconto?: number; adicional?: boolean } | null;
     if (!r?.ok) {
       setCupom(null);
       return setCupomErro("Cupom inválido, vencido ou não vale para este plano.");
     }
-    setCupom({ codigo: r.codigo!, desconto: r.desconto!, plano });
+    setCupom({ codigo: r.codigo!, desconto: r.desconto!, plano, adicional: r.adicional === true && r.desconto === 100 });
   }
   const precoCom = (k: Plano) => (cupom && cupom.plano === k ? Math.round(PLANOS[k].preco * (100 - cupom.desconto)) / 100 : PLANOS[k].preco);
   const mostraAdicional = !loja && stripe;
-  const precoFinal = loja ? loja.preco : precoCom(plano) + (mostraAdicional && comAdicional ? ADICIONAL.preco : 0);
+  const adicionalGratis = !!cupom?.adicional && cupom.plano === plano;
+  const precoFinal = loja ? loja.preco : precoCom(plano) + (mostraAdicional && comAdicional && !adicionalGratis ? ADICIONAL.preco : 0);
   const nomePedido = (p: Pedido) => (p.plano === "loja" ? (loja?.titulo ?? "Hot Store") : PLANOS[p.plano].t);
 
   const mm = String(Math.floor(restante / 60000)).padStart(2, "0");
@@ -324,7 +325,11 @@ function Assinar() {
                     Tenho um cupom
                   </button>
                 )}
-                {cupom && cupom.plano === plano && <p className={s.ok}>Cupom {cupom.codigo} aplicado: {cupom.desconto}% de desconto.</p>}
+                {cupom && cupom.plano === plano && (
+                  <p className={s.ok}>
+                    Cupom {cupom.codigo} aplicado: {cupom.desconto}% de desconto{adicionalGratis ? " (o adicional também sai grátis)" : ""}.
+                  </p>
+                )}
                 {cupom && cupom.plano !== plano && <p className="hs-as-conta">O cupom {cupom.codigo} foi conferido para o outro plano. Toque em Aplicar de novo.</p>}
                 {cupomErro && (
                   <p className={s.err} role="alert">
@@ -387,7 +392,11 @@ function Assinar() {
                   </p>
                 )}
                 <button type="submit" className={s.primary} disabled={enviando}>
-                  {stripe
+                  {precoFinal === 0
+                    ? enviando
+                      ? "Liberando…"
+                      : "Liberar acesso grátis"
+                    : stripe
                     ? enviando
                       ? "Abrindo pagamento…"
                       : `Ir para o pagamento · ${BRL.format(precoFinal)}`
