@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Captcha do login (o mesmo que estiver ligado no Supabase → Authentication → Attack Protection).
 // Variáveis na Vercel (são públicas, podem ficar no navegador):
@@ -51,6 +51,8 @@ function carregarScript() {
 export default function Captcha({ onToken, versao }: { onToken: (t: string | null) => void; versao: number }) {
   const caixa = useRef<HTMLDivElement>(null);
   const cb = useRef(onToken);
+  const [falhou, setFalhou] = useState(false);
+  const [tentativa, setTentativa] = useState(0);
   useEffect(() => {
     cb.current = onToken;
   });
@@ -60,6 +62,9 @@ export default function Captcha({ onToken, versao }: { onToken: (t: string | nul
     let id: string | undefined;
     let vivo = true;
     cb.current(null);
+    setFalhou(false);
+    // Se em 20 s o quadro não responder (bloqueador, rede), mostra o aviso com "tentar de novo".
+    const limite = setTimeout(() => vivo && setFalhou(true), 20000);
     carregarScript()
       .then(() => {
         const a = api();
@@ -69,19 +74,54 @@ export default function Captcha({ onToken, versao }: { onToken: (t: string | nul
           sitekey: SITE_KEY,
           theme: "dark",
           language: "pt-br",
-          callback: (t: string) => cb.current(t),
+          retry: "auto",
+          "refresh-expired": "auto",
+          callback: (t: string) => {
+            clearTimeout(limite);
+            setFalhou(false);
+            cb.current(t);
+          },
           "expired-callback": () => cb.current(null),
-          "error-callback": () => cb.current(null),
+          "error-callback": () => {
+            cb.current(null);
+            if (vivo) setFalhou(true);
+          },
         });
       })
-      .catch(() => cb.current(null));
+      .catch(() => {
+        cb.current(null);
+        if (vivo) setFalhou(true);
+      });
     return () => {
       vivo = false;
+      clearTimeout(limite);
       const a = api();
       if (id && a?.remove) a.remove(id);
     };
-  }, [versao]);
+  }, [versao, tentativa]);
 
   if (!CAPTCHA_LIGADO) return null;
-  return <div ref={caixa} style={{ minHeight: 65, display: "flex", justifyContent: "center" }} />;
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      <div ref={caixa} style={{ minHeight: 65, display: "flex", justifyContent: "center" }} />
+      {falhou && (
+        <div role="alert" style={{ display: "grid", gap: 8, padding: "10px 12px", borderRadius: 10, border: "1px solid rgba(230,201,120,.45)", background: "rgba(201,162,78,.08)", fontSize: 13, lineHeight: 1.45 }}>
+          <span>
+            A verificação de segurança não carregou. Se você usa bloqueador de anúncios, VPN ou o navegador Brave, libere este site ou tente outra rede (por
+            exemplo, os dados do celular).
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              carregando = null;
+              setTentativa((n) => n + 1);
+            }}
+            style={{ justifySelf: "start", padding: "8px 14px", borderRadius: 8, border: "1px solid #C9A24E", background: "transparent", color: "inherit", font: "700 13px/1 inherit", cursor: "pointer" }}
+          >
+            Recarregar verificação
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
