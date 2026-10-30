@@ -1,296 +1,601 @@
 "use client";
 
-import "../../_components/membros/painel.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "../../_components/membros/Toast";
-import { m } from "../../_components/membros/proto";
-import { FUNIL_ETAPAS, GANCHOS, JOGOS, QUIZ } from "../../_lib/demo";
+import {
+  CATALOGO,
+  CHATS,
+  DUELOS,
+  FUNIS,
+  MITOS,
+  PARES,
+  GANCHOS,
+  PERSONAS,
+  QUIZ,
+  gerarContas,
+  misturarOpcoes,
+  embaralhar,
+  sortear,
+  type Binario as ItemBinario,
+  type InfoJogo,
+  type JogoId,
+  type Pergunta,
+} from "../../_lib/games";
 import { supabase } from "../../_lib/supabase";
+import "./games.css";
 
-type Jogo = "quiz" | "hook" | "funil";
-type Fim = { k: Jogo; pontos: number; max: number; xp: number | null };
-type Linha = { pos: number; nome: string; pontos: number; eu: boolean };
+type Resumo = { partidas: number; limite: number; hoje: Partial<Record<JogoId, number>>; recorde: Partial<Record<JogoId, number>> };
+type Linha = { pos: number; nome: string; avatar: string | null; pontos: number; jogos: number; eu: boolean };
+type Erro = { q: string; certa: string; porque: string };
+type Fim = { k: JogoId; pontos: number; max: number; xp: number | null; limite?: boolean; erros: Erro[]; recordeAntes: number };
+type Placar = (pontos: number, erros: Erro[]) => void;
+
+const CATS = ["Todos", "Conhecimento", "Conteúdo", "Vendas", "Números"] as const;
+const info = (k: JogoId) => CATALOGO.find((j) => j.k === k)!;
+const jogoDoDia = () => {
+  const d = new Date();
+  const n = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
+  return CATALOGO[n % CATALOGO.length];
+};
 
 export default function Games() {
+  const [resumo, setResumo] = useState<Resumo | null>(null);
   const [ranking, setRanking] = useState<Linha[] | null>(null);
-  const [jogo, setJogo] = useState<Jogo | null>(null);
-  const [rodada, setRodada] = useState(0); // muda para reiniciar o mesmo jogo
+  const [jogo, setJogo] = useState<JogoId | null>(null);
+  const [rodada, setRodada] = useState(0);
   const [fim, setFim] = useState<Fim | null>(null);
-  const [hoje, setHoje] = useState(0);
-  const [recorde, setRecorde] = useState<Partial<Record<Jogo, number>>>({});
-  const palco = useRef<HTMLDivElement>(null);
+  const [cat, setCat] = useState<(typeof CATS)[number]>("Todos");
+  const topo = useRef<HTMLDivElement>(null);
+  const doDia = useMemo(jogoDoDia, []);
 
-  function comecar(k: Jogo) {
+  function carregar() {
+    supabase.rpc("meus_games").then(({ data }) => data && setResumo(data as Resumo));
+    supabase.rpc("ranking_games").then(({ data, error }) => setRanking(error ? [] : ((data ?? []) as Linha[])));
+  }
+  useEffect(carregar, []);
+
+  const subir = () => setTimeout(() => topo.current?.scrollIntoView({ block: "start", behavior: "smooth" }), 30);
+
+  function comecar(k: JogoId) {
     setFim(null);
     setJogo(k);
     setRodada((r) => r + 1);
-    setTimeout(() => palco.current?.scrollIntoView({ block: "start", behavior: "smooth" }), 30);
+    subir();
+  }
+  function sair() {
+    setJogo(null);
+    setFim(null);
+    subir();
   }
 
-  function carregarRanking() {
-    supabase.rpc("ranking_games").then(({ data, error }) => setRanking(error ? [] : ((data ?? []) as Linha[])));
-  }
-  useEffect(carregarRanking, []);
-
-  async function terminar(k: Jogo, pontos: number, max: number) {
-    setFim({ k, pontos, max, xp: null });
-    setRecorde((r) => ({ ...r, [k]: Math.max(r[k] ?? 0, pontos) }));
+  async function terminar(k: JogoId, pontos: number, erros: Erro[]) {
+    const max = info(k).max;
+    const recordeAntes = resumo?.recorde[k] ?? 0;
+    setFim({ k, pontos, max, xp: null, erros, recordeAntes });
     const { data, error } = await supabase.rpc("registrar_partida", { p_jogo: k, p_pontos: pontos });
-    const xp = error ? 0 : ((data as { xp: number }).xp ?? 0);
-    setFim({ k, pontos, max, xp });
-    setHoje((h) => h + xp);
-    if (xp) toast(`+${xp} XP · game`, true);
-    carregarRanking();
+    const r = (data ?? {}) as { xp?: number; limite?: boolean };
+    const xp = error ? 0 : (r.xp ?? 0);
+    setFim({ k, pontos, max, xp, limite: r.limite, erros, recordeAntes });
+    if (xp) toast(`+${xp} XP · ${info(k).t}`, true);
+    carregar();
   }
+
+  const xpHoje = resumo ? Object.values(resumo.hoje).reduce((a, p) => a + (p ?? 0) * 10, 0) : 0;
+  const xpMax = CATALOGO.reduce((a, j) => a + j.max * 10, 0);
+  const perfeitos = resumo ? CATALOGO.filter((j) => (resumo.hoje[j.k] ?? 0) >= j.max).length : 0;
+  const lista = CATALOGO.filter((j) => cat === "Todos" || j.cat === cat);
 
   return (
-    <section className={m("view")} aria-label="Games">
-      <div className={m("top")}>
-        <div>
-          <h1>Games</h1>
-          <p className={m("sub")}>Aprenda jogando. Seu melhor resultado do dia em cada jogo vale XP.</p>
-        </div>
-        <div className={m("chips")}>
-          <span className={m("chip gold")}>
-            <i className={m("num")}>{hoje}</i> XP hoje nos games
-          </span>
-        </div>
-      </div>
-
+    <section className="hs-gm" aria-label="Games" ref={topo}>
       {!jogo ? (
-        <div className={m("gm-list")}>
-          {JOGOS.map((g) => {
-            const soon = "soon" in g && g.soon;
-            return (
-              <button
-                key={g.k}
-                type="button"
-                className={m("gm-c" + (soon ? " soon" : ""))}
-                aria-disabled={soon || undefined}
-                onClick={() => (soon ? toast("Em breve") : comecar(g.k as Jogo))}
-              >
-                <span className={m("ic")}>{g.ic}</span>
-                <b>{g.t}</b>
-                <p>{g.d}</p>
-                <div className={m("mt")}>
-                  <span className={m("tag am")}>{g.xp}</span>
-                  {!soon && recorde[g.k as Jogo] !== undefined && (
-                    <span className={m("tag")}>Recorde: {recorde[g.k as Jogo]}</span>
-                  )}
-                </div>
+        <>
+          <header className="hs-gm-hero hs-escuro">
+            <div className="hs-gm-hero-tx">
+              <p className="hs-gm-eb">Arena HOT SOCIETY</p>
+              <h1>
+                Games<span>.</span>
+              </h1>
+              <p className="hs-gm-sub">Aprenda jogando. O melhor resultado do dia em cada jogo vira XP para o ranking da temporada.</p>
+              <button type="button" className="hs-gm-dia" onClick={() => comecar(doDia.k)} style={{ "--c": doDia.cor } as React.CSSProperties}>
+                <span className="ic" aria-hidden>
+                  {doDia.ic}
+                </span>
+                <span className="tx">
+                  <small>Jogo do dia</small>
+                  <b>{doDia.t}</b>
+                </span>
+                <span className="go">Jogar ▸</span>
               </button>
-            );
-          })}
-        </div>
-      ) : (
-        <div className={m("gm-stage")} ref={palco}>
-          {fim ? (
-            <div className={m("gm-end")}>
-              <p className={m("eb")}>Fim de jogo</p>
-              <span className={m("sc")}>
-                {fim.pontos}/{fim.max}
-              </span>
-              <p className={m("sub")} style={{ margin: 0 }}>
-                {fim.pontos === fim.max
-                  ? "Perfeito. Você domina esse assunto."
-                  : fim.pontos >= fim.max / 2
-                    ? "Mandou bem. Revise o módulo e volte para bater o recorde."
-                    : "Bora revisar as aulas e tentar de novo."}
-              </p>
-              {fim.xp !== null && (
-                <p className={m("demo")} style={{ margin: 0, textAlign: "center" }}>
-                  {fim.xp > 0 ? `+${fim.xp} XP` : "Sem XP novo: só conta o melhor resultado do dia em cada jogo."}
-                </p>
-              )}
-              <div className={m("row")} style={{ justifyContent: "center" }}>
-                <button type="button" className={m("btn btn-p")} onClick={() => comecar(fim.k)}>
-                  Jogar de novo
-                </button>
-                <button type="button" className={m("btn btn-s")} onClick={() => setJogo(null)}>
-                  Voltar aos games
-                </button>
-              </div>
             </div>
-          ) : jogo === "quiz" ? (
-            <Quiz key={rodada} onSair={() => setJogo(null)} onFim={(p) => terminar("quiz", p, QUIZ.length)} />
-          ) : jogo === "hook" ? (
-            <Gancho key={rodada} onSair={() => setJogo(null)} onFim={(p) => terminar("hook", p, GANCHOS.length)} />
+            <ul className="hs-gm-stats" aria-label="Seu dia nos games">
+              <li className="xp">
+                <Anel v={xpHoje} max={xpMax} />
+                <span>
+                  <b>{xpHoje}</b>
+                  <small>de {xpMax} XP hoje</small>
+                </span>
+              </li>
+              <li>
+                <b>
+                  {resumo?.partidas ?? 0}
+                  <em>/{resumo?.limite ?? 20}</em>
+                </b>
+                <small>partidas hoje</small>
+              </li>
+              <li>
+                <b>
+                  {perfeitos}
+                  <em>/{CATALOGO.length}</em>
+                </b>
+                <small>gabaritados hoje</small>
+              </li>
+            </ul>
+          </header>
+
+          <div className="hs-gm-filtro" role="tablist" aria-label="Categorias">
+            {CATS.map((c) => (
+              <button key={c} type="button" role="tab" aria-selected={cat === c} onClick={() => setCat(c)}>
+                {c}
+              </button>
+            ))}
+          </div>
+
+          <div className="hs-gm-grade">
+            {lista.map((j) => (
+              <CartaoJogo key={j.k} j={j} hoje={resumo?.hoje[j.k]} recorde={resumo?.recorde[j.k]} dia={j.k === doDia.k} onJogar={() => comecar(j.k)} />
+            ))}
+          </div>
+
+          <Ranking linhas={ranking} />
+        </>
+      ) : (
+        <div className="hs-gm-palco" style={{ "--c": info(jogo).cor } as React.CSSProperties}>
+          {fim ? (
+            <FimDeJogo fim={fim} onDeNovo={() => comecar(fim.k)} onSair={sair} />
           ) : (
-            <Funil key={rodada} onSair={() => setJogo(null)} onFim={(p) => terminar("funil", p, FUNIL_ETAPAS.length)} />
+            <Partida key={rodada} k={jogo} onSair={sair} onFim={(p, e) => terminar(jogo, p, e)} />
           )}
         </div>
       )}
-
-      <div className={m("card")}>
-        <h2>Ranking dos games · últimos 7 dias</h2>
-        {ranking === null ? (
-          <p className={m("sub")}>Carregando…</p>
-        ) : ranking.length === 0 ? (
-          <p className={m("sub")}>Ninguém jogou esta semana ainda. Seja o primeiro do ranking.</p>
-        ) : (
-          <ol className={m("rank")}>
-            {ranking.map((r) => (
-              <li key={r.pos} className={r.eu ? m("me") : undefined}>
-                <span className={m("p")}>{String(r.pos).padStart(2, "0")}</span>
-                <span>{r.eu ? "Você" : r.nome}</span>
-                <span className={m("mono")} style={{ fontSize: 12 }}>
-                  {r.pontos} XP
-                </span>
-              </li>
-            ))}
-          </ol>
-        )}
-      </div>
     </section>
   );
 }
 
-function Topo({ titulo, children, onSair }: { titulo: string; children: React.ReactNode; onSair: () => void }) {
+/* ---------------- Hub ---------------- */
+
+function Anel({ v, max }: { v: number; max: number }) {
+  const r = 22;
+  const c = 2 * Math.PI * r;
   return (
-    <div className={m("gm-top")}>
-      <b>{titulo}</b>
-      <div className={m("meta")}>
-        {children}
-        <button type="button" className={m("btn btn-g")} onClick={onSair}>
-          Sair
-        </button>
+    <svg className="hs-gm-anel" viewBox="0 0 52 52" aria-hidden>
+      <circle cx="26" cy="26" r={r} />
+      <circle cx="26" cy="26" r={r} style={{ strokeDasharray: c, strokeDashoffset: c * (1 - Math.min(1, v / Math.max(1, max))) }} />
+    </svg>
+  );
+}
+
+function CartaoJogo({ j, hoje, recorde, dia, onJogar }: { j: InfoJogo; hoje?: number; recorde?: number; dia: boolean; onJogar: () => void }) {
+  const feito = (hoje ?? 0) >= j.max;
+  return (
+    <button type="button" className={"hs-gm-card" + (feito ? " feito" : "")} style={{ "--c": j.cor } as React.CSSProperties} onClick={onJogar}>
+      <span className="hs-gm-card-art" aria-hidden>
+        <span className="em">{j.ic}</span>
+      </span>
+      <span className="hs-gm-card-tags">
+        <em>{j.cat}</em>
+        {j.novo && <em className="novo">Novo</em>}
+        {dia && <em className="dia">Jogo do dia</em>}
+        {feito && <em className="ok">✓ Gabaritado</em>}
+      </span>
+      <b className="hs-gm-card-t">{j.t}</b>
+      <span className="hs-gm-card-d">{j.d}</span>
+      <span className="hs-gm-card-pg" aria-label={`Hoje: ${hoje ?? 0} de ${j.max}`}>
+        {Array.from({ length: j.max }, (_, i) => (
+          <i key={i} className={i < (hoje ?? 0) ? "on" : undefined} />
+        ))}
+      </span>
+      <span className="hs-gm-card-rod">
+        <span>⏱ {j.dur}</span>
+        <span>até {j.max * 10} XP</span>
+        {recorde !== undefined && <span>🏆 {recorde}/{j.max}</span>}
+        <span className="go">{hoje ? "Jogar de novo" : "Jogar"} ▸</span>
+      </span>
+    </button>
+  );
+}
+
+function iniciais(n: string) {
+  return n
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
+}
+function Foto({ l }: { l: Linha }) {
+  if (l.avatar)
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img className="hs-gm-av" src={l.avatar} alt="" loading="lazy" />;
+  let h = 0;
+  for (const ch of l.nome) h = (h * 31 + ch.charCodeAt(0)) % 360;
+  return (
+    <span className="hs-gm-av" style={{ background: `hsl(${h} 38% 34%)` }} aria-hidden>
+      {iniciais(l.nome)}
+    </span>
+  );
+}
+
+function Ranking({ linhas }: { linhas: Linha[] | null }) {
+  const top = linhas?.filter((l) => l.pos <= 3) ?? [];
+  const resto = linhas?.filter((l) => l.pos > 3) ?? [];
+  const podio = [top.find((l) => l.pos === 2), top.find((l) => l.pos === 1), top.find((l) => l.pos === 3)];
+  const max = Math.max(1, ...(linhas ?? []).map((l) => l.pontos));
+  return (
+    <div className="hs-gm-rank">
+      <div className="hs-gm-rank-cab">
+        <div>
+          <p className="hs-gm-eb">Ranking dos games</p>
+          <h2>Últimos 7 dias</h2>
+        </div>
+        <small>Soma do melhor resultado de cada jogo, por dia</small>
       </div>
+      {linhas === null ? (
+        <p className="hs-gm-vazio">Carregando…</p>
+      ) : linhas.length === 0 ? (
+        <div className="hs-gm-vazio">
+          <span aria-hidden>🏆</span>
+          <b>O pódio está vazio</b>
+          <p>Ninguém pontuou esta semana ainda. Jogue uma partida e entre no topo.</p>
+        </div>
+      ) : (
+        <>
+          <ol className="hs-gm-podio">
+            {podio.map((l, i) =>
+              l ? (
+                <li key={l.pos} className={"p" + l.pos + (l.eu ? " eu" : "")}>
+                  <span className="cor" aria-hidden>
+                    {l.pos === 1 ? "👑" : ""}
+                  </span>
+                  <Foto l={l} />
+                  <b>{l.eu ? "Você" : l.nome}</b>
+                  <small>{l.pontos} XP</small>
+                  <span className="base">{l.pos}</span>
+                </li>
+              ) : (
+                <li key={"v" + i} className="vago" aria-hidden />
+              ),
+            )}
+          </ol>
+          {resto.length > 0 && (
+            <ol className="hs-gm-lista">
+              {resto.map((l) => (
+                <li key={l.pos} className={l.eu ? "eu" : undefined}>
+                  <span className="n">{String(l.pos).padStart(2, "0")}</span>
+                  <Foto l={l} />
+                  <span className="nm">
+                    <b>{l.eu ? "Você" : l.nome}</b>
+                    <small>
+                      {l.jogos} {l.jogos === 1 ? "jogo" : "jogos"}
+                    </small>
+                  </span>
+                  <span className="br" aria-hidden>
+                    <i style={{ width: `${(l.pontos / max) * 100}%` }} />
+                  </span>
+                  <span className="xp">{l.pontos} XP</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </>
+      )}
     </div>
   );
 }
 
-function Explicacao({ ok, tempo, texto, ultima, onProxima }: { ok: boolean; tempo?: boolean; texto: string; ultima: boolean; onProxima: () => void }) {
+/* ---------------- Partida ---------------- */
+
+function Partida({ k, onFim, onSair }: { k: JogoId; onFim: Placar; onSair: () => void }) {
+  if (k === "hook")
+    return <Binario k="hook" itens={GANCHOS.map((g) => ({ f: `“${g.f}”`, ok: g.ok, porque: g.porque }))} rotulo="Reels · primeiros 2 segundos" nao="🙈 Mico" sim="🎣 Gancho" seloNao="MICO" seloSim="GANCHO" onFim={onFim} onSair={onSair} />;
+  if (k === "mito")
+    return <Binario k="mito" itens={MITOS} rotulo="Verdade ou mito?" nao="❌ Mito" sim="✅ Verdade" seloNao="MITO" seloSim="VERDADE" tempo={10} onFim={onFim} onSair={onSair} />;
+  if (k === "duelo") return <DueloPosts onFim={onFim} onSair={onSair} />;
+  if (k === "memoria") return <Memoria onFim={onFim} onSair={onSair} />;
+  if (k === "funil") return <MonteFunil onFim={onFim} onSair={onSair} />;
+  const cfg = {
+    quiz: { banco: () => sortear(QUIZ).map(misturarOpcoes), tempo: 15, modo: "quiz" as const },
+    persona: { banco: () => sortear(PERSONAS).map(misturarOpcoes), tempo: 0, modo: "persona" as const },
+    chat: { banco: () => sortear(CHATS).map(misturarOpcoes), tempo: 0, modo: "chat" as const },
+    conta: { banco: gerarContas, tempo: 20, modo: "conta" as const },
+  }[k as "quiz" | "persona" | "chat" | "conta"];
+  return <Escolha k={k} gerar={cfg.banco} tempo={cfg.tempo} modo={cfg.modo} onFim={onFim} onSair={onSair} />;
+}
+
+function Topo({ k, i, total, marcas, onSair, children }: { k: JogoId; i: number; total: number; marcas: (boolean | null)[]; onSair: () => void; children?: React.ReactNode }) {
+  const j = info(k);
+  return (
+    <div className="hs-gm-topo">
+      <button type="button" className="hs-gm-sair" onClick={onSair} aria-label="Sair do jogo">
+        ✕
+      </button>
+      <span className="hs-gm-topo-t">
+        <span aria-hidden>{j.ic}</span>
+        <b>{j.t}</b>
+      </span>
+      <span className="hs-gm-pips" aria-label={`Rodada ${Math.min(i + 1, total)} de ${total}`}>
+        {Array.from({ length: total }, (_, n) => (
+          <i key={n} className={marcas[n] === true ? "ok" : marcas[n] === false ? "no" : n === i ? "at" : undefined} />
+        ))}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+function Feedback({ ok, tempo, texto, ultima, onProxima }: { ok: boolean; tempo?: boolean; texto: string; ultima: boolean; onProxima: () => void }) {
   const btn = useRef<HTMLButtonElement>(null);
-  useEffect(() => btn.current?.focus(), []);
+  useEffect(() => btn.current?.focus({ preventScroll: true }), []);
   return (
-    <div>
-      <div className={m("gm-ex")}>
-        {ok ? (
-          <b style={{ color: "var(--ok)" }}>Certo. </b>
-        ) : tempo ? (
-          <b>Tempo esgotado. </b>
-        ) : (
-          <b style={{ color: "var(--erro-t)" }}>Quase. </b>
-        )}
-        {texto}
-      </div>
-      <div className={m("row")} style={{ marginTop: 12 }}>
-        <button ref={btn} type="button" className={m("btn btn-p")} onClick={onProxima}>
-          {ultima ? "Ver resultado" : "Próxima"}
-        </button>
-      </div>
+    <div className={"hs-gm-fb " + (ok ? "ok" : "no")} role="status">
+      <span className="ic" aria-hidden>
+        {ok ? "✓" : tempo ? "⏱" : "✕"}
+      </span>
+      <p>
+        <b>{ok ? pick(["Na mosca.", "Isso aí.", "Certíssimo.", "Mandou bem."]) : tempo ? "Tempo esgotado." : "Não foi dessa vez."}</b> {texto}
+      </p>
+      <button ref={btn} type="button" className="hs-gm-btn p" onClick={onProxima}>
+        {ultima ? "Ver resultado" : "Próxima"} <kbd>Enter</kbd>
+      </button>
     </div>
   );
 }
+const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)];
 
-/* ---------- Quiz relâmpago: 15 s por pergunta ---------- */
-const TEMPO = 15;
-function Quiz({ onFim, onSair }: { onFim: (p: number) => void; onSair: () => void }) {
+/* Quiz, Persona, Objeção na DM e Calcula o caixa: múltipla escolha com apresentações diferentes. */
+function Escolha({
+  k,
+  gerar,
+  tempo,
+  modo,
+  onFim,
+  onSair,
+}: {
+  k: JogoId;
+  gerar: () => Pergunta[];
+  tempo: number;
+  modo: "quiz" | "persona" | "chat" | "conta";
+  onFim: Placar;
+  onSair: () => void;
+}) {
+  const [perguntas] = useState(gerar);
   const [i, setI] = useState(0);
-  const [acertos, setAcertos] = useState(0);
   const [resp, setResp] = useState<number | null>(null); // -1 = tempo esgotado
+  const [marcas, setMarcas] = useState<(boolean | null)[]>(() => perguntas.map(() => null));
+  const [erros, setErros] = useState<Erro[]>([]);
+  const [combo, setCombo] = useState(0);
   const barra = useRef<HTMLElement>(null);
-  const [pergunta, opcoes, certa, porque] = QUIZ[i];
+  const p = perguntas[i];
+  const ultima = i === perguntas.length - 1;
+  const acertos = marcas.filter(Boolean).length;
 
   useEffect(() => {
-    if (resp !== null) return;
+    if (!tempo || resp !== null) return;
     const t0 = Date.now();
     const id = setInterval(() => {
-      const resta = TEMPO - (Date.now() - t0) / 1000;
-      if (barra.current) barra.current.style.width = Math.max(0, (resta / TEMPO) * 100) + "%";
+      const resta = tempo - (Date.now() - t0) / 1000;
+      if (barra.current) {
+        barra.current.style.width = Math.max(0, (resta / tempo) * 100) + "%";
+        barra.current.dataset.urg = resta < 5 ? "1" : "";
+      }
       if (resta <= 0) {
         clearInterval(id);
-        setResp(-1);
+        responder(-1);
       }
     }, 100);
     return () => clearInterval(id);
-  }, [i, resp]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i, resp, tempo]);
 
-  function responder(k: number) {
+  function responder(n: number) {
     if (resp !== null) return;
-    setResp(k);
-    if (k === certa) setAcertos((a) => a + 1);
+    setResp(n);
+    const ok = n === p.certa;
+    setMarcas((m) => m.map((v, x) => (x === i ? ok : v)));
+    setCombo((c) => (ok ? c + 1 : 0));
+    if (!ok) setErros((e) => [...e, { q: p.q, certa: p.ops[p.certa], porque: p.porque }]);
   }
 
   function proxima() {
-    if (i < QUIZ.length - 1) {
+    if (!ultima) {
       setI(i + 1);
       setResp(null);
-    } else onFim(acertos);
+    } else onFim(marcas.filter(Boolean).length, erros);
   }
+
+  // Teclado: 1–4 escolhe, Enter avança.
+  useEffect(() => {
+    const ouvir = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement) return;
+      const n = Number(e.key) - 1;
+      if (resp === null && n >= 0 && n < p.ops.length) responder(n);
+    };
+    window.addEventListener("keydown", ouvir);
+    return () => window.removeEventListener("keydown", ouvir);
+  });
+
+  const opcoes = (
+    <div className={"hs-gm-ops " + modo}>
+      {p.ops.map((o, n) => (
+        <button
+          key={n}
+          type="button"
+          disabled={resp !== null}
+          className={resp !== null ? (n === p.certa ? "certa" : n === resp ? "errada" : "apagada") : undefined}
+          onClick={() => responder(n)}
+        >
+          <kbd>{n + 1}</kbd>
+          <span>{o}</span>
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <>
-      <Topo titulo="Quiz relâmpago" onSair={onSair}>
-        <span className={m("tag")}>
-          {i + 1}/{QUIZ.length}
+      <Topo k={k} i={i} total={perguntas.length} marcas={marcas} onSair={onSair}>
+        <span className="hs-gm-placar">
+          <b>{acertos}</b> pts{combo >= 2 && <em>🔥 {combo} seguidas</em>}
         </span>
-        <span className={m("tag am")}>{acertos} acertos</span>
       </Topo>
-      <div className={m("gm-time")}>
-        <i ref={barra} style={{ width: resp === null ? "100%" : undefined }} />
-      </div>
-      <p className={m("gm-q")}>{pergunta}</p>
-      <div className={m("gm-ops")}>
-        {opcoes.map((o, k) => (
-          <button
-            key={k}
-            type="button"
-            disabled={resp !== null}
-            className={resp !== null ? (k === certa ? m("right") : k === resp ? m("wrong") : undefined) : undefined}
-            onClick={() => responder(k)}
-          >
-            {o}
-          </button>
-        ))}
-      </div>
-      {resp !== null && (
-        <Explicacao ok={resp === certa} tempo={resp === -1} texto={porque} ultima={i === QUIZ.length - 1} onProxima={proxima} />
+      {tempo > 0 && (
+        <div className="hs-gm-tempo">
+          <i ref={barra} key={i} style={{ width: resp === null ? "100%" : undefined }} />
+        </div>
       )}
+
+      {modo === "chat" ? (
+        <div className="hs-gm-chat" key={i}>
+          <div className="hs-gm-chat-cab">
+            <span className="av" aria-hidden>
+              {String.fromCharCode(65 + ((i * 7) % 26))}
+            </span>
+            <span>
+              <b>Lead #{1000 + i * 137}</b>
+              <small>online agora</small>
+            </span>
+          </div>
+          <div className="hs-gm-chat-msgs">
+            <p className="ele">{p.q}</p>
+            {resp === null ? <p className="digitando" aria-label="Escolha a resposta">•••</p> : resp >= 0 && <p className="eu">{p.ops[resp]}</p>}
+          </div>
+          <p className="hs-gm-dica">Qual resposta você manda?</p>
+          {opcoes}
+        </div>
+      ) : (
+        <div className={"hs-gm-q " + modo} key={i}>
+          {p.ctx && <span className="ctx">{modo === "persona" ? "Briefing · " : ""}{p.ctx}</span>}
+          <p>{p.q}</p>
+          {opcoes}
+        </div>
+      )}
+
+      {resp !== null && <Feedback ok={resp === p.certa} tempo={resp === -1} texto={p.porque} ultima={ultima} onProxima={proxima} />}
     </>
   );
 }
 
-/* ---------- Gancho ou mico ---------- */
-function Gancho({ onFim, onSair }: { onFim: (p: number) => void; onSair: () => void }) {
+/* Gancho ou mico e Verdade ou mito: cartão no centro, ← não / sim →. */
+function Binario({
+  k,
+  itens,
+  rotulo,
+  nao,
+  sim,
+  seloNao,
+  seloSim,
+  tempo = 0,
+  onFim,
+  onSair,
+}: {
+  k: JogoId;
+  itens: ItemBinario[];
+  rotulo: string;
+  nao: string;
+  sim: string;
+  seloNao: string;
+  seloSim: string;
+  tempo?: number;
+  onFim: Placar;
+  onSair: () => void;
+}) {
+  const [frases] = useState(() => sortear(itens));
   const [i, setI] = useState(0);
-  const [acertos, setAcertos] = useState(0);
-  const [resp, setResp] = useState<0 | 1 | null>(null);
-  const [frase, certo, porque] = GANCHOS[i];
+  const [resp, setResp] = useState<boolean | null>(null);
+  const [esgotou, setEsgotou] = useState(false);
+  const [marcas, setMarcas] = useState<(boolean | null)[]>(() => frases.map(() => null));
+  const [erros, setErros] = useState<Erro[]>([]);
+  const barra = useRef<HTMLElement>(null);
+  const g = frases[i];
+  const ultima = i === frases.length - 1;
 
-  function escolher(v: 0 | 1) {
-    if (resp !== null) return;
-    setResp(v);
-    if (v === certo) setAcertos((a) => a + 1);
+  function escolher(v: boolean | null) {
+    if (resp !== null || esgotou) return;
+    const ok = v === g.ok;
+    if (v === null) setEsgotou(true);
+    else setResp(v);
+    setMarcas((m) => m.map((x, n) => (n === i ? ok : x)));
+    if (!ok) setErros((e) => [...e, { q: g.f, certa: g.ok ? seloSim : seloNao, porque: g.porque }]);
   }
+  const respondeu = resp !== null || esgotou;
+
+  useEffect(() => {
+    if (!tempo || respondeu) return;
+    const t0 = Date.now();
+    const id = setInterval(() => {
+      const resta = tempo - (Date.now() - t0) / 1000;
+      if (barra.current) {
+        barra.current.style.width = Math.max(0, (resta / tempo) * 100) + "%";
+        barra.current.dataset.urg = resta < 3 ? "1" : "";
+      }
+      if (resta <= 0) {
+        clearInterval(id);
+        escolher(null);
+      }
+    }, 100);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i, respondeu, tempo]);
+
+  useEffect(() => {
+    const ouvir = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") escolher(false);
+      if (e.key === "ArrowRight") escolher(true);
+    };
+    window.addEventListener("keydown", ouvir);
+    return () => window.removeEventListener("keydown", ouvir);
+  });
 
   return (
     <>
-      <Topo titulo="Gancho ou mico" onSair={onSair}>
-        <span className={m("tag")}>
-          {i + 1}/{GANCHOS.length}
+      <Topo k={k} i={i} total={frases.length} marcas={marcas} onSair={onSair}>
+        <span className="hs-gm-placar">
+          <b>{marcas.filter(Boolean).length}</b> pts
         </span>
-        <span className={m("tag am")}>{acertos} acertos</span>
       </Topo>
-      <div className={m("gm-hook")}>{frase}</div>
-      <div className={m("gm-yn")}>
-        <button type="button" className={m("btn btn-p")} disabled={resp !== null} onClick={() => escolher(1)}>
-          Gancho
+      {tempo > 0 && (
+        <div className="hs-gm-tempo">
+          <i ref={barra} key={i} style={{ width: respondeu ? undefined : "100%" }} />
+        </div>
+      )}
+      <div className="hs-gm-hookpilha">
+        <span className="atras" aria-hidden />
+        <span className="atras b" aria-hidden />
+        <div key={i} className={"hs-gm-hook" + (resp === null ? "" : resp ? " dir" : " esq")}>
+          <small>{rotulo}</small>
+          <p>{g.f}</p>
+          {respondeu && <span className={"selo " + (resp === g.ok ? "ok" : "no")}>{g.ok ? seloSim : seloNao}</span>}
+        </div>
+      </div>
+      <div className="hs-gm-yn">
+        <button type="button" className="mico" disabled={respondeu} onClick={() => escolher(false)}>
+          <kbd>←</kbd> {nao}
         </button>
-        <button type="button" className={m("btn btn-s")} disabled={resp !== null} onClick={() => escolher(0)}>
-          Mico
+        <button type="button" className="gancho" disabled={respondeu} onClick={() => escolher(true)}>
+          {sim} <kbd>→</kbd>
         </button>
       </div>
-      {resp !== null && (
-        <Explicacao
-          ok={resp === certo}
-          texto={porque}
-          ultima={i === GANCHOS.length - 1}
+      {respondeu && (
+        <Feedback
+          ok={resp === g.ok}
+          tempo={esgotou}
+          texto={g.porque}
+          ultima={ultima}
           onProxima={() => {
-            if (i < GANCHOS.length - 1) {
+            if (!ultima) {
               setI(i + 1);
               setResp(null);
-            } else onFim(acertos);
+              setEsgotou(false);
+            } else onFim(marcas.filter(Boolean).length, erros);
           }}
         />
       )}
@@ -298,68 +603,341 @@ function Gancho({ onFim, onSair }: { onFim: (p: number) => void; onSair: () => v
   );
 }
 
-/* ---------- Monte o funil ---------- */
-function embaralhar<T>(a: T[]) {
-  const c = [...a];
-  for (let i = c.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [c[i], c[j]] = [c[j], c[i]];
+/* Duelo de posts: dois posts lado a lado, qual performa melhor. */
+function DueloPosts({ onFim, onSair }: { onFim: Placar; onSair: () => void }) {
+  const [duelos] = useState(() =>
+    sortear(DUELOS).map((d) => (Math.random() < 0.5 ? d : { ...d, a: d.b, b: d.a, certa: (1 - d.certa) as 0 | 1 })),
+  );
+  const [i, setI] = useState(0);
+  const [resp, setResp] = useState<0 | 1 | null>(null);
+  const [marcas, setMarcas] = useState<(boolean | null)[]>(() => duelos.map(() => null));
+  const [erros, setErros] = useState<Erro[]>([]);
+  const d = duelos[i];
+  const ultima = i === duelos.length - 1;
+
+  function escolher(v: 0 | 1) {
+    if (resp !== null) return;
+    setResp(v);
+    const ok = v === d.certa;
+    setMarcas((m) => m.map((x, n) => (n === i ? ok : x)));
+    if (!ok) setErros((e) => [...e, { q: `${d.ctx}: qual performa melhor?`, certa: d.certa === 0 ? d.a : d.b, porque: d.porque }]);
   }
-  return c;
+
+  useEffect(() => {
+    const ouvir = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft" || e.key === "1") escolher(0);
+      if (e.key === "ArrowRight" || e.key === "2") escolher(1);
+    };
+    window.addEventListener("keydown", ouvir);
+    return () => window.removeEventListener("keydown", ouvir);
+  });
+
+  return (
+    <>
+      <Topo k="duelo" i={i} total={duelos.length} marcas={marcas} onSair={onSair}>
+        <span className="hs-gm-placar">
+          <b>{marcas.filter(Boolean).length}</b> pts
+        </span>
+      </Topo>
+      <div className="hs-gm-q">
+        <span className="ctx">Teste A/B · {d.ctx}</span>
+        <p>Qual versão performa melhor?</p>
+      </div>
+      <div className="hs-gm-duelo" key={i}>
+        {[d.a, d.b].map((t, n) => (
+          <button
+            key={n}
+            type="button"
+            disabled={resp !== null}
+            className={resp === null ? undefined : n === d.certa ? "certa" : n === resp ? "errada" : "apagada"}
+            onClick={() => escolher(n as 0 | 1)}
+          >
+            <span className="lado">{n === 0 ? "A" : "B"}</span>
+            <span className="post">
+              <span className="perfil" aria-hidden>
+                <i />
+                <b />
+              </span>
+              <span className="tx">{t}</span>
+              <span className="acoes" aria-hidden>
+                ♡ 💬 ↗
+              </span>
+            </span>
+            {resp !== null && n === d.certa && <span className="venc">🏆 Vencedor</span>}
+          </button>
+        ))}
+        <span className="vs" aria-hidden>
+          VS
+        </span>
+      </div>
+      {resp !== null && (
+        <Feedback
+          ok={resp === d.certa}
+          texto={d.porque}
+          ultima={ultima}
+          onProxima={() => {
+            if (!ultima) {
+              setI(i + 1);
+              setResp(null);
+            } else onFim(marcas.filter(Boolean).length, erros);
+          }}
+        />
+      )}
+    </>
+  );
 }
 
-function Funil({ onFim, onSair }: { onFim: (p: number) => void; onSair: () => void }) {
-  const [ordem] = useState(() => embaralhar(FUNIL_ETAPAS));
+/* Memória do operador: 6 pares termo ↔ significado. 3 erros de graça, depois cada erro tira 1 ponto. */
+type Carta = { id: number; par: number; txt: string; termo: boolean };
+function Memoria({ onFim, onSair }: { onFim: Placar; onSair: () => void }) {
+  const [pares] = useState(() => sortear(PARES));
+  const [cartas] = useState<Carta[]>(() =>
+    embaralhar(pares.flatMap((p, n) => [
+      { id: n * 2, par: n, txt: p.t, termo: true },
+      { id: n * 2 + 1, par: n, txt: p.d, termo: false },
+    ])),
+  );
+  const [abertas, setAbertas] = useState<number[]>([]);
+  const [achados, setAchados] = useState<number[]>([]);
+  const [erros, setErros] = useState(0);
+  const [seg, setSeg] = useState(0);
+  const total = pares.length;
+  const pronto = achados.length === total;
+  const pontos = Math.max(0, total - Math.max(0, erros - 3));
+
+  useEffect(() => {
+    if (pronto) return;
+    const t0 = Date.now();
+    const id = setInterval(() => setSeg(Math.floor((Date.now() - t0) / 1000)), 250);
+    return () => clearInterval(id);
+  }, [pronto]);
+
+  function virar(c: Carta) {
+    if (abertas.length === 2 || abertas.includes(c.id) || achados.includes(c.par)) return;
+    const novas = [...abertas, c.id];
+    setAbertas(novas);
+    if (novas.length === 2) {
+      const [x, y] = novas.map((id) => cartas.find((k) => k.id === id)!);
+      if (x.par === y.par) {
+        setTimeout(() => {
+          setAchados((a) => [...a, x.par]);
+          setAbertas([]);
+        }, 350);
+      } else {
+        setErros((e) => e + 1);
+        setTimeout(() => setAbertas([]), 900);
+      }
+    }
+  }
+
+  const marcas = pares.map((_, n) => (n < achados.length ? true : null));
+
+  return (
+    <>
+      <Topo k="memoria" i={achados.length} total={total} marcas={marcas} onSair={onSair}>
+        <span className="hs-gm-placar">
+          <b>{pontos}</b> pts · {erros} {erros === 1 ? "erro" : "erros"} · {seg}s
+        </span>
+      </Topo>
+      <div className="hs-gm-q">
+        <span className="ctx">{erros < 3 ? `${3 - erros} ${3 - erros === 1 ? "erro grátis" : "erros grátis"}` : "Cada erro agora tira 1 ponto"}</span>
+        <p>Vire as cartas e junte cada termo com o significado.</p>
+      </div>
+      <div className="hs-gm-mem">
+        {cartas.map((c) => {
+          const aberta = abertas.includes(c.id) || achados.includes(c.par);
+          const errou = abertas.length === 2 && abertas.includes(c.id) && !achados.includes(c.par) && (() => {
+            const [x, y] = abertas.map((id) => cartas.find((k) => k.id === id)!);
+            return x.par !== y.par;
+          })();
+          return (
+            <button
+              key={c.id}
+              type="button"
+              className={"hs-gm-carta" + (aberta ? " aberta" : "") + (achados.includes(c.par) ? " achada" : "") + (errou ? " errou" : "")}
+              onClick={() => virar(c)}
+              aria-label={aberta ? c.txt : "Carta virada"}
+              disabled={achados.includes(c.par)}
+            >
+              <span className="in">
+                <span className="fr" aria-hidden>
+                  ?
+                </span>
+                <span className={"vs " + (c.termo ? "termo" : "def")}>{c.txt}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {pronto && (
+        <Feedback
+          ok={pontos === total}
+          texto={pontos === total ? `Todos os pares em ${seg} segundos, com ${erros} ${erros === 1 ? "erro" : "erros"}.` : `Todos os pares, mas ${erros} erros custaram ${total - pontos} ${total - pontos === 1 ? "ponto" : "pontos"}.`}
+          ultima
+          onProxima={() => onFim(pontos, pontos === total ? [] : pares.map((p) => ({ q: p.t, certa: p.d, porque: "" })))}
+        />
+      )}
+    </>
+  );
+}
+
+/* Monte o funil: toque nas etapas na ordem. Cada erro tira um ponto. */
+function MonteFunil({ onFim, onSair }: { onFim: Placar; onSair: () => void }) {
+  const [f] = useState(() => FUNIS[Math.floor(Math.random() * FUNIS.length)]);
+  const [ordem] = useState(() => embaralhar(f.etapas));
   const [prox, setProx] = useState(0);
   const [erros, setErros] = useState(0);
   const [tremer, setTremer] = useState<{ s: string; n: number } | null>(null);
   const [seg, setSeg] = useState(0);
+  const [pronto, setPronto] = useState(false);
+  const total = f.etapas.length;
+  const pontos = Math.max(0, total - erros);
 
   useEffect(() => {
+    if (pronto) return;
     const t0 = Date.now();
-    const id = setInterval(() => setSeg(Math.round((Date.now() - t0) / 1000)), 500);
+    const id = setInterval(() => setSeg(Math.floor((Date.now() - t0) / 1000)), 250);
     return () => clearInterval(id);
-  }, []);
+  }, [pronto]);
 
   function tocar(s: string) {
-    if (FUNIL_ETAPAS.indexOf(s) === prox) {
+    if (pronto) return;
+    if (f.etapas.indexOf(s) === prox) {
       const n = prox + 1;
       setProx(n);
-      if (n === FUNIL_ETAPAS.length) onFim(Math.max(0, FUNIL_ETAPAS.length - erros));
+      if (n === total) setPronto(true);
     } else {
       setErros((e) => e + 1);
       setTremer((t) => ({ s, n: (t?.n ?? 0) + 1 }));
     }
   }
 
+  const marcas = f.etapas.map((_, n) => (n < prox ? true : null));
+
   return (
     <>
-      <Topo titulo="Monte o funil" onSair={onSair}>
-        <span className={m("tag")}>Erros: {erros}</span>
-        <span className={m("tag am")}>{seg} s</span>
+      <Topo k="funil" i={prox} total={total} marcas={marcas} onSair={onSair}>
+        <span className="hs-gm-placar">
+          <b>{pontos}</b> pts · {erros} {erros === 1 ? "erro" : "erros"} · {seg}s
+        </span>
       </Topo>
-      <p className={m("gm-q")} style={{ fontSize: 18 }}>
-        Toque nas etapas na ordem do funil, da primeira à última.
-      </p>
-      <div className={m("gm-fn")}>
-        {ordem.map((s) => {
-          const pos = FUNIL_ETAPAS.indexOf(s);
-          const feito = pos < prox;
-          const erro = tremer?.s === s;
-          return (
-            <button
-              key={erro ? `${s}-${tremer!.n}` : s}
-              type="button"
-              disabled={feito}
-              className={feito ? m("ok") : erro ? m("no") : undefined}
-              onClick={() => tocar(s)}
-            >
-              <i>{feito ? pos + 1 : ""}</i>
-              {s}
-            </button>
-          );
-        })}
+      <div className="hs-gm-q">
+        <span className="ctx">{f.t}</span>
+        <p>Toque nas etapas na ordem, da primeira à última.</p>
       </div>
+      <div className="hs-gm-funil">
+        <ol className="hs-gm-funil-alvo" aria-label="Seu funil">
+          {f.etapas.map((s, n) => (
+            <li key={s} className={n < prox ? "on" : undefined} style={{ "--w": `${100 - n * 11}%` } as React.CSSProperties}>
+              <i>{n + 1}</i>
+              <span>{n < prox ? s : "…"}</span>
+            </li>
+          ))}
+        </ol>
+        <div className="hs-gm-funil-pecas">
+          {ordem.map((s) => {
+            const feito = f.etapas.indexOf(s) < prox;
+            const erro = tremer?.s === s;
+            return (
+              <button key={erro ? `${s}-${tremer!.n}` : s} type="button" disabled={feito || pronto} className={feito ? "usada" : erro ? "no" : undefined} onClick={() => tocar(s)}>
+                {s}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      {pronto && (
+        <Feedback
+          ok={erros === 0}
+          texto={erros === 0 ? `Funil montado sem erro em ${seg} segundos.` : `Funil montado com ${erros} ${erros === 1 ? "erro" : "erros"}. A ordem certa ficou acima: decore e tente zerar.`}
+          ultima
+          onProxima={() => onFim(pontos, erros ? [{ q: f.t, certa: f.etapas.join(" → "), porque: "Cada etapa prepara a próxima: atenção, interesse, confiança e só então a venda." }] : [])}
+        />
+      )}
     </>
+  );
+}
+
+/* ---------------- Fim de jogo ---------------- */
+
+function FimDeJogo({ fim, onDeNovo, onSair }: { fim: Fim; onDeNovo: () => void; onSair: () => void }) {
+  const j = info(fim.k);
+  const pct = fim.pontos / fim.max;
+  const estrelas = pct === 1 ? 3 : pct >= 0.66 ? 2 : pct >= 0.33 ? 1 : 0;
+  const recorde = fim.pontos > fim.recordeAntes;
+  const frase = pct === 1 ? "Gabaritou. Você domina esse assunto." : pct >= 0.5 ? "Mandou bem. Revise os erros e volte para gabaritar." : "Bora revisar as aulas e tentar de novo.";
+  return (
+    <div className="hs-gm-fim">
+      {pct === 1 && <Confete />}
+      <p className="hs-gm-eb">
+        {j.ic} {j.t}
+      </p>
+      <div className="hs-gm-estrelas" aria-label={`${estrelas} de 3 estrelas`}>
+        {[0, 1, 2].map((n) => (
+          <span key={n} className={n < estrelas ? "on" : undefined} style={{ animationDelay: `${0.15 + n * 0.18}s` }}>
+            ★
+          </span>
+        ))}
+      </div>
+      <div className="hs-gm-nota">
+        {fim.pontos}
+        <small>/{fim.max}</small>
+      </div>
+      <p className="hs-gm-frase">{frase}</p>
+      <div className="hs-gm-selos">
+        <span className={"xp" + (fim.xp ? " on" : "")}>
+          {fim.xp === null ? "Salvando…" : fim.limite ? "Limite de 20 partidas hoje" : fim.xp > 0 ? `+${fim.xp} XP` : "Sem XP novo hoje"}
+        </span>
+        {recorde && fim.pontos > 0 && <span className="rec">🏆 Novo recorde</span>}
+      </div>
+      {fim.xp === 0 && !fim.limite && <p className="hs-gm-nota-xp">Só conta o melhor resultado do dia em cada jogo. Supere {fim.max > fim.pontos ? "sua melhor marca" : "o seu dia"} em outro jogo.</p>}
+
+      {fim.erros.length > 0 && (
+        <details className="hs-gm-rev">
+          <summary>
+            Revisar {fim.erros.length} {fim.erros.length === 1 ? "erro" : "erros"}
+          </summary>
+          <ul>
+            {fim.erros.map((e, n) => (
+              <li key={n}>
+                <b>{e.q}</b>
+                <span>
+                  Resposta: <em>{e.certa}</em>
+                </span>
+                <small>{e.porque}</small>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      <div className="hs-gm-fim-acoes">
+        <button type="button" className="hs-gm-btn p" onClick={onDeNovo} autoFocus>
+          Jogar de novo
+        </button>
+        <button type="button" className="hs-gm-btn s" onClick={onSair}>
+          Todos os games
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Confete() {
+  const [pecas] = useState(() =>
+    Array.from({ length: 36 }, (_, n) => ({
+      l: Math.random() * 100,
+      d: Math.random() * 0.6,
+      t: 1.6 + Math.random() * 1.2,
+      c: ["#F1DC9A", "#C9A24E", "#fff", "#E0714F", "#3ECF72"][n % 5],
+      r: Math.random() * 360,
+    })),
+  );
+  return (
+    <span className="hs-gm-confete" aria-hidden>
+      {pecas.map((p, n) => (
+        <i key={n} style={{ left: `${p.l}%`, background: p.c, animationDelay: `${p.d}s`, animationDuration: `${p.t}s`, transform: `rotate(${p.r}deg)` }} />
+      ))}
+    </span>
   );
 }
