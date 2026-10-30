@@ -10,6 +10,7 @@ import Vitrine from "./Vitrine";
 import { capaDoVideo } from "../../_lib/video";
 import { useProgresso } from "../../_components/membros/Progresso";
 import { useAulasInfo } from "../../_components/membros/useAulasInfo";
+import "./modulo.css";
 
 type Filtro = "all" | "own" | "lock";
 
@@ -44,6 +45,20 @@ export default function Modulos() {
   const mod = visiveis[kOk]?.mod ?? atual;
   const prox = proximaAula(mod, feitas);
   const travado = mod.status === "bloqueado";
+  const feitasMod = mod.aulas.filter((a) => feitas.has(a.id)).length;
+  // Soma das durações ("m:ss" ou "h:mm:ss") das aulas do módulo.
+  const duracaoTotal = useMemo(() => {
+    let seg = 0;
+    for (const a of mod.aulas) {
+      const d = info?.get(a.id)?.duracao;
+      if (!d) continue;
+      seg += d.split(":").reduce((t, p) => t * 60 + (Number(p) || 0), 0);
+    }
+    if (!seg) return "";
+    const h = Math.floor(seg / 3600);
+    const min = Math.round((seg % 3600) / 60);
+    return h ? `${h}h ${String(min).padStart(2, "0")}min` : `${min} min`;
+  }, [mod, info]);
 
   const hrefDe = (x: Modulo) => `/dashboard/aulas/${x.slug}${x.status === "feito" ? "" : `?aula=${proximaAula(x, feitas) + 1}`}`;
   const rotuloDe = (x: Modulo) => (x.feitas === 0 ? "Começar" : x.status === "feito" ? "Rever" : "Continuar");
@@ -116,38 +131,80 @@ export default function Modulos() {
       )}
 
       {/* Aulas do módulo que está no centro da vitrine */}
-      <div ref={detalhe} className={m("card") + " hs-mod-det"}>
-        <div className={m("split")} style={{ marginBottom: 12 }}>
-          <h2 style={{ margin: 0 }}>
-            Mod {mod.n} · {mod.t}
-          </h2>
-          {travado ? (
-            <Link className={m("btn btn-s")} href="/dashboard/jornada">
-              Ver requisitos
-            </Link>
-          ) : (
-            <Link className={m("btn btn-p")} href={hrefDe(mod)}>
-              {rotuloDe(mod)}
-            </Link>
-          )}
-        </div>
-        <ol className={m("lessons")}>
+      <div ref={detalhe} className="hs-mod-det hs-md">
+        <header className="hs-md-cab">
+          <span className="hs-md-capa" style={{ backgroundImage: `url(${mod.img})` }} aria-hidden>
+            <b>{mod.n}</b>
+          </span>
+          <div className="hs-md-info">
+            <p className="hs-md-eyebrow">
+              Módulo {mod.n} · {mod.aulas.length} aulas{duracaoTotal ? ` · ${duracaoTotal}` : ""}
+            </p>
+            <h2>{mod.t}</h2>
+            {mod.desc && <p className="hs-md-desc">{mod.desc}</p>}
+            {!travado && (
+              <div className="hs-md-prog" aria-label={`${feitasMod} de ${mod.aulas.length} aulas concluídas`}>
+                <span>
+                  <i style={{ width: `${Math.round((feitasMod / Math.max(1, mod.aulas.length)) * 100)}%` }} />
+                </span>
+                <small>
+                  {feitasMod} de {mod.aulas.length} concluídas
+                </small>
+              </div>
+            )}
+          </div>
+          <div className="hs-md-acao">
+            {travado ? (
+              <>
+                <span className="hs-md-trava">{LOCK} {mod.trava ?? "Bloqueado"}</span>
+                <Link className={m("btn btn-s")} href="/dashboard/jornada">
+                  Ver requisitos
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link className={m("btn btn-p") + " hs-md-cta"} href={hrefDe(mod)}>
+                  {PLAY} {rotuloDe(mod)}
+                </Link>
+                {mod.status !== "feito" && mod.aulas[prox] && (
+                  <small className="hs-md-prox">
+                    Aula {prox + 1}: {mod.aulas[prox].t}
+                  </small>
+                )}
+              </>
+            )}
+          </div>
+        </header>
+
+        <ol className="hs-md-lista">
           {mod.aulas.map((a, j) => {
-            const estado = travado ? "lk" : feitas.has(a.id) ? "done" : j === prox && mod.status === "andamento" ? "cur" : "";
+            const estado = travado ? "lk" : feitas.has(a.id) ? "done" : j === prox && mod.status !== "feito" ? "cur" : "";
+            const dados = info?.get(a.id);
+            const capa = travado ? null : capaDoVideo(dados?.video_url);
+            const bonus = /b[oô]nus/i.test(a.t);
+            const titulo = a.t.replace(/^\(?b[oô]nus\)?\s*[-·:]?\s*/i, "");
             const conteudo = (
               <>
-                <span className={m("c")}>{estado === "done" ? "✓" : estado === "lk" ? LOCK : j + 1}</span>
-                <span className={m("n")}>
-                  {a.t}
-                  {estado === "lk" && <small>{mod.trava}</small>}
-                  {estado === "cur" && <small>Próxima aula</small>}
+                <span className="hs-md-n">{estado === "done" ? "✓" : estado === "lk" ? LOCK : String(j + 1).padStart(2, "0")}</span>
+                <span className="hs-md-th" style={capa ? { backgroundImage: `url(${capa})` } : undefined} aria-hidden>
+                  {!capa && <span className="hs-md-th-n">{j + 1}</span>}
+                  {!travado && <span className="hs-md-play">{PLAY}</span>}
                 </span>
-                <span className={m("t")}>{travado ? "—" : (info?.get(a.id)?.duracao ?? "")}</span>
+                <span className="hs-md-t">
+                  <b>{titulo}</b>
+                  <span className="hs-md-tags">
+                    {estado === "cur" && <em className="prox">Próxima aula</em>}
+                    {estado === "done" && <em className="ok">Assistida</em>}
+                    {bonus && <em className="bonus">Bônus</em>}
+                    {estado === "lk" && mod.trava && <em>{mod.trava}</em>}
+                  </span>
+                </span>
+                <span className="hs-md-dur">{travado ? "—" : (dados?.duracao ?? "")}</span>
               </>
             );
             return (
-              <li key={a.id} className={estado ? m(estado) : undefined}>
-                {travado ? conteudo : <Link href={`/dashboard/aulas/${mod.slug}?aula=${j + 1}`}>{conteudo}</Link>}
+              <li key={a.id} className={estado ? `hs-md-${estado}` : undefined}>
+                {travado ? <div className="hs-md-row">{conteudo}</div> : <Link className="hs-md-row" href={`/dashboard/aulas/${mod.slug}?aula=${j + 1}`}>{conteudo}</Link>}
               </li>
             );
           })}
