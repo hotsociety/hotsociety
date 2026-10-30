@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
-import Esteira from "../../_components/membros/Esteira";
 import { m } from "../../_components/membros/proto";
 import { type Modulo } from "../../_lib/demo";
 import { moduloAtual, proximaAula } from "../../_lib/progresso";
@@ -63,18 +62,6 @@ export default function Modulos() {
   const hrefDe = (x: Modulo) => `/dashboard/aulas/${x.slug}${x.status === "feito" ? "" : `?aula=${proximaAula(x, feitas) + 1}`}`;
   const rotuloDe = (x: Modulo) => (x.feitas === 0 ? "Começar" : x.status === "feito" ? "Rever" : "Continuar");
 
-  // Próximas aulas na ordem do curso, a partir de onde o aluno está (as já vistas ficam de fora).
-  const continuar = useMemo(() => {
-    const lista: { mod: Modulo; i: number }[] = [];
-    for (const x of MODULOS) {
-      if (x.status === "bloqueado") continue;
-      x.aulas.forEach((a, i) => {
-        if (!feitas.has(a.id)) lista.push({ mod: x, i });
-      });
-    }
-    const ini = lista.findIndex((l) => l.mod.slug === atual.slug && l.i === iProx);
-    return (ini > 0 ? lista.slice(ini) : lista).slice(0, 12);
-  }, [MODULOS, feitas, atual, iProx]);
 
   return (
     <section className={m("view")} aria-label="Módulos">
@@ -211,29 +198,6 @@ export default function Modulos() {
         </ol>
       </div>
 
-      {/* Próximas aulas com a capa real do vídeo */}
-      {continuar.length > 0 && (
-        <Esteira titulo={totalFeitas === 0 ? "Comece por aqui" : "Continue assistindo"} sub={`${totalAulas - totalFeitas} aulas pela frente`} largo="aula">
-          {continuar.map(({ mod: x, i }, n) => {
-            const a = x.aulas[i];
-            const dados = info?.get(a.id);
-            const capa = capaDoVideo(dados?.video_url) ?? x.img;
-            return (
-              <Link key={a.id} className="hs-aula-c" href={`/dashboard/aulas/${x.slug}?aula=${i + 1}`}>
-                <span className="cv" style={{ backgroundImage: `url(${capa})` }}>
-                  {n === 0 && <span className="tag">Próxima</span>}
-                  <span className="play">{PLAY}</span>
-                  {dados?.duracao && <span className="dur">{dados.duracao}</span>}
-                </span>
-                <small>
-                  Mod {x.n} · Aula {i + 1}
-                </small>
-                <b>{a.t}</b>
-              </Link>
-            );
-          })}
-        </Esteira>
-      )}
     </section>
   );
 }
