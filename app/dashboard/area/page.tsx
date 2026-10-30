@@ -7,7 +7,6 @@ import { IMG, type Modulo } from "../../_lib/demo";
 import { moduloAtual, proximaAula } from "../../_lib/progresso";
 import { useProgresso } from "../../_components/membros/Progresso";
 import { useAulasInfo } from "../../_components/membros/useAulasInfo";
-import { capaDoVideo } from "../../_lib/video";
 import "./area.css";
 
 type Card = {
@@ -59,7 +58,6 @@ export default function AreaDeMembros() {
   const iProx = proximaAula(andamento, feitas);
   const proxima = andamento.aulas[iProx];
   const dadosProx = proxima ? info?.get(proxima.id) : undefined;
-  const capaProx = capaDoVideo(dadosProx?.video_url) ?? andamento.img;
   const seguintes = andamento.aulas
     .map((a, i) => ({ a, i }))
     .filter(({ a, i }) => i > iProx && !feitas.has(a.id))
@@ -124,7 +122,8 @@ export default function AreaDeMembros() {
                 <i style={{ width: `${pctModulo}%` }} />
               </span>
               <small>
-                Aula {iProx + 1} de {andamento.aulas.length} · {pctModulo}% do módulo
+                Aula {iProx + 1} de {andamento.aulas.length}
+                {dadosProx?.duracao ? ` · ${dadosProx.duracao}` : ""} · {pctModulo}% do módulo
               </small>
             </div>
             <div className="hs-am2-acoes">
@@ -152,11 +151,6 @@ export default function AreaDeMembros() {
               </div>
             )}
           </div>
-          <Link className="hs-am2-video" href={`/dashboard/aulas/${andamento.slug}?aula=${iProx + 1}`} aria-label={`Assistir: ${proxima.t}`}>
-            <span className="cv" style={{ backgroundImage: `url(${capaProx})` }} />
-            <span className="pl">{PLAY}</span>
-            {dadosProx?.duracao && <span className="du">{dadosProx.duracao}</span>}
-          </Link>
         </div>
       )}
 
