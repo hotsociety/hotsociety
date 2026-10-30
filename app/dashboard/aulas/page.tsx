@@ -164,7 +164,7 @@ export default function Modulos() {
             ) : (
               <>
                 <Link className={m("btn btn-p") + " hs-md-cta"} href={hrefDe(mod)}>
-                  {PLAY} {rotuloDe(mod)}
+                  {rotuloDe(mod)}
                 </Link>
                 {mod.status !== "feito" && mod.aulas[prox] && (
                   <small className="hs-md-prox">
