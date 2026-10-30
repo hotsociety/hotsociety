@@ -63,14 +63,14 @@ img { display: block; max-width: 100%; }
 
 /* ---------- HERO ---------- */
 .hero { position: relative; min-height: 100svh; display: grid; align-content: end; overflow: hidden; isolation: isolate; }
-.hero-img { position: absolute; inset: -4% -4% 0; z-index: -2; background: #000 url(img/911.webp) 62% 40% / cover; transform: scale(1.12); animation: kb 22s ease-in-out infinite alternate; will-change: transform; }
+.hero-img { position: absolute; inset: 0 0 auto; height: 64svh; z-index: -2; background: #000 url(img/911.webp) 72% 100% / cover; transform-origin: 75% 70%; transform: scale(1.12); animation: kb 22s ease-in-out infinite alternate; will-change: transform; }
+  .hero-img > span { display: none; }
 @keyframes kb { to { transform: scale(1.02) translate(-1.5%, 1%); } }
 .hero::before { content: ""; position: absolute; inset: 0; z-index: -1;
   background:
-    linear-gradient(180deg, rgba(4,9,23,.75) 0%, rgba(4,9,23,.05) 22%, rgba(4,9,23,.1) 45%, rgba(4,9,23,.85) 72%, var(--bg) 100%),
-    radial-gradient(80% 50% at 20% 100%, rgba(7,18,51,.9), transparent 70%),
-    linear-gradient(90deg, rgba(4,9,23,.55), transparent 60%); }
-.lanterna { position: absolute; z-index: -1; right: -10%; top: 58%; width: 80%; height: 3px; border-radius: 3px; background: linear-gradient(90deg, transparent, var(--red) 30%, #ff8a95 50%, var(--red) 70%, transparent); filter: blur(.5px); box-shadow: 0 0 30px 6px rgba(255,45,63,.45); opacity: .0; animation: lant 4.5s ease-in-out 1.6s infinite; }
+    linear-gradient(180deg, rgba(4,9,23,.7) 0%, rgba(4,9,23,0) 16%, rgba(4,9,23,0) 40%, rgba(4,9,23,.75) 56%, var(--bg) 64%),
+    radial-gradient(70% 22% at 80% 42%, rgba(255,45,63,.22), transparent 70%); }
+.lanterna { display: none; position: absolute; z-index: -1; right: -10%; top: 58%; width: 80%; height: 3px; border-radius: 3px; background: linear-gradient(90deg, transparent, var(--red) 30%, #ff8a95 50%, var(--red) 70%, transparent); filter: blur(.5px); box-shadow: 0 0 30px 6px rgba(255,45,63,.45); opacity: .0; animation: lant 4.5s ease-in-out 1.6s infinite; }
 @keyframes lant { 0%, 100% { opacity: 0; transform: scaleX(.4); } 30%, 70% { opacity: .85; transform: scaleX(1); } }
 
 .top { position: absolute; top: 0; left: 0; right: 0; z-index: 3; display: flex; justify-content: space-between; align-items: center; padding: max(16px, env(safe-area-inset-top)) 16px 0; max-width: 1180px; margin: 0 auto; }
@@ -251,6 +251,24 @@ footer { position: relative; z-index: 2; max-width: 1180px; margin: 90px auto 0;
 .lb .pv { left: 16px; top: 50%; transform: translateY(-50%); }
 .lb .nx { right: 16px; top: 50%; transform: translateY(-50%); }
 
+/* Computador: a foto vira um painel à direita, enquadrada na lanterna acesa */
+@media (min-width: 900px) {
+  .hero { align-content: center; background: radial-gradient(45% 60% at 78% 55%, rgba(255,45,63,.16), transparent 70%), radial-gradient(60% 80% at 10% 100%, #0b1a48, transparent 70%), var(--bg); }
+  .hero::before { background: linear-gradient(180deg, transparent 75%, var(--bg)); }
+  .hero-img { inset: 96px max(24px, calc((100vw - 1180px) / 2 + 16px)) 48px auto; width: min(42vw, 560px); border-radius: 30px; border: 1px solid rgba(160,190,255,.22);
+    background-size: 112% auto; background-position: 100% 76%; background-repeat: no-repeat; transform: none; animation: kbd 18s ease-in-out infinite alternate;
+    box-shadow: 0 50px 120px -40px rgba(255,45,63,.55), 0 0 0 10px rgba(10,21,52,.35); overflow: hidden; }
+  .hero-img::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(90deg, rgba(4,9,23,.55), transparent 35%), linear-gradient(180deg, rgba(4,9,23,.35), transparent 30%, transparent 70%, rgba(4,9,23,.6)); }
+  .hero-img::after { content: ""; position: absolute; left: 30%; right: -10%; top: 56%; height: 22%; background: radial-gradient(60% 50% at 70% 50%, rgba(255,45,63,.55), transparent 70%); mix-blend-mode: screen; animation: brilho 3.2s ease-in-out infinite; }
+  @keyframes kbd { from { background-size: 112% auto; background-position: 100% 76%; } to { background-size: 168% auto; background-position: 97% 72%; } }
+  @keyframes brilho { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+  .hero-img > span { display: block; position: absolute; z-index: 1; left: 18px; bottom: 16px; font: 500 10.5px/1 var(--f-m); letter-spacing: .16em; color: var(--led2); text-transform: uppercase; }
+  .hero-img > span b { color: var(--red); }
+  .hero-tx { padding-right: calc(min(42vw, 560px) + 56px); padding-top: 96px; }
+  .lanterna { display: none; }
+  .cue { display: none; }
+}
+
 @media (max-width: 860px) {
   .console { grid-template-columns: 1fr; }
   .gar { grid-auto-columns: 74%; }
@@ -287,7 +305,7 @@ footer { position: relative; z-index: 2; max-width: 1180px; margin: 90px auto 0;
 <div class="spot" id="spot" aria-hidden="true"></div>
 
 <header class="hero" id="hero">
-  <div class="hero-img" id="heroImg" role="img" aria-label="Porsche 911 azul-escuro com a lanterna acesa numa garagem à noite"></div>
+  <div class="hero-img" id="heroImg" role="img" aria-label="Porsche 911 azul-escuro com a lanterna acesa numa garagem à noite"><span>Porsche 911 · <b>●</b> lanterna on</span></div>
   <span class="lanterna" aria-hidden="true"></span>
   <div class="top">
     <span class="pill"><i></i>online · SP <b id="clock">--:--</b></span>
@@ -493,7 +511,7 @@ footer { position: relative; z-index: 2; max-width: 1180px; margin: 90px auto 0;
   addEventListener('pointermove', e => { spot.style.setProperty('--x', e.clientX + 'px'); spot.style.setProperty('--y', e.clientY + 'px'); }, { passive: true });
   if (!RM) addEventListener('scroll', () => {
     const y = scrollY;
-    if (y < innerHeight * 1.2) heroImg.style.translate = '0 ' + (y * .35) + 'px';
+    if (y < innerHeight * 1.2) heroImg.style.translate = '0 ' + (y * (innerWidth >= 900 ? .12 : .35)) + 'px';
   }, { passive: true });
 
   // revelar ao rolar
