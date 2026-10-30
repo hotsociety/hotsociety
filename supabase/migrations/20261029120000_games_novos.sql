@@ -1,7 +1,7 @@
--- Games: três jogos novos (persona, chat, conta) e resumo do dia para a tela.
+-- Games: seis jogos novos (persona, chat, conta, mito, duelo, memoria) e resumo do dia para a tela.
 alter table public.jogos_partidas drop constraint if exists jogos_partidas_jogo_check;
 alter table public.jogos_partidas add constraint jogos_partidas_jogo_check
-  check (jogo in ('quiz', 'hook', 'funil', 'persona', 'chat', 'conta'));
+  check (jogo in ('quiz', 'hook', 'funil', 'persona', 'chat', 'conta', 'mito', 'duelo', 'memoria'));
 
 -- Mesmas regras: XP só sobre o melhor resultado do dia em cada jogo (10 XP por ponto), até 20 partidas por dia.
 create or replace function public.registrar_partida(p_jogo text, p_pontos int)
@@ -10,7 +10,8 @@ language plpgsql security definer set search_path = '' as $$
 declare
   uid uuid := public.hs_exigir_acesso();
   maxp int := case p_jogo when 'quiz' then 6 when 'hook' then 6 when 'funil' then 5
-                          when 'persona' then 6 when 'chat' then 6 when 'conta' then 6 end;
+                          when 'persona' then 6 when 'chat' then 6 when 'conta' then 6
+                          when 'mito' then 6 when 'duelo' then 6 when 'memoria' then 6 end;
   antes int;
   ganho int;
 begin

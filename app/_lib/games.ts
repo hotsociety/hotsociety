@@ -1,7 +1,7 @@
 // Games da área de membros: catálogo, bancos de perguntas (cada partida sorteia 6) e geradores.
 // Os pontos máximos de cada jogo precisam bater com o "maxp" de registrar_partida no banco.
 
-export type JogoId = "quiz" | "hook" | "funil" | "persona" | "chat" | "conta";
+export type JogoId = "quiz" | "hook" | "funil" | "persona" | "chat" | "conta" | "mito" | "duelo" | "memoria";
 
 export type InfoJogo = {
   k: JogoId;
@@ -22,6 +22,9 @@ export const CATALOGO: InfoJogo[] = [
   { k: "persona", t: "Desafio da persona", d: "Leia o briefing do público e escolha a persona que vai converter.", max: 6, ic: "🎭", cat: "Conteúdo", dur: "3 min", cor: "#B47BE0", novo: true },
   { k: "chat", t: "Objeção na DM", d: "O lead mandou mensagem. Escolha a resposta que fecha a venda.", max: 6, ic: "💬", cat: "Vendas", dur: "3 min", cor: "#3ECF72", novo: true },
   { k: "conta", t: "Calcula o caixa", d: "Conta de cabeça: ticket, churn, conversão. 20 segundos cada.", max: 6, ic: "🧮", cat: "Números", dur: "2 min", cor: "#E8C35A", novo: true },
+  { k: "mito", t: "Verdade ou mito", d: "O que todo mundo repete no digital: é verdade ou é mito? 10 segundos cada.", max: 6, ic: "🕵️", cat: "Conhecimento", dur: "1 min", cor: "#4FC3C9", novo: true },
+  { k: "duelo", t: "Duelo de posts", d: "Dois posts, um teste A/B. Qual deles performa melhor?", max: 6, ic: "⚔️", cat: "Conteúdo", dur: "2 min", cor: "#E05B8F", novo: true },
+  { k: "memoria", t: "Memória do operador", d: "Ache os pares de termo e significado. Errou muito, perde ponto.", max: 6, ic: "🧠", cat: "Conhecimento", dur: "2 min", cor: "#8A9BFF", novo: true },
 ];
 
 export const POR_RODADA = 6;
@@ -130,6 +133,63 @@ export const CHATS: Pergunta[] = [
   { q: "Vi outra parecida mais barata", ops: ["A outra é fake", "Cada uma tem seu estilo. Aqui você tem [diferencial]. Quer ver?", "Então vai lá"], certa: 1, porque: "Não fale mal da concorrência. Mostre seu diferencial." },
   { q: "Responde rápido assim sempre?", ops: ["Sempre que posso! Assinante tem prioridade nas respostas 😉", "Não", "É robô"], certa: 0, porque: "Use a pergunta para mostrar um benefício de assinar." },
   { q: "Me manda o link", ops: ["Aqui: [link]. Qualquer dúvida no pagamento me chama!", "Tá na bio", "Depois mando"], certa: 0, porque: "Lead pediu o link: mande na hora e se coloque disponível. Cada segundo conta." },
+];
+
+/* ---------- Verdade ou mito ---------- */
+export type Binario = { f: string; ok: boolean; porque: string };
+export const MITOS: Binario[] = [
+  { f: "Precisa de muitos seguidores para começar a vender.", ok: false, porque: "Mito. Perfil pequeno com público certo e oferta clara já vende." },
+  { f: "Conteúdo feito com IA deve ser identificado como IA.", ok: true, porque: "Verdade. Transparência é regra da Society e protege sua conta." },
+  { f: "Postar todo dia garante crescimento.", ok: false, porque: "Mito. Frequência ajuda, mas sem gancho e sem consistência de persona não adianta." },
+  { f: "Quem já comprou uma vez é o lead mais fácil de vender de novo.", ok: true, porque: "Verdade. Cliente que confia compra mais barato e mais rápido." },
+  { f: "Tráfego pago resolve um funil que não converte.", ok: false, porque: "Mito. Anúncio só acelera o que já funciona. Funil ruim + tráfego = prejuízo maior." },
+  { f: "Os 2 primeiros segundos decidem se a pessoa assiste ao Reels.", ok: true, porque: "Verdade. Por isso o gancho vem antes de qualquer apresentação." },
+  { f: "Dá para usar o rosto de uma famosa se for só inspiração.", ok: false, porque: "Mito. Rosto ou nome de pessoa real é proibido. Persona 100% original." },
+  { f: "Plano anual ajuda a diminuir o cancelamento.", ok: true, porque: "Verdade. Quem paga o ano tem menos momentos para desistir." },
+  { f: "Prazo de oferta pode ser prorrogado sem problema.", ok: false, porque: "Mito. Prazo falso ensina o cliente a esperar e queima a confiança." },
+  { f: "Ticket médio sobe com upsell logo depois da compra.", ok: true, porque: "Verdade. É o momento de maior confiança do cliente." },
+  { f: "Hashtag é o que mais faz um post viralizar.", ok: false, porque: "Mito. Retenção, salvamentos e compartilhamentos pesam muito mais." },
+  { f: "A persona deve ter aparência sempre claramente adulta.", ok: true, porque: "Verdade. Regra inegociável." },
+  { f: "Se o print do resultado for editado ninguém percebe.", ok: false, porque: "Mito e antiético. Prova social só vale se for real." },
+  { f: "Responder rápido no direct aumenta a conversão.", ok: true, porque: "Verdade. Lead quente esfria em minutos." },
+  { f: "Ter várias personas ao mesmo tempo acelera o resultado de quem está começando.", ok: false, porque: "Mito. Uma persona bem feita e testada por 30 dias rende mais que cinco pela metade." },
+  { f: "Pedir dados de cartão pelo direct é normal.", ok: false, porque: "Mito. Pagamento só por link seguro. Nunca peça dados de cartão no chat." },
+];
+
+/* ---------- Duelo de posts ---------- */
+export type Duelo = { ctx: string; a: string; b: string; certa: 0 | 1; porque: string };
+export const DUELOS: Duelo[] = [
+  { ctx: "Legenda", a: "Bom dia! Mais um post pra vocês 💕", b: "Eu quase desisti no mês 2. O que me fez continuar 👇", certa: 1, porque: "B cria curiosidade e conta uma história. A não dá motivo para ler." },
+  { ctx: "Capa do Reels", a: "3 erros que travam sua primeira venda", b: "Vídeo sobre vendas", certa: 0, porque: "Número + dor específica na capa vence o genérico." },
+  { ctx: "Chamada para ação", a: "Link na bio 😉", b: "Comenta QUERO que eu te mando o link no direct", certa: 1, porque: "CTA com ação simples gera comentários e conversa no direct, que converte mais." },
+  { ctx: "Story de oferta", a: "Promoção! Corre!", b: "Só até 23h59 de hoje: anual com bônus. Depois volta ao normal.", certa: 1, porque: "Prazo real e oferta clara. A não diz o quê nem até quando." },
+  { ctx: "Bio", a: "Persona criada com IA ✨ Bastidores, rotina e conteúdo exclusivo ↓", b: "Sou eu 😜", certa: 0, porque: "A diz quem é, o que a pessoa recebe e já é transparente sobre IA." },
+  { ctx: "Carrossel", a: "Slide 1: Meu método completo (leia tudo)", b: "Slide 1: Você está perdendo assinantes por ISSO →", certa: 1, porque: "O primeiro slide é um gancho. B promete uma resposta e puxa o próximo slide." },
+  { ctx: "Horário", a: "Postar quando o seu público está online (vi nos insights)", b: "Postar quando der tempo", certa: 0, porque: "Insights mostram quando seu público está ativo. Use os dados." },
+  { ctx: "Prova social", a: "Print real de um feedback, com nome escondido", b: "\"Todo mundo ama meu conteúdo\"", certa: 0, porque: "Prova concreta vence afirmação vaga. E proteja os dados de quem comprou." },
+  { ctx: "Reels", a: "Começa com logo animada de 4 segundos", b: "Começa já na frase mais forte do vídeo", certa: 1, porque: "Ninguém espera a logo. A frase forte segura nos 2 primeiros segundos." },
+  { ctx: "Mensagem de boas-vindas", a: "Obrigado por assinar! Comece por aqui: [3 conteúdos favoritos]", b: "Obrigado.", certa: 0, porque: "Boas-vindas guiadas fazem o assinante consumir logo e reduzem o cancelamento." },
+  { ctx: "Preço", a: "R$ 29,90/mês", b: "R$ 29,90/mês · ou R$ 0,99 por dia, menos que um café", certa: 1, porque: "Ancorar o preço no custo diário reduz a percepção de caro." },
+  { ctx: "Sequência de stories", a: "10 stories seguidos de foto sem texto", b: "Pergunta na caixinha → resposta → bastidor → oferta", certa: 1, porque: "Sequência com narrativa e interação aquece até a oferta." },
+];
+
+/* ---------- Memória do operador (pares termo ↔ significado) ---------- */
+export type Par = { t: string; d: string };
+export const PARES: Par[] = [
+  { t: "Churn", d: "% de assinantes que cancelam no mês" },
+  { t: "Ticket médio", d: "Faturamento ÷ número de vendas" },
+  { t: "CPA", d: "Quanto custa cada venda no anúncio" },
+  { t: "Upsell", d: "Oferta extra logo após a compra" },
+  { t: "Gancho", d: "Frase que segura nos 2 primeiros segundos" },
+  { t: "CTA", d: "A chamada para a ação: comente, clique, assine" },
+  { t: "Funil", d: "Caminho do seguidor até a compra" },
+  { t: "Persona", d: "Personagem com nome, estilo e rotina definidos" },
+  { t: "Recorrência", d: "Receita que se repete todo mês" },
+  { t: "Prova social", d: "Resultado real que gera confiança" },
+  { t: "Conversão", d: "% de visitantes que viram clientes" },
+  { t: "Orgânico", d: "Alcance sem pagar anúncio" },
+  { t: "Lead", d: "Pessoa interessada que ainda não comprou" },
+  { t: "Retenção", d: "Quanto tempo o assinante continua pagando" },
 ];
 
 /* ---------- Calcula o caixa (geradas a cada partida) ---------- */

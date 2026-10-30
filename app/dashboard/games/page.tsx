@@ -5,7 +5,10 @@ import { toast } from "../../_components/membros/Toast";
 import {
   CATALOGO,
   CHATS,
+  DUELOS,
   FUNIS,
+  MITOS,
+  PARES,
   GANCHOS,
   PERSONAS,
   QUIZ,
@@ -13,6 +16,7 @@ import {
   misturarOpcoes,
   embaralhar,
   sortear,
+  type Binario as ItemBinario,
   type InfoJogo,
   type JogoId,
   type Pergunta,
@@ -291,14 +295,19 @@ function Ranking({ linhas }: { linhas: Linha[] | null }) {
 /* ---------------- Partida ---------------- */
 
 function Partida({ k, onFim, onSair }: { k: JogoId; onFim: Placar; onSair: () => void }) {
-  if (k === "hook") return <Gancho onFim={onFim} onSair={onSair} />;
+  if (k === "hook")
+    return <Binario k="hook" itens={GANCHOS.map((g) => ({ f: `“${g.f}”`, ok: g.ok, porque: g.porque }))} rotulo="Reels · primeiros 2 segundos" nao="🙈 Mico" sim="🎣 Gancho" seloNao="MICO" seloSim="GANCHO" onFim={onFim} onSair={onSair} />;
+  if (k === "mito")
+    return <Binario k="mito" itens={MITOS} rotulo="Verdade ou mito?" nao="❌ Mito" sim="✅ Verdade" seloNao="MITO" seloSim="VERDADE" tempo={10} onFim={onFim} onSair={onSair} />;
+  if (k === "duelo") return <DueloPosts onFim={onFim} onSair={onSair} />;
+  if (k === "memoria") return <Memoria onFim={onFim} onSair={onSair} />;
   if (k === "funil") return <MonteFunil onFim={onFim} onSair={onSair} />;
   const cfg = {
     quiz: { banco: () => sortear(QUIZ).map(misturarOpcoes), tempo: 15, modo: "quiz" as const },
     persona: { banco: () => sortear(PERSONAS).map(misturarOpcoes), tempo: 0, modo: "persona" as const },
     chat: { banco: () => sortear(CHATS).map(misturarOpcoes), tempo: 0, modo: "chat" as const },
     conta: { banco: gerarContas, tempo: 20, modo: "conta" as const },
-  }[k];
+  }[k as "quiz" | "persona" | "chat" | "conta"];
   return <Escolha k={k} gerar={cfg.banco} tempo={cfg.tempo} modo={cfg.modo} onFim={onFim} onSair={onSair} />;
 }
 
@@ -475,23 +484,67 @@ function Escolha({
   );
 }
 
-/* Gancho ou mico: cartão no centro, ← mico / gancho →. */
-function Gancho({ onFim, onSair }: { onFim: Placar; onSair: () => void }) {
-  const [frases] = useState(() => sortear(GANCHOS));
+/* Gancho ou mico e Verdade ou mito: cartão no centro, ← não / sim →. */
+function Binario({
+  k,
+  itens,
+  rotulo,
+  nao,
+  sim,
+  seloNao,
+  seloSim,
+  tempo = 0,
+  onFim,
+  onSair,
+}: {
+  k: JogoId;
+  itens: ItemBinario[];
+  rotulo: string;
+  nao: string;
+  sim: string;
+  seloNao: string;
+  seloSim: string;
+  tempo?: number;
+  onFim: Placar;
+  onSair: () => void;
+}) {
+  const [frases] = useState(() => sortear(itens));
   const [i, setI] = useState(0);
   const [resp, setResp] = useState<boolean | null>(null);
+  const [esgotou, setEsgotou] = useState(false);
   const [marcas, setMarcas] = useState<(boolean | null)[]>(() => frases.map(() => null));
   const [erros, setErros] = useState<Erro[]>([]);
+  const barra = useRef<HTMLElement>(null);
   const g = frases[i];
   const ultima = i === frases.length - 1;
 
-  function escolher(v: boolean) {
-    if (resp !== null) return;
-    setResp(v);
+  function escolher(v: boolean | null) {
+    if (resp !== null || esgotou) return;
     const ok = v === g.ok;
+    if (v === null) setEsgotou(true);
+    else setResp(v);
     setMarcas((m) => m.map((x, n) => (n === i ? ok : x)));
-    if (!ok) setErros((e) => [...e, { q: `“${g.f}”`, certa: g.ok ? "Gancho" : "Mico", porque: g.porque }]);
+    if (!ok) setErros((e) => [...e, { q: g.f, certa: g.ok ? seloSim : seloNao, porque: g.porque }]);
   }
+  const respondeu = resp !== null || esgotou;
+
+  useEffect(() => {
+    if (!tempo || respondeu) return;
+    const t0 = Date.now();
+    const id = setInterval(() => {
+      const resta = tempo - (Date.now() - t0) / 1000;
+      if (barra.current) {
+        barra.current.style.width = Math.max(0, (resta / tempo) * 100) + "%";
+        barra.current.dataset.urg = resta < 3 ? "1" : "";
+      }
+      if (resta <= 0) {
+        clearInterval(id);
+        escolher(null);
+      }
+    }, 100);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i, respondeu, tempo]);
 
   useEffect(() => {
     const ouvir = (e: KeyboardEvent) => {
@@ -504,32 +557,123 @@ function Gancho({ onFim, onSair }: { onFim: Placar; onSair: () => void }) {
 
   return (
     <>
-      <Topo k="hook" i={i} total={frases.length} marcas={marcas} onSair={onSair}>
+      <Topo k={k} i={i} total={frases.length} marcas={marcas} onSair={onSair}>
         <span className="hs-gm-placar">
           <b>{marcas.filter(Boolean).length}</b> pts
         </span>
       </Topo>
+      {tempo > 0 && (
+        <div className="hs-gm-tempo">
+          <i ref={barra} key={i} style={{ width: respondeu ? undefined : "100%" }} />
+        </div>
+      )}
       <div className="hs-gm-hookpilha">
         <span className="atras" aria-hidden />
         <span className="atras b" aria-hidden />
         <div key={i} className={"hs-gm-hook" + (resp === null ? "" : resp ? " dir" : " esq")}>
-          <small>Reels · primeiros 2 segundos</small>
-          <p>“{g.f}”</p>
-          {resp !== null && <span className={"selo " + (resp === g.ok ? "ok" : "no")}>{g.ok ? "GANCHO" : "MICO"}</span>}
+          <small>{rotulo}</small>
+          <p>{g.f}</p>
+          {respondeu && <span className={"selo " + (resp === g.ok ? "ok" : "no")}>{g.ok ? seloSim : seloNao}</span>}
         </div>
       </div>
       <div className="hs-gm-yn">
-        <button type="button" className="mico" disabled={resp !== null} onClick={() => escolher(false)}>
-          <kbd>←</kbd> 🙈 Mico
+        <button type="button" className="mico" disabled={respondeu} onClick={() => escolher(false)}>
+          <kbd>←</kbd> {nao}
         </button>
-        <button type="button" className="gancho" disabled={resp !== null} onClick={() => escolher(true)}>
-          🎣 Gancho <kbd>→</kbd>
+        <button type="button" className="gancho" disabled={respondeu} onClick={() => escolher(true)}>
+          {sim} <kbd>→</kbd>
         </button>
+      </div>
+      {respondeu && (
+        <Feedback
+          ok={resp === g.ok}
+          tempo={esgotou}
+          texto={g.porque}
+          ultima={ultima}
+          onProxima={() => {
+            if (!ultima) {
+              setI(i + 1);
+              setResp(null);
+              setEsgotou(false);
+            } else onFim(marcas.filter(Boolean).length, erros);
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+/* Duelo de posts: dois posts lado a lado, qual performa melhor. */
+function DueloPosts({ onFim, onSair }: { onFim: Placar; onSair: () => void }) {
+  const [duelos] = useState(() =>
+    sortear(DUELOS).map((d) => (Math.random() < 0.5 ? d : { ...d, a: d.b, b: d.a, certa: (1 - d.certa) as 0 | 1 })),
+  );
+  const [i, setI] = useState(0);
+  const [resp, setResp] = useState<0 | 1 | null>(null);
+  const [marcas, setMarcas] = useState<(boolean | null)[]>(() => duelos.map(() => null));
+  const [erros, setErros] = useState<Erro[]>([]);
+  const d = duelos[i];
+  const ultima = i === duelos.length - 1;
+
+  function escolher(v: 0 | 1) {
+    if (resp !== null) return;
+    setResp(v);
+    const ok = v === d.certa;
+    setMarcas((m) => m.map((x, n) => (n === i ? ok : x)));
+    if (!ok) setErros((e) => [...e, { q: `${d.ctx}: qual performa melhor?`, certa: d.certa === 0 ? d.a : d.b, porque: d.porque }]);
+  }
+
+  useEffect(() => {
+    const ouvir = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft" || e.key === "1") escolher(0);
+      if (e.key === "ArrowRight" || e.key === "2") escolher(1);
+    };
+    window.addEventListener("keydown", ouvir);
+    return () => window.removeEventListener("keydown", ouvir);
+  });
+
+  return (
+    <>
+      <Topo k="duelo" i={i} total={duelos.length} marcas={marcas} onSair={onSair}>
+        <span className="hs-gm-placar">
+          <b>{marcas.filter(Boolean).length}</b> pts
+        </span>
+      </Topo>
+      <div className="hs-gm-q">
+        <span className="ctx">Teste A/B · {d.ctx}</span>
+        <p>Qual versão performa melhor?</p>
+      </div>
+      <div className="hs-gm-duelo" key={i}>
+        {[d.a, d.b].map((t, n) => (
+          <button
+            key={n}
+            type="button"
+            disabled={resp !== null}
+            className={resp === null ? undefined : n === d.certa ? "certa" : n === resp ? "errada" : "apagada"}
+            onClick={() => escolher(n as 0 | 1)}
+          >
+            <span className="lado">{n === 0 ? "A" : "B"}</span>
+            <span className="post">
+              <span className="perfil" aria-hidden>
+                <i />
+                <b />
+              </span>
+              <span className="tx">{t}</span>
+              <span className="acoes" aria-hidden>
+                ♡ 💬 ↗
+              </span>
+            </span>
+            {resp !== null && n === d.certa && <span className="venc">🏆 Vencedor</span>}
+          </button>
+        ))}
+        <span className="vs" aria-hidden>
+          VS
+        </span>
       </div>
       {resp !== null && (
         <Feedback
-          ok={resp === g.ok}
-          texto={g.porque}
+          ok={resp === d.certa}
+          texto={d.porque}
           ultima={ultima}
           onProxima={() => {
             if (!ultima) {
@@ -537,6 +681,100 @@ function Gancho({ onFim, onSair }: { onFim: Placar; onSair: () => void }) {
               setResp(null);
             } else onFim(marcas.filter(Boolean).length, erros);
           }}
+        />
+      )}
+    </>
+  );
+}
+
+/* Memória do operador: 6 pares termo ↔ significado. 3 erros de graça, depois cada erro tira 1 ponto. */
+type Carta = { id: number; par: number; txt: string; termo: boolean };
+function Memoria({ onFim, onSair }: { onFim: Placar; onSair: () => void }) {
+  const [pares] = useState(() => sortear(PARES));
+  const [cartas] = useState<Carta[]>(() =>
+    embaralhar(pares.flatMap((p, n) => [
+      { id: n * 2, par: n, txt: p.t, termo: true },
+      { id: n * 2 + 1, par: n, txt: p.d, termo: false },
+    ])),
+  );
+  const [abertas, setAbertas] = useState<number[]>([]);
+  const [achados, setAchados] = useState<number[]>([]);
+  const [erros, setErros] = useState(0);
+  const [seg, setSeg] = useState(0);
+  const total = pares.length;
+  const pronto = achados.length === total;
+  const pontos = Math.max(0, total - Math.max(0, erros - 3));
+
+  useEffect(() => {
+    if (pronto) return;
+    const t0 = Date.now();
+    const id = setInterval(() => setSeg(Math.floor((Date.now() - t0) / 1000)), 250);
+    return () => clearInterval(id);
+  }, [pronto]);
+
+  function virar(c: Carta) {
+    if (abertas.length === 2 || abertas.includes(c.id) || achados.includes(c.par)) return;
+    const novas = [...abertas, c.id];
+    setAbertas(novas);
+    if (novas.length === 2) {
+      const [x, y] = novas.map((id) => cartas.find((k) => k.id === id)!);
+      if (x.par === y.par) {
+        setTimeout(() => {
+          setAchados((a) => [...a, x.par]);
+          setAbertas([]);
+        }, 350);
+      } else {
+        setErros((e) => e + 1);
+        setTimeout(() => setAbertas([]), 900);
+      }
+    }
+  }
+
+  const marcas = pares.map((_, n) => (n < achados.length ? true : null));
+
+  return (
+    <>
+      <Topo k="memoria" i={achados.length} total={total} marcas={marcas} onSair={onSair}>
+        <span className="hs-gm-placar">
+          <b>{pontos}</b> pts · {erros} {erros === 1 ? "erro" : "erros"} · {seg}s
+        </span>
+      </Topo>
+      <div className="hs-gm-q">
+        <span className="ctx">{erros < 3 ? `${3 - erros} ${3 - erros === 1 ? "erro grátis" : "erros grátis"}` : "Cada erro agora tira 1 ponto"}</span>
+        <p>Vire as cartas e junte cada termo com o significado.</p>
+      </div>
+      <div className="hs-gm-mem">
+        {cartas.map((c) => {
+          const aberta = abertas.includes(c.id) || achados.includes(c.par);
+          const errou = abertas.length === 2 && abertas.includes(c.id) && !achados.includes(c.par) && (() => {
+            const [x, y] = abertas.map((id) => cartas.find((k) => k.id === id)!);
+            return x.par !== y.par;
+          })();
+          return (
+            <button
+              key={c.id}
+              type="button"
+              className={"hs-gm-carta" + (aberta ? " aberta" : "") + (achados.includes(c.par) ? " achada" : "") + (errou ? " errou" : "")}
+              onClick={() => virar(c)}
+              aria-label={aberta ? c.txt : "Carta virada"}
+              disabled={achados.includes(c.par)}
+            >
+              <span className="in">
+                <span className="fr" aria-hidden>
+                  ?
+                </span>
+                <span className={"vs " + (c.termo ? "termo" : "def")}>{c.txt}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {pronto && (
+        <Feedback
+          ok={pontos === total}
+          texto={pontos === total ? `Todos os pares em ${seg} segundos, com ${erros} ${erros === 1 ? "erro" : "erros"}.` : `Todos os pares, mas ${erros} erros custaram ${total - pontos} ${total - pontos === 1 ? "ponto" : "pontos"}.`}
+          ultima
+          onProxima={() => onFim(pontos, pontos === total ? [] : pares.map((p) => ({ q: p.t, certa: p.d, porque: "" })))}
         />
       )}
     </>
