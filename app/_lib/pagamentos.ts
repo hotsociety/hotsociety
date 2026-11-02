@@ -912,8 +912,10 @@ export async function aplicarCobranca(sb: SupabaseClient, c: Cobranca): Promise<
       atualizado_em: new Date().toISOString(),
     })
     .eq("id", p.id)
+    .eq("status", p.status) // só aplica uma vez: se o aviso e a consulta chegarem juntos, o segundo não repete nada
     .select("*")
-    .single<Pedido>();
+    .maybeSingle<Pedido>();
+  if (!atual) return p;
 
   // Stripe: repasse automático da parte do sócio (Connect) e estorno em reembolso/contestação.
   if (atual && c.gateway === "stripe" && novo === "pago") {
@@ -948,7 +950,7 @@ export async function aplicarCobranca(sb: SupabaseClient, c: Cobranca): Promise<
 
   if (novo === "pago" && p.status !== "chargeback") {
     await enviarRecibo(p, c).catch((e) => console.error("recibo:", (e as Error).message));
-    if (p.cupom) await sb.rpc("hs_usar_cupom", { p_codigo: p.cupom });
+    if (p.cupom && c.gateway !== "cortesia") await sb.rpc("hs_usar_cupom", { p_codigo: p.cupom }); // cortesia já reservou o uso
   }
 
   const statusVenda = STATUS_VENDA[novo];

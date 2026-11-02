@@ -16,7 +16,7 @@ import s from "../login/login.styles";
 import "./assinar.css";
 
 type Plano = "mensal" | "anual";
-type Pedido = { entrar?: string | null; id: string; plano: Plano | "loja"; item?: string | null; metodo?: "pix" | "cartao"; valor: number; status: string; br_code: string | null; checkout_url?: string | null; expira_em: string | null; adicional?: string | null; convite?: string | null };
+type Pedido = { entrar?: string | null; chave?: string; id: string; plano: Plano | "loja"; item?: string | null; metodo?: "pix" | "cartao"; valor: number; status: string; br_code: string | null; checkout_url?: string | null; expira_em: string | null; adicional?: string | null; convite?: string | null };
 type Etapa = "carregando" | "form" | "pix" | "cartao" | "pago" | "expirado";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -31,6 +31,20 @@ export default function AssinarPage() {
       <Assinar />
     </Suspense>
   );
+}
+
+// Compra sem cadastro: a chave do pedido fica só nesta aba (precisa dela para acompanhar o pagamento e voltar do cartão).
+function guardarChave(id: string, chave: string) {
+  try {
+    sessionStorage.setItem(`hs-pedido:${id}`, chave);
+  } catch {}
+}
+function lerChave(id: string) {
+  try {
+    return sessionStorage.getItem(`hs-pedido:${id}`) ?? "";
+  } catch {
+    return "";
+  }
 }
 
 function mascaraCpf(v: string) {
@@ -80,6 +94,7 @@ function Assinar() {
   // Planos: dá para pagar sem conta (o e-mail vai no formulário e a conta nasce no pagamento).
   // Itens da Hot Store continuam exigindo login. Roda uma vez só.
   const [visitante, setVisitante] = useState(false);
+  const [jaTemConta, setJaTemConta] = useState(false);
   const rota = useRef(router);
   useEffect(() => {
     const router = rota.current;
@@ -133,7 +148,8 @@ function Assinar() {
 
   const conferir = useCallback(async () => {
     if (!pedido) return;
-    const r = await fetch(`/api/pagamentos/pix?id=${pedido.id}`, { headers: token ? { authorization: `Bearer ${token}` } : {}, cache: "no-store" });
+    const chave = token ? "" : lerChave(pedido.id);
+    const r = await fetch(`/api/pagamentos/pix?id=${pedido.id}${chave ? `&t=${chave}` : ""}`, { headers: token ? { authorization: `Bearer ${token}` } : {}, cache: "no-store" });
     if (!r.ok) return;
     const p = (await r.json()) as Pedido;
     setPedido(p);
@@ -189,8 +205,12 @@ function Assinar() {
         ),
       });
       const j = await r.json().catch(() => ({}));
-      if (!r.ok) return setErro((j as { erro?: string }).erro || "Não deu para gerar o pagamento. Tente de novo.");
+      if (!r.ok) {
+        if ((j as { entrar?: boolean }).entrar) setJaTemConta(true);
+        return setErro((j as { erro?: string }).erro || "Não deu para gerar o pagamento. Tente de novo.");
+      }
       const p = j as Pedido;
+      if (p.chave) guardarChave(p.id, p.chave);
       setPedido(p);
       if (p.status === "pago") return setEtapa("pago");
       if (p.checkout_url && /^https:\/\//.test(p.checkout_url)) {
@@ -226,11 +246,15 @@ function Assinar() {
     setCupomErro("");
     const codigo = cupomTxt.trim();
     if (!codigo) return;
-    const { data } = await supabase.rpc("conferir_cupom", { p_codigo: codigo, p_plano: plano });
-    const r = data as { ok: boolean; codigo?: string; desconto?: number; adicional?: boolean } | null;
+    const res = await fetch("/api/pagamentos/cupom", {
+      method: "POST",
+      headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ codigo, plano }),
+    }).catch(() => null);
+    const r = (res ? await res.json().catch(() => null) : null) as { ok: boolean; codigo?: string; desconto?: number; adicional?: boolean; erro?: string } | null;
     if (!r?.ok) {
       setCupom(null);
-      return setCupomErro("Cupom inválido, vencido ou não vale para este plano.");
+      return setCupomErro(r?.erro || "Cupom inválido, vencido ou não vale para este plano.");
     }
     setCupom({ codigo: r.codigo!, desconto: r.desconto!, plano, adicional: r.adicional === true && r.desconto === 100 });
   }
@@ -417,6 +441,12 @@ function Assinar() {
                 {erro && (
                   <p className={s.err} role="alert">
                     {erro}
+                    {jaTemConta && (
+                      <>
+                        {" "}
+                        <a href={`/login?email=${encodeURIComponent(email.trim())}&callback=${encodeURIComponent(`/assinar?plano=${plano}`)}`}>Entrar agora</a>
+                      </>
+                    )}
                   </p>
                 )}
                 <button type="submit" className={s.primary} disabled={enviando}>

@@ -21,11 +21,13 @@ export async function POST(req: Request) {
   }
   if (ev.resource !== "charge" || !ev.data?.id) return Response.json({ ok: true, ignorado: true });
 
-  let cobranca: Cobranca = transfeerNormalizar(ev.data);
+  // Confirma na fonte; se a consulta falhar, devolve erro para a Transfeer reenviar (não confia só no aviso).
+  let cobranca: Cobranca;
   try {
-    cobranca = await transfeerConsultar(cobranca.id);
+    cobranca = await transfeerConsultar(transfeerNormalizar(ev.data).id);
   } catch (e) {
     console.error("Transfeer consultar (webhook):", (e as Error).message);
+    return Response.json({ ok: false, erro: "conferência indisponível" }, { status: 503 });
   }
 
   const pedido = await aplicarCobranca(admin(), cobranca);

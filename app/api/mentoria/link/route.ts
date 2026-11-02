@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   if (corpo.acao === "desativar") {
     if (!corpo.id || !UUID.test(corpo.id)) return resp({ erro: "Link inválido." }, 400);
     const { data: linkId, error } = await sbUser.rpc("mentoria_link_pode_desativar", { p_id: corpo.id });
-    if (error) return resp({ erro: error.message.includes("permiss") ? "Sem permissão." : error.message }, 403);
+    if (error) return resp({ erro: error.message.includes("permiss") ? "Sem permissão." : "Não deu para continuar agora." }, 403);
     const { data: g } = await sb.from("mentoria_links").select("gateway").eq("id", corpo.id).maybeSingle<{ gateway: string }>();
     const desligar = g?.gateway === "mercadopago" ? mpDesativarLink : stripeDesativarLink;
     if (linkId) await desligar(String(linkId)).catch((e) => console.error("desativar link:", (e as Error).message));
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
   if (centavos > 100_000_000) return resp({ erro: "Valor alto demais." }, 400);
 
   const { data: id, error } = await sbUser.rpc("mentoria_link_criar", { p_aplicacao: aplicacao, p_descricao: descricao, p_valor_centavos: centavos });
-  if (error || !id) return resp({ erro: error?.message.includes("permiss") ? "Sem permissão." : (error?.message ?? "Não deu para criar.") }, 403);
+  if (error || !id) return resp({ erro: error?.message.includes("permiss") ? "Sem permissão." : "Não deu para criar." }, 403);
 
   const { data: l } = await sb.from("mentoria_links").select("lead_nome").eq("id", id).single<{ lead_nome: string | null }>();
   try {
