@@ -1,4 +1,6 @@
-// POST: gera a cobrança de um plano para quem está logado (Pix com QR Code, ou cartão na página segura do gateway).
+// POST: gera a cobrança de um plano (Pix com QR Code, ou cartão na página segura do gateway).
+//   Logado: a compra fica na conta. Sem login (só planos): o checkout manda o e-mail e a conta é criada/achada aqui,
+//   para o lead pagar sem passar pelo cadastro antes. Itens da Hot Store continuam exigindo login.
 // GET ?id=PEDIDO: devolve o status do pedido (e confere direto no gateway se ainda estiver pendente).
 // GET sem id: diz quais formas de pagamento estão ligadas.
 
@@ -19,6 +21,7 @@ import {
   type Plano,
 } from "../../../_lib/pagamentos";
 import { SITE } from "../../../_lib/site";
+import { SITE_URL } from "../../../_lib/email";
 import { ADICIONAL, adicionalValido } from "../../../_lib/adicional";
 import { ARSENAL_CONVITE, temArsenal } from "../../../_lib/pagamentos";
 import { ITENS_PAGOS, itemPago } from "../../../_lib/loja";
@@ -93,6 +96,37 @@ async function cortesia(
   return resp(publico(pago ?? pedido));
 }
 
+// Acha a conta do e-mail ou cria uma nova (sem senha, e-mail já confirmado: quem pagar define a senha depois).
+// O link gerado aqui não é usado; a chamada serve para criar/achar a conta numa ida só.
+async function contaPeloEmail(email: string): Promise<{ id: string; email: string } | null> {
+  const sb = admin();
+  const { data, error } = await sb.auth.admin.generateLink({ type: "magiclink", email });
+  if (data?.user) return { id: data.user.id, email: data.user.email ?? email };
+  const criado = await sb.auth.admin.createUser({ email, email_confirm: true });
+  if (criado.data.user) return { id: criado.data.user.id, email };
+  console.error("conta pelo e-mail:", error?.message, criado.error?.message);
+  return null;
+}
+
+// Depois de pago, quem comprou sem login entra direto: link de acesso que cai na tela de criar senha.
+// Só para conta que nunca entrou (criada no checkout): assim ninguém paga para entrar na conta de outra pessoa.
+async function linkDeEntrada(p: Pedido): Promise<string | null> {
+  if (p.status !== "pago" || !p.user_id) return null;
+  const pagoHa = Date.now() - new Date(p.pago_em ?? p.criado_em).getTime();
+  if (pagoHa > 6 * 3600e3) return null;
+  const sb = admin();
+  const { data } = await sb.auth.admin.getUserById(p.user_id);
+  const u = data?.user;
+  if (!u?.email || u.last_sign_in_at) return null;
+  const base = new URL(SITE_URL).origin;
+  const { data: link } = await sb.auth.admin.generateLink({
+    type: "magiclink",
+    email: u.email,
+    options: { redirectTo: `${base}/redefinir-senha` },
+  });
+  return link?.properties?.action_link ?? null;
+}
+
 export async function POST(req: Request) {
   const cfg = configurado();
   if (!cfg.ok) {
@@ -100,14 +134,20 @@ export async function POST(req: Request) {
     return resp({ erro: "O pagamento ainda não está disponível. Tente mais tarde." }, 503);
   }
 
-  const user = await usuarioDoPedido(req);
-  if (!user) return resp({ erro: "Entre na sua conta para assinar." }, 401);
-
-  let corpo: { plano?: string; item?: string; nome?: string; cpf?: string; telefone?: string; aceite?: boolean; cupom?: string; metodo?: string; utm?: unknown; adicional?: string };
+  let corpo: { plano?: string; item?: string; nome?: string; cpf?: string; telefone?: string; aceite?: boolean; cupom?: string; metodo?: string; utm?: unknown; adicional?: string; email?: string };
   try {
     corpo = await req.json();
   } catch {
     return resp({ erro: "Pedido inválido." }, 400);
+  }
+
+  let user: { id: string; email?: string } | null = await usuarioDoPedido(req);
+  if (!user) {
+    if (corpo.item) return resp({ erro: "Entre na sua conta para comprar." }, 401);
+    const email = (corpo.email ?? "").trim().toLowerCase().slice(0, 120);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return resp({ erro: "Digite um e-mail válido. É nele que chega o seu acesso." }, 400);
+    user = await contaPeloEmail(email);
+    if (!user) return resp({ erro: "Não deu para iniciar agora. Tente de novo." }, 500);
   }
   // Item da Hot Store (ex.: a call) ou plano de assinatura.
   const item = itemPago(corpo.item);
@@ -242,23 +282,28 @@ export async function GET(req: Request) {
   const id = new URL(req.url).searchParams.get("id");
   if (!id) return resp({ pix: cfg.ok, cartao: cfg.ok && cfg.cartao, gateway: cfg.gateway });
   if (!cfg.ok) return resp({ erro: "indisponível" }, 503);
-  const user = await usuarioDoPedido(req);
-  if (!user) return resp({ erro: "Entre na sua conta." }, 401);
   if (!/^[0-9a-f-]{36}$/i.test(id)) return resp({ erro: "Pedido inválido." }, 400);
+  // Logado: só os pedidos da própria conta. Sem login (compra sem cadastro): o id do pedido (aleatório,
+  // só o navegador que comprou conhece) basta para acompanhar o status, que não mostra dados pessoais.
+  const user = await usuarioDoPedido(req);
 
   const sb = admin();
-  const { data: p } = await sb.from("pedidos").select("*").eq("id", id).eq("user_id", user.id).maybeSingle<Pedido>();
+  let q = sb.from("pedidos").select("*").eq("id", id);
+  if (user) q = q.eq("user_id", user.id);
+  const { data: p } = await q.maybeSingle<Pedido>();
   if (!p) return resp({ erro: "Pedido não encontrado." }, 404);
 
+  let atual = p;
   // Ainda pendente: pergunta direto para o gateway (caso o aviso automático atrase).
   if (p.status === "pendente" && p.charge_id) {
     try {
       const c = await consultarPedido(p);
-      const atual = c ? await aplicarCobranca(sb, { ...c, referencia: p.id }) : null;
-      if (atual) return resp(publico(atual));
+      const novo = c ? await aplicarCobranca(sb, { ...c, referencia: p.id }) : null;
+      if (novo) atual = novo;
     } catch (e) {
       console.error("consultar pedido:", (e as Error).message);
     }
   }
-  return resp(publico(p));
+  const entrar = user ? null : await linkDeEntrada(atual).catch(() => null);
+  return resp({ ...publico(atual), entrar });
 }

@@ -16,7 +16,7 @@ import s from "../login/login.styles";
 import "./assinar.css";
 
 type Plano = "mensal" | "anual";
-type Pedido = { id: string; plano: Plano | "loja"; item?: string | null; metodo?: "pix" | "cartao"; valor: number; status: string; br_code: string | null; checkout_url?: string | null; expira_em: string | null; adicional?: string | null; convite?: string | null };
+type Pedido = { entrar?: string | null; id: string; plano: Plano | "loja"; item?: string | null; metodo?: "pix" | "cartao"; valor: number; status: string; br_code: string | null; checkout_url?: string | null; expira_em: string | null; adicional?: string | null; convite?: string | null };
 type Etapa = "carregando" | "form" | "pix" | "cartao" | "pago" | "expirado";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -77,25 +77,28 @@ function Assinar() {
   const [comAdicional, setComAdicional] = useState(false); // Arsenal do Cappu + Networking (só nos planos, pela Stripe)
   const voltaPedido = useRef(params.get("pedido"));
 
-  // Precisa estar logado: o pagamento fica ligado à conta. Roda uma vez só.
+  // Planos: dá para pagar sem conta (o e-mail vai no formulário e a conta nasce no pagamento).
+  // Itens da Hot Store continuam exigindo login. Roda uma vez só.
+  const [visitante, setVisitante] = useState(false);
   const rota = useRef(router);
   useEffect(() => {
     const router = rota.current;
     let vivo = true;
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!vivo) return;
-      if (!session) {
-        const volta = item ? `/assinar?item=${item}` : `/assinar?plano=${inicial}`;
-        router.replace(`/login?plano=${inicial}&callback=${encodeURIComponent(volta)}`);
+      if (!session && item) {
+        router.replace(`/login?plano=${inicial}&callback=${encodeURIComponent(`/assinar?item=${item}`)}`);
         return;
       }
-      setToken(session.access_token);
-      setEmail(session.user.email ?? "");
-      const meta = session.user.user_metadata as { full_name?: string; name?: string };
-      setNome(meta?.full_name || meta?.name || "");
-      const { data } = await supabase.rpc("meu_acesso");
-      const a = data as { ativo?: boolean; cargo?: string | null; valido_ate?: string | null } | null;
-      if (vivo && a?.ativo && !a.cargo && !item) setJaAtivo(a.valido_ate ?? "sem prazo");
+      if (session) {
+        setToken(session.access_token);
+        setEmail(session.user.email ?? "");
+        const meta = session.user.user_metadata as { full_name?: string; name?: string };
+        setNome(meta?.full_name || meta?.name || "");
+        const { data } = await supabase.rpc("meu_acesso");
+        const a = data as { ativo?: boolean; cargo?: string | null; valido_ate?: string | null } | null;
+        if (vivo && a?.ativo && !a.cargo && !item) setJaAtivo(a.valido_ate ?? "sem prazo");
+      } else setVisitante(true);
       fetch("/api/pagamentos/pix", { cache: "no-store" })
         .then((r) => r.json())
         .then((c: { cartao?: boolean; gateway?: string }) => {
@@ -130,7 +133,7 @@ function Assinar() {
 
   const conferir = useCallback(async () => {
     if (!pedido) return;
-    const r = await fetch(`/api/pagamentos/pix?id=${pedido.id}`, { headers: { authorization: `Bearer ${token}` }, cache: "no-store" });
+    const r = await fetch(`/api/pagamentos/pix?id=${pedido.id}`, { headers: token ? { authorization: `Bearer ${token}` } : {}, cache: "no-store" });
     if (!r.ok) return;
     const p = (await r.json()) as Pedido;
     setPedido(p);
@@ -160,19 +163,21 @@ function Assinar() {
     setErro("");
     const n = nome.trim().replace(/\s+/g, " ");
     if (n.split(" ").length < 2) return setErro("Digite seu nome completo, como no CPF.");
+    if (!token && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) return setErro("Digite um e-mail válido. É nele que chega o seu acesso.");
     if (cpf.replace(/\D/g, "").length !== 11) return setErro("Digite os 11 números do CPF.");
     if (!aceite) return setErro("Para continuar, confirme que tem 18 anos ou mais e aceita os termos.");
     setEnviando(true);
     try {
       const r = await fetch("/api/pagamentos/pix", {
         method: "POST",
-        headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+        headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify(
           item
             ? { item, metodo, nome: n, cpf, telefone: tel, aceite, utm: lerUtm() }
             : {
                 plano,
                 metodo,
+                email: token ? undefined : email.trim().toLowerCase(),
                 nome: n,
                 cpf,
                 telefone: tel,
@@ -292,6 +297,22 @@ function Assinar() {
                   ))}
                 </div>
                 )}
+                {visitante && (
+                  <label className={s.field}>
+                    <span>E-mail (seu acesso chega aqui)</span>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      autoComplete="email"
+                      inputMode="email"
+                      autoCapitalize="off"
+                      maxLength={120}
+                      placeholder="voce@email.com"
+                      required
+                    />
+                  </label>
+                )}
                 <label className={s.field}>
                   <span>Nome completo</span>
                   <input value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="name" maxLength={120} required />
@@ -357,9 +378,16 @@ function Assinar() {
                     </label>
                   </div>
                 )}
-                <p className="hs-as-conta">
-                  {loja ? "A compra fica registrada na conta" : "O acesso será liberado na conta"} <b>{email}</b>.
-                </p>
+                {visitante ? (
+                  <p className="hs-as-conta">
+                    Sem cadastro: a conta é criada com esse e-mail na hora do pagamento. Já tem conta?{" "}
+                    <a href={`/login?callback=${encodeURIComponent(`/assinar?plano=${plano}`)}`}>Entrar</a>
+                  </p>
+                ) : (
+                  <p className="hs-as-conta">
+                    {loja ? "A compra fica registrada na conta" : "O acesso será liberado na conta"} <b>{email}</b>.
+                  </p>
+                )}
                 <label className="hs-as-aceite">
                   <input type="checkbox" checked={aceite} onChange={(e) => setAceite(e.target.checked)} />
                   <span>
@@ -514,12 +542,19 @@ function Assinar() {
                     </a>
                   </div>
                 )}
+                {visitante && (
+                  <p className="hs-as-conta">
+                    {pedido?.entrar
+                      ? "Sua conta foi criada. Toque abaixo para criar sua senha e entrar."
+                      : `Mandamos o acesso para ${email || "o seu e-mail"}. Abra o e-mail “Pagamento aprovado” para criar sua senha e entrar.`}
+                  </p>
+                )}
                 <a
-                  href={daBiblioteca ? `/dashboard/aulas?desbloqueado=${item}` : loja ? "/dashboard/inventario" : "/dashboard"}
+                  href={visitante ? (pedido?.entrar ?? `/login?email=${encodeURIComponent(email)}`) : daBiblioteca ? `/dashboard/aulas?desbloqueado=${item}` : loja ? "/dashboard/inventario" : "/dashboard"}
                   className={s.primary}
                   style={{ display: "grid", placeItems: "center", textDecoration: "none" }}
                 >
-                  {daBiblioteca ? "🔓 Quebrar a corrente" : loja ? "Abrir meu Inventário" : "Entrar na área de membros"}
+                  {visitante ? (pedido?.entrar ? "Criar minha senha e entrar" : "Ir para o login") : daBiblioteca ? "🔓 Quebrar a corrente" : loja ? "Abrir meu Inventário" : "Entrar na área de membros"}
                 </a>
               </div>
             </>

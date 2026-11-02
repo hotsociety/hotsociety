@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { supabase } from "../../_lib/supabase";
+import { PRICE } from "../../_lib/site";
 import { formatPreco, type Curso } from "../../_lib/cursos";
 import "./catalog.css";
 import s from "./catalog.styles";
@@ -38,7 +39,7 @@ export default async function CourseGrid() {
             <h3>{curso.titulo}</h3>
             {curso.descricao && <p>{curso.descricao}</p>}
             <div className={s.foot}>
-              <strong>{formatPreco(curso.preco)}</strong>
+              <strong>a partir de {formatPreco(PRICE.mensal)}/mês</strong>
               <Link href={`/curso/${curso.id}`} className={s.link}>
                 Ver curso
               </Link>

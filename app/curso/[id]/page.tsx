@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { supabase } from "../../_lib/supabase";
-import { formatPreco, type Curso } from "../../_lib/cursos";
+import { type Curso } from "../../_lib/cursos";
+import { CHECKOUT, PRICE } from "../../_lib/site";
 import "./curso.css";
 import s from "./curso.styles";
 
@@ -52,7 +53,8 @@ async function DetalhesDoCurso({ promessaParams }: { promessaParams: Params }) {
     );
   }
 
-  const comprar = `/login?callback=/curso/${curso.id}`;
+  // Comprar vai direto para o checkout do plano (sem login antes: a conta nasce no pagamento).
+  const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
   const c = curso.conteudo;
   const totalAulas = c?.modulos?.reduce((t, m) => t + (m.aulas ?? 0), 0) ?? 0;
 
@@ -82,11 +84,15 @@ async function DetalhesDoCurso({ promessaParams }: { promessaParams: Params }) {
         </div>
 
         <aside className={s.buy} aria-label="Comprar curso">
-          <span className={s.priceLabel}>Investimento</span>
-          <strong className={s.price}>{formatPreco(curso.preco)}</strong>
-          <Link href={comprar} className={s.btnGold}>
-            Comprar agora
-          </Link>
+          <span className={s.priceLabel}>Anual · melhor preço</span>
+          <strong className={s.price}>{BRL.format(PRICE.anual)}</strong>
+          <span className="hs-curso-parc">em até 12x no cartão · menos de R$ 3 por dia</span>
+          <a href={CHECKOUT.anual} className={s.btnGold}>
+            Garantir o anual
+          </a>
+          <a href={CHECKOUT.mensal} className="hs-curso-mensal">
+            Prefiro o mensal · <b>{BRL.format(PRICE.mensal)}</b>/mês
+          </a>
           <ul className={s.perks}>
             <li>Acesso imediato após a confirmação</li>
             <li>Garantia de 7 dias</li>
