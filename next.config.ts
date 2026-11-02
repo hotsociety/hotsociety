@@ -13,6 +13,26 @@ const SEGURANCA = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   // Câmera, microfone e localização desligados.
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()" },
+  // Política completa em modo "só relatar": mostra no console o que seria bloqueado, sem quebrar nada.
+  // Depois de uns dias sem avisos, troca a chave para "Content-Security-Policy" e passa a valer.
+  {
+    key: "Content-Security-Policy-Report-Only",
+    value: [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://js.hcaptcha.com https://open.spotify.com https://*.daily.co https://va.vercel-scripts.com",
+      "style-src 'self' 'unsafe-inline'",
+      "font-src 'self' data:",
+      "img-src 'self' data: blob: https://uadzgmdyoksdxyybgisl.supabase.co https://*.googleusercontent.com https://i.ytimg.com https://*.scdn.co https://*.spotifycdn.com https://*.pandavideo.com.br",
+      "media-src 'self' blob: https://uadzgmdyoksdxyybgisl.supabase.co",
+      "connect-src 'self' https://uadzgmdyoksdxyybgisl.supabase.co wss://uadzgmdyoksdxyybgisl.supabase.co https://api.pwnedpasswords.com https://challenges.cloudflare.com https://*.hcaptcha.com https://*.daily.co wss://*.daily.co https://open.spotify.com https://vitals.vercel-insights.com",
+      "frame-src https://open.spotify.com https://challenges.cloudflare.com https://*.hcaptcha.com https://*.daily.co https://player.vimeo.com https://www.youtube.com https://www.youtube-nocookie.com https://*.tv.pandavideo.com.br https://player.pandavideo.com.br https://miro.com",
+      "worker-src 'self' blob:",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "object-src 'none'",
+    ].join("; "),
+  },
 ];
 
 const nextConfig: NextConfig = {

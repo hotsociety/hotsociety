@@ -420,9 +420,17 @@ function NovoPost({ tipo, onClose, onPublicado }: { tipo: Post["tipo"]; onClose:
     setEnviando(true);
     let caminho: string | null = null;
     if (foto) {
-      const ext = foto.type.split("/")[1].replace("jpeg", "jpg");
+      // Redesenha a foto antes de enviar: some a localização (GPS) e os outros dados escondidos do arquivo.
+      let limpa: Blob;
+      try {
+        limpa = await semMetadados(foto);
+      } catch {
+        setEnviando(false);
+        return toast("Não deu para preparar a foto. Tente outra.");
+      }
+      const ext = limpa.type.split("/")[1].replace("jpeg", "jpg");
       caminho = `${user.id}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
-      const { error } = await supabase.storage.from("feed").upload(caminho, foto, { contentType: foto.type, upsert: false });
+      const { error } = await supabase.storage.from("feed").upload(caminho, limpa, { contentType: limpa.type, upsert: false });
       if (error) {
         setEnviando(false);
         console.error("feed upload:", error.message);
@@ -483,4 +491,18 @@ function NovoPost({ tipo, onClose, onPublicado }: { tipo: Post["tipo"]; onClose:
       </p>
     </Modal>
   );
+}
+
+// Copia a imagem para um canvas e exporta de novo: o arquivo novo não leva EXIF (GPS, aparelho, data).
+// Também limita o lado maior a 2000 px. Se algo falhar, não envia a original (melhor avisar do que vazar).
+async function semMetadados(f: File): Promise<Blob> {
+  const img = await createImageBitmap(f, { imageOrientation: "from-image" });
+  const escala = Math.min(1, 2000 / Math.max(img.width, img.height));
+  const c = document.createElement("canvas");
+  c.width = Math.round(img.width * escala);
+  c.height = Math.round(img.height * escala);
+  c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
+  img.close();
+  const tipo = f.type === "image/png" ? "image/png" : "image/jpeg";
+  return await new Promise<Blob>((ok, falha) => c.toBlob((b) => (b ? ok(b) : falha(new Error("foto"))), tipo, 0.9));
 }

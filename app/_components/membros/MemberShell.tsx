@@ -191,6 +191,7 @@ export default function MemberShell({ children }: { children: ReactNode }) {
           setTentativa((n) => n + 1);
         }}
         onSair={async () => {
+          limparLocal();
           await supabase.auth.signOut();
           router.replace("/login");
         }}
@@ -206,6 +207,7 @@ export default function MemberShell({ children }: { children: ReactNode }) {
     iniciais: nome.slice(0, 2).toUpperCase(),
     sair: async () => {
       sairOnline();
+      limparLocal();
       await supabase.auth.signOut();
       router.replace("/login");
     },
@@ -383,4 +385,12 @@ function Casca({
       </div>
     </>
   );
+}
+
+// Ao sair, apaga o que fica guardado no aparelho (notas do Cofre do HOTPHONE etc.): computador compartilhado.
+function limparLocal() {
+  try {
+    for (const k of Object.keys(localStorage)) if (k.startsWith("hotphone:")) localStorage.removeItem(k);
+    sessionStorage.clear();
+  } catch {}
 }

@@ -22,6 +22,9 @@ import {
 } from "../../../_lib/pagamentos";
 import { SITE } from "../../../_lib/site";
 import { SITE_URL } from "../../../_lib/email";
+import { createHmac, timingSafeEqual } from "node:crypto";
+
+const iguais = (a: string, b: string) => a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 import { ADICIONAL, adicionalValido } from "../../../_lib/adicional";
 import { ARSENAL_CONVITE, temArsenal } from "../../../_lib/pagamentos";
 import { ITENS_PAGOS, itemPago } from "../../../_lib/loja";
@@ -54,7 +57,7 @@ async function cortesia(
   req: Request,
   sb: ReturnType<typeof admin>,
   user: { id: string; email?: string },
-  o: { plano: Plano; nome: string; codigo: string; desconto: number; adicional: string | null; utm: unknown },
+  o: { plano: Plano; nome: string; codigo: string; desconto: number; adicional: string | null; utm: unknown; contaNova: boolean; ip: string | null; visitante: boolean },
 ) {
   const { data: pedido, error } = await sb
     .from("pedidos")
@@ -75,6 +78,8 @@ async function cortesia(
       utm: limparUtm(o.utm),
       cupom: o.codigo,
       desconto_centavos: o.desconto,
+      conta_nova: o.contaNova,
+      ip_hash: o.ip,
       ...(o.adicional ? { adicional: o.adicional, adicional_centavos: 0 } : {}),
     })
     .select("*")
@@ -93,25 +98,49 @@ async function cortesia(
   });
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
   console.log(`cortesia ${pedido.id} (${o.codigo}) para ${user.id} ip=${ip ?? "-"}`);
-  return resp(publico(pago ?? pedido));
+  const final = pago ?? pedido;
+  if (!o.visitante) return resp(publico(final));
+  return resp({ ...publico(final), chave: chavePedido(final.id), entrar: await linkDeEntrada({ ...final, conta_nova: o.contaNova }).catch(() => null) });
 }
 
-// Acha a conta do e-mail ou cria uma nova (sem senha, e-mail já confirmado: quem pagar define a senha depois).
-// O link gerado aqui não é usado; a chamada serve para criar/achar a conta numa ida só.
-async function contaPeloEmail(email: string): Promise<{ id: string; email: string } | null> {
+// ---------- Compra sem cadastro ----------
+const hmac = (txt: string) => createHmac("sha256", process.env.SUPABASE_SERVICE_ROLE_KEY ?? "hs").update(txt).digest("hex").slice(0, 40);
+// Chave do pedido: só o navegador que fez a compra recebe. Sem ela, quem não está logado não acompanha o pedido.
+const chavePedido = (id: string) => hmac(`pedido:${id}`);
+const ipHash = (req: Request) => {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return ip ? hmac(`ip:${ip}`) : null;
+};
+
+// Conta para quem compra sem login. Cria uma conta nova (sem senha, quem pagar cria a senha depois).
+// Se o e-mail já tem conta, só reaproveita quando foi criada por uma compra sem cadastro e nunca entrou;
+// fora isso, pede para entrar: ninguém paga para cair na conta de outra pessoa.
+async function contaDoVisitante(email: string): Promise<{ id: string; email: string; nova: boolean } | "existe" | null> {
   const sb = admin();
-  const { data, error } = await sb.auth.admin.generateLink({ type: "magiclink", email });
-  if (data?.user) return { id: data.user.id, email: data.user.email ?? email };
   const criado = await sb.auth.admin.createUser({ email, email_confirm: true });
-  if (criado.data.user) return { id: criado.data.user.id, email };
-  console.error("conta pelo e-mail:", error?.message, criado.error?.message);
-  return null;
+  if (criado.data.user) return { id: criado.data.user.id, email, nova: true };
+  if (!/already|registered|exists/i.test(criado.error?.message ?? "")) {
+    console.error("conta do visitante:", criado.error?.message);
+    return null;
+  }
+  const { data: antigo } = await sb
+    .from("pedidos")
+    .select("user_id")
+    .eq("email", email)
+    .eq("conta_nova", true)
+    .order("criado_em", { ascending: true })
+    .limit(1)
+    .maybeSingle<{ user_id: string }>();
+  if (!antigo) return "existe";
+  const { data } = await sb.auth.admin.getUserById(antigo.user_id);
+  if (!data?.user || data.user.last_sign_in_at || (data.user.email ?? "").toLowerCase() !== email) return "existe";
+  return { id: antigo.user_id, email, nova: false };
 }
 
-// Depois de pago, quem comprou sem login entra direto: link de acesso que cai na tela de criar senha.
-// Só para conta que nunca entrou (criada no checkout): assim ninguém paga para entrar na conta de outra pessoa.
-async function linkDeEntrada(p: Pedido): Promise<string | null> {
-  if (p.status !== "pago" || !p.user_id) return null;
+// Depois de pago, quem comprou sem cadastro entra direto (link que cai na tela de criar senha).
+// Só quando a conta nasceu nesta compra e ainda não entrou.
+async function linkDeEntrada(p: Pedido & { conta_nova?: boolean }): Promise<string | null> {
+  if (p.status !== "pago" || !p.user_id || !p.conta_nova) return null;
   const pagoHa = Date.now() - new Date(p.pago_em ?? p.criado_em).getTime();
   if (pagoHa > 6 * 3600e3) return null;
   const sb = admin();
@@ -141,14 +170,9 @@ export async function POST(req: Request) {
     return resp({ erro: "Pedido inválido." }, 400);
   }
 
-  let user: { id: string; email?: string } | null = await usuarioDoPedido(req);
-  if (!user) {
-    if (corpo.item) return resp({ erro: "Entre na sua conta para comprar." }, 401);
-    const email = (corpo.email ?? "").trim().toLowerCase().slice(0, 120);
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return resp({ erro: "Digite um e-mail válido. É nele que chega o seu acesso." }, 400);
-    user = await contaPeloEmail(email);
-    if (!user) return resp({ erro: "Não deu para iniciar agora. Tente de novo." }, 500);
-  }
+  const logado = await usuarioDoPedido(req);
+  if (!logado && corpo.item) return resp({ erro: "Entre na sua conta para comprar." }, 401);
+  const emailVisitante = (corpo.email ?? "").trim().toLowerCase().slice(0, 120);
   // Item da Hot Store (ex.: a call) ou plano de assinatura.
   const item = itemPago(corpo.item);
   const plano: Plano | null = item ? "loja" : corpo.plano === "anual" ? "anual" : corpo.plano === "mensal" ? "mensal" : null;
@@ -161,12 +185,32 @@ export async function POST(req: Request) {
   if (nome.split(" ").length < 2) return resp({ erro: "Digite seu nome completo." }, 400);
   if (!cpfValido(cpf)) return resp({ erro: "CPF inválido. Confira os números." }, 400);
   if (corpo.aceite !== true) return resp({ erro: "Para continuar, confirme que tem 18 anos ou mais e aceita os termos." }, 400);
+  if (!logado && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailVisitante)) return resp({ erro: "Digite um e-mail válido. É nele que chega o seu acesso." }, 400);
 
   const sb = admin();
   const gateway = gatewayAtivo();
+  const ip = ipHash(req);
+
+  // Sem cadastro: freio por IP (6 pedidos por hora) antes de criar qualquer conta.
+  if (!logado) {
+    if (ip) {
+      const { count } = await sb
+        .from("pedidos")
+        .select("id", { count: "exact", head: true })
+        .eq("ip_hash", ip)
+        .gt("criado_em", new Date(Date.now() - 3600_000).toISOString());
+      if ((count ?? 0) >= 6) return resp({ erro: "Muitas tentativas. Espere um pouco e tente de novo." }, 429);
+    }
+  }
+
+  // Cupom: tentativas limitadas (por conta ou por IP) para ninguém sair testando códigos.
+  const codigo = (corpo.cupom ?? "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20);
+  if (codigo) {
+    const { data: pode } = await sb.rpc("hs_cupom_pode_tentar", { p_chave: logado ? `u:${logado.id}` : `ip:${ip ?? "?"}` });
+    if (pode === false) return resp({ erro: "Muitas tentativas de cupom. Espere um pouco e tente de novo." }, 429);
+  }
 
   // Cupom de desconto (conferido no banco, nunca pelo navegador).
-  const codigo = (corpo.cupom ?? "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20);
   let desconto = 0;
   let cuponCobreAdicional = false;
   if (codigo && plano === "loja") return resp({ erro: "Cupom não vale para itens da loja." }, 400);
@@ -181,10 +225,27 @@ export async function POST(req: Request) {
   const adicional = !item && gateway === "stripe" ? adicionalValido(corpo.adicional) : null;
   const adicionalCentavos = adicional && !cuponCobreAdicional ? ADICIONAL.preco * 100 : 0;
   const valor = (item ? ITENS_PAGOS[item].preco * 100 : VALOR_CENTAVOS[plano as "mensal" | "anual"] - desconto) + adicionalCentavos;
-  // Cupom que zera tudo: pedido "cortesia", confirmado na hora (sem gateway), com a mesma entrega de um pago.
-  if (valor === 0) return cortesia(req, sb, user, { plano, nome, codigo, desconto, adicional, utm: corpo.utm });
   // A Stripe não cobra menos de R$ 1.
-  if (valor < 100) return resp({ erro: "Com este cupom, marque o adicional (Arsenal do Cappu) para continuar." }, 400);
+  if (valor > 0 && valor < 100) return resp({ erro: "Com este cupom, marque o adicional (Arsenal do Cappu) para continuar." }, 400);
+  // Só agora (tudo conferido) cria/acha a conta de quem compra sem cadastro.
+  let user: { id: string; email?: string };
+  let contaNova = false;
+  if (logado) user = logado;
+  else {
+    const c = await contaDoVisitante(emailVisitante);
+    if (c === "existe") return resp({ erro: "Esse e-mail já tem conta. Entre na sua conta para pagar.", entrar: true }, 409);
+    if (!c) return resp({ erro: "Não deu para iniciar agora. Tente de novo." }, 500);
+    user = c;
+    contaNova = c.nova;
+  }
+
+  // Cupom que zera tudo: pedido "cortesia", confirmado na hora (sem gateway), com a mesma entrega de um pago.
+  if (valor === 0) {
+    // Reserva o uso do cupom antes (atômico): pedidos ao mesmo tempo não passam do limite.
+    const { data: ok } = await sb.rpc("hs_reservar_cupom", { p_codigo: codigo });
+    if (ok !== true) return resp({ erro: "Cupom inválido, vencido ou esgotado." }, 400);
+    return cortesia(req, sb, user, { plano, nome, codigo, desconto, adicional, utm: corpo.utm, contaNova, ip, visitante: !logado });
+  }
 
   // Já existe uma cobrança igual ainda válida? Reaproveita.
   const { data: aberto } = await sb
@@ -202,7 +263,7 @@ export async function POST(req: Request) {
     .order("criado_em", { ascending: false })
     .limit(1)
     .maybeSingle<Pedido>();
-  if (aberto && (aberto.br_code || aberto.checkout_url)) return resp(publico(aberto));
+  if (aberto && (aberto.br_code || aberto.checkout_url)) return resp(logado ? publico(aberto) : { ...publico(aberto), chave: chavePedido(aberto.id) });
 
   // Freio contra abuso: no máximo 8 cobranças por hora por conta.
   const { count } = await sb
@@ -237,6 +298,8 @@ export async function POST(req: Request) {
       versao_termos: SITE.versaoTermos,
       utm: limparUtm(corpo.utm),
       ref_afiliado: refAfiliado,
+      conta_nova: contaNova,
+      ip_hash: ip,
       ...(codigo ? { cupom: codigo, desconto_centavos: desconto } : {}),
       ...(adicional ? { adicional, adicional_centavos: adicionalCentavos } : {}),
     })
@@ -264,9 +327,9 @@ export async function POST(req: Request) {
       .select("*")
       .single<Pedido>();
     if (!atual) throw new Error("não deu para salvar a cobrança");
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
-    await enviarUtmify(atual, { ip, cpf, telefone: telefone || null });
-    return resp(publico(atual));
+    const ipReal = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+    await enviarUtmify(atual, { ip: ipReal, cpf, telefone: telefone || null });
+    return resp(logado ? publico(atual) : { ...publico(atual), chave: chavePedido(atual.id) });
   } catch (e) {
     const err = e as ErroGateway;
     console.error(`${gateway} criar cobrança:`, err.code, err.status, err.message);
@@ -283,9 +346,11 @@ export async function GET(req: Request) {
   if (!id) return resp({ pix: cfg.ok, cartao: cfg.ok && cfg.cartao, gateway: cfg.gateway });
   if (!cfg.ok) return resp({ erro: "indisponível" }, 503);
   if (!/^[0-9a-f-]{36}$/i.test(id)) return resp({ erro: "Pedido inválido." }, 400);
-  // Logado: só os pedidos da própria conta. Sem login (compra sem cadastro): o id do pedido (aleatório,
-  // só o navegador que comprou conhece) basta para acompanhar o status, que não mostra dados pessoais.
+  // Logado: só os pedidos da própria conta. Sem login (compra sem cadastro): precisa da chave que só o navegador
+  // que fez a compra recebeu (o id sozinho não basta: ele aparece na volta do cartão e no histórico).
   const user = await usuarioDoPedido(req);
+  const t = new URL(req.url).searchParams.get("t") ?? "";
+  if (!user && !iguais(t, chavePedido(id))) return resp({ erro: "Entre na sua conta." }, 401);
 
   const sb = admin();
   let q = sb.from("pedidos").select("*").eq("id", id);
@@ -304,6 +369,6 @@ export async function GET(req: Request) {
       console.error("consultar pedido:", (e as Error).message);
     }
   }
-  const entrar = user ? null : await linkDeEntrada(atual).catch(() => null);
+  const entrar = user ? null : await linkDeEntrada(atual as Pedido & { conta_nova?: boolean }).catch(() => null);
   return resp({ ...publico(atual), entrar });
 }

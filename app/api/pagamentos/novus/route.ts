@@ -38,13 +38,15 @@ export async function POST(req: Request) {
   }
   if (!pedido) return Response.json({ ok: true, ignorado: "pedido não encontrado" });
 
-  // Confirma na fonte. Se a consulta falhar, usa os dados do aviso (que já vieram assinados).
-  let cobranca: Cobranca = { ...aviso, referencia: pedido.id };
+  // Confirma na fonte. Se a consulta falhar, não confia só no aviso: devolve erro e a Novus reenvia depois.
+  let cobranca: Cobranca;
   try {
     const c = await consultarPedido(pedido);
-    if (c?.id) cobranca = { ...c, referencia: pedido.id, sessao: c.sessao ?? aviso.sessao };
+    if (!c?.id) throw new Error("consulta sem cobrança");
+    cobranca = { ...c, referencia: pedido.id, sessao: c.sessao ?? aviso.sessao };
   } catch (e) {
     console.error("Novus consultar (aviso):", (e as Error).message);
+    return Response.json({ ok: false, erro: "conferência indisponível" }, { status: 503 });
   }
 
   const atual = await aplicarCobranca(sb, cobranca);
