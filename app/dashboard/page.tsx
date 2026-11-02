@@ -7,6 +7,7 @@ import { useMembro } from "../_components/membros/MemberContext";
 import Contador from "../_components/membros/Contador";
 import Icon from "../_components/membros/Icon";
 import { supabase } from "../_lib/supabase";
+import { PRICE } from "../_lib/site";
 import { formatPreco, type Curso } from "../_lib/cursos";
 import { ROUTE } from "../_lib/site";
 import { MISSOES_PLANO } from "../_lib/demo";
@@ -281,7 +282,7 @@ export default function Inicio() {
                     </span>
                     <span className={ui.rowMain}>
                       <b>{c.titulo}</b>
-                      <small>{formatPreco(c.preco)}</small>
+                      <small>a partir de {formatPreco(PRICE.mensal)}/mês</small>
                     </span>
                   </Link>
                 ))}

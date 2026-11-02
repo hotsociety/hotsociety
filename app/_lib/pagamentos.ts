@@ -983,6 +983,24 @@ async function enviarRecibo(p: Pedido, c: Cobranca) {
   const esc = (t: string) => t.replace(/[&<>"]/g, (x) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[x]!);
   const meio = p.gateway === "cortesia" ? "Cortesia" : p.metodo === "cartao" ? "Cartão" : "Pix";
   const loja = p.plano === "loja";
+  // Conta criada no checkout (nunca entrou): o botão já leva para criar a senha, sem passar pelo "esqueci a senha".
+  let botao = `${SITE}${loja ? "/dashboard/inventario" : "/dashboard"}`;
+  let novaConta = false;
+  try {
+    const sb = admin();
+    const { data } = await sb.auth.admin.getUserById(p.user_id);
+    if (data?.user?.email && !data.user.last_sign_in_at) {
+      const { data: link } = await sb.auth.admin.generateLink({
+        type: "recovery",
+        email: data.user.email,
+        options: { redirectTo: `${SITE}/redefinir-senha` },
+      });
+      if (link?.properties?.action_link) {
+        botao = link.properties.action_link;
+        novaConta = true;
+      }
+    }
+  } catch {}
   const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#141416">
   <h2 style="margin:0 0 12px">Pagamento aprovado ✈️</h2>
   <p>Olá${p.nome ? ", " + esc(p.nome.split(" ")[0]) : ""}! ${loja ? (p.item === "ar" ? "Seu Arsenal do Cappu está liberado." : "Sua compra já está no seu Inventário.") : "Seu passaporte HOT SOCIETY está ativo."}</p>
@@ -992,7 +1010,7 @@ async function enviarRecibo(p: Pedido, c: Cobranca) {
     <tr><td style="padding:6px 0;color:#666">Data</td><td>${data}</td></tr>
     <tr><td style="padding:6px 0;color:#666">Pedido</td><td>${esc(c.id)}</td></tr>
   </table>
-  <p><a href="${SITE}${loja ? "/dashboard/inventario" : "/dashboard"}" style="display:inline-block;background:#C9A24E;color:#141416;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold">${loja ? "Abrir meu Inventário" : "Entrar na área de membros"}</a></p>
+  <p><a href="${botao}" style="display:inline-block;background:#C9A24E;color:#141416;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold">${novaConta ? "Criar minha senha e entrar" : loja ? "Abrir meu Inventário" : "Entrar na área de membros"}</a></p>${novaConta ? `<p style="font-size:12px;color:#666">Sua conta foi criada com este e-mail. O botão vale por 1 hora; depois disso, use "Esqueci a senha" no login.</p>` : ""}
   ${
     temArsenal(p)
       ? `<div style="margin:16px 0;padding:14px 16px;border:1px solid #e6c978;border-radius:10px;background:#fffaf0">
