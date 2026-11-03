@@ -161,3 +161,43 @@
 .hs-pn-gl-gw button.on{border-color:var(--gold);background:rgba(201,162,78,.10);box-shadow:inset 0 0 0 1px var(--gold)}
 .hs-pn-gl-gw button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 @media (max-width:520px){.hs-pn-gl-gw{grid-template-columns:1fr}}
+
+/* Alunos: abas internas e Localizar aluno */
+.hs-pn-sub{display:inline-flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--s1);justify-self:start;max-width:100%;overflow-x:auto}
+.hs-pn-sub button{appearance:none;border:0;background:none;color:var(--muted);font:600 13.5px/1 var(--f-t);padding:10px 14px;border-radius:9px;cursor:pointer;white-space:nowrap}
+.hs-pn-sub button[aria-selected="true"]{background:var(--tint-ouro2);color:var(--gold-t)}
+.hs-pn-loc{display:grid;gap:14px;min-width:0}
+.hs-pn-loc-busca{position:relative;display:flex;align-items:center;gap:10px;padding:0 16px;min-height:54px;border:1px solid var(--line2);border-radius:14px;background:var(--s1);color:var(--muted);transition:border-color .2s,box-shadow .2s}
+.hs-pn-loc-busca:focus-within{border-color:var(--gold);box-shadow:0 0 0 4px var(--tint-ouro2)}
+.hs-pn-loc-busca input{flex:1;min-width:0;border:0;background:none;color:var(--neve);font:500 16px/1.2 var(--f-t);outline:none;padding:14px 0}
+.hs-pn-loc-sp{width:16px;height:16px;border-radius:50%;border:2px solid var(--line2);border-top-color:var(--gold);animation:hs-pn-giro .7s linear infinite}
+@keyframes hs-pn-giro{to{transform:rotate(360deg)}}
+.hs-pn-loc-grid{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:860px){.hs-pn-loc-grid{grid-template-columns:1fr}}
+.hs-pn-loc-lista{list-style:none;margin:0;padding:6px;display:grid;gap:4px;border:1px solid var(--line);border-radius:14px;background:var(--s1);max-height:560px;overflow:auto}
+.hs-pn-loc-lista button{appearance:none;width:100%;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px;border:1px solid transparent;border-radius:10px;background:none;color:inherit;text-align:left;cursor:pointer}
+.hs-pn-loc-lista button:hover{background:var(--s2)}
+.hs-pn-loc-lista button[aria-pressed="true"]{border-color:var(--gold);background:var(--tint-ouro2)}
+.hs-pn-loc-lista .tx{display:grid;gap:3px;min-width:0}
+.hs-pn-loc-lista .tx b{font:600 14px/1.2 var(--f-t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hs-pn-loc-lista .tx small{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hs-pn-loc-lista .hs-pn-st{font-size:11.5px}
+.hs-pn-loc-ficha{border:1px solid var(--line);border-radius:14px;background:var(--s1);padding:18px;display:grid;gap:16px;min-width:0}
+.hs-pn-loc-cab{display:flex;gap:14px;align-items:flex-start}
+.hs-pn-loc-cab h3{margin:0 0 2px;font:800 20px/1.15 var(--f-t)}
+.hs-pn-loc-cab .hs-pn-link{padding:2px 0;font-size:13.5px;overflow-wrap:anywhere;text-align:left}
+.hs-pn-av.g{width:52px;height:52px;font-size:20px}
+.hs-pn-loc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
+.hs-pn-loc-dados{margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.hs-pn-loc-dados div{padding:12px;border-radius:10px;background:var(--s2);display:grid;gap:4px;min-width:0}
+.hs-pn-loc-dados dt{font:700 10.5px/1 var(--f-t);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.hs-pn-loc-dados dd{margin:0;font:600 14px/1.35 var(--f-t);display:grid;gap:2px;justify-items:start;overflow-wrap:anywhere}
+.hs-pn-loc-dados dd small{color:var(--muted);font-weight:500;font-size:12px}
+.hs-pn-loc-dados dd .hs-pn-link{padding:2px 0;font-size:12.5px}
+.hs-pn-loc-sub{margin:0;font:800 13px/1 var(--f-t);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.hs-pn-loc-compras{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.hs-pn-loc-compras li{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:10px;border:1px solid var(--line)}
+.hs-pn-loc-compras li>span{display:grid;gap:3px;min-width:0}
+.hs-pn-loc-compras small{color:var(--muted);font-size:12px}
+.hs-pn-loc-compras .v{justify-items:end;text-align:right;font:700 14px/1.2 var(--f-t);white-space:nowrap}
+.hs-pn-loc-compras .hs-pn-st{font-size:11.5px}
