@@ -6,6 +6,7 @@ import { PODE, useMembro } from "../../../_components/membros/MemberContext";
 import { Modal, toast } from "../../../_components/membros/Toast";
 import { data, dataHora, erroAmigavel } from "../../../_lib/painel";
 import { supabase } from "../../../_lib/supabase";
+import ImportarMentorados from "./ImportarMentorados";
 import LinksPagamento from "./LinksPagamento";
 
 type Turma = { id: string; nome: string; inicio: string | null; ativa: boolean; qtd: number };
@@ -76,6 +77,7 @@ export default function PainelMentoria() {
   const [n, setN] = useState(0);
   const [editT, setEditT] = useState<Turma | "novo" | null>(null);
   const [editM, setEditM] = useState<Mentorado | "novo" | null>(null);
+  const [importar, setImportar] = useState(false);
   const [editE, setEditE] = useState<Encontro | "novo" | null>(null);
   const [conversa, setConversa] = useState<{ id: string; titulo: string } | null>(null);
   const [apl, setApl] = useState<Aplic[] | null>(null);
@@ -314,9 +316,14 @@ export default function PainelMentoria() {
 
           <div className="hs-pn-bar" style={{ justifyContent: "space-between" }}>
             <h2 style={H2}>Mentorados</h2>
-            <button type="button" className="hs-pn-btn hs-pn-btn-p hs-pn-btn-sm" onClick={() => setEditM("novo")}>
-              Liberar mentorado
-            </button>
+            <div className="hs-pn-acts">
+              <button type="button" className="hs-pn-btn hs-pn-btn-sm" onClick={() => setEditM("novo")}>
+                Liberar um
+              </button>
+              <button type="button" className="hs-pn-btn hs-pn-btn-p hs-pn-btn-sm" onClick={() => setImportar(true)}>
+                Importar quem já é mentorado
+              </button>
+            </div>
           </div>
           <div className="hs-pn-tw">
             <table className="hs-pn-t">
@@ -416,6 +423,7 @@ export default function PainelMentoria() {
       )}
 
       {editT && <EditarTurma t={editT === "novo" ? null : editT} onClose={() => setEditT(null)} onFeito={() => (setEditT(null), recarregar())} />}
+      {importar && d && <ImportarMentorados turmas={d.turmas} onClose={() => setImportar(false)} onFeito={() => (setImportar(false), recarregar())} />}
       {editM && d && (
         <EditarMentorado mt={editM === "novo" ? null : editM} turmas={d.turmas} onClose={() => setEditM(null)} onFeito={() => (setEditM(null), recarregar())} />
       )}
