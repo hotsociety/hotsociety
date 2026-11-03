@@ -43,7 +43,7 @@ export const PLANS = [
     name: "Anual",
     price: brl(PRICE.anual),
     period: "/ano",
-    note: `${brl(ANUAL_MES)} por mês · economize ${brl(ECONOMIA)} · Pix à vista, sem renovação automática`,
+    note: `${brl(ANUAL_MES)} por mês · economize ${brl(ECONOMIA)} · Pix ou cartão, sem renovação automática`,
     badge: "Melhor valor",
     href: CHECKOUT.anual,
     featured: true,
@@ -61,7 +61,7 @@ export const PLANS = [
     name: "Mensal",
     price: brl(PRICE.mensal),
     period: "/mês",
-    note: "Pix à vista · 30 dias de acesso · sem renovação automática",
+    note: "Pix ou cartão · 30 dias de acesso · sem renovação automática",
     badge: null,
     href: CHECKOUT.mensal,
     featured: false,
@@ -120,7 +120,7 @@ export const FAQ = [
   },
   {
     q: "Tem renovação automática? E se eu me arrepender?",
-    a: "Não há renovação automática: o pagamento é por Pix e vale pelo período do plano. Se você se arrepender, pede o reembolso integral em até 7 dias da compra em Perfil → Minhas compras, sem precisar explicar o motivo (Código de Defesa do Consumidor, art. 49).",
+    a: "Não há renovação automática: o pagamento é à vista (Pix ou cartão) e vale pelo período do plano. Se você se arrepender, pede o reembolso integral em até 7 dias da compra em Perfil → Acesso e compras, sem precisar explicar o motivo (Código de Defesa do Consumidor, art. 49).",
   },
   {
     q: "Quais são as regras para modelo real e modelo IA?",

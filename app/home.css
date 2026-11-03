@@ -748,6 +748,9 @@
   padding: 6px 8px;
   border-radius: 5px;
 }
+.hs-home-modCard {
+  container-type: inline-size;
+}
 .hs-home-modIn {
   padding: 16px;
   display: grid;
@@ -755,9 +758,12 @@
 }
 .hs-home-modIn h3 {
   margin: 0;
-  font: 900 clamp(22px, 3vw, 26px) / 0.92 var(--f-d);
-  font-stretch: 125%;
+  /* Tamanho pela largura do card: o título cabe inteiro (antes cortava "Introduç…", "Prospecta…"). */
+  font: 900 clamp(16px, 9.5cqi, 26px) / 0.95 var(--f-d);
+  font-stretch: 112%;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 .hs-home-modRule {
   width: 40px;
