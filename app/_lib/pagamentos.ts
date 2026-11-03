@@ -32,6 +32,7 @@ import { ADICIONAL } from "./adicional";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { PRICE } from "./site";
 import { ITENS_PAGOS, itemPago } from "./loja";
+import { mentoradoDoPagamento, mentoradoReembolso } from "./mentorados";
 
 export type PlanoAssinatura = "mensal" | "anual";
 export type Plano = PlanoAssinatura | "loja"; // "loja" = item avulso da Hot Store (não mexe no acesso)
@@ -568,6 +569,7 @@ export async function mentoriaAplicarEvento(sb: SupabaseClient, linkId: string, 
     await stripeEstornarRepasse({ id: l.id }, l.pi_id, "mentoria").catch((e) => console.error(`estorno repasse mentoria ${l.id}:`, (e as Error).message));
     await sb.from("mentoria_links").update({ status: "reembolsado" }).eq("id", l.id);
     await lancarVendaMentoria(sb, { ...l, status: "reembolsado" }, null);
+    await mentoradoReembolso(sb, l.id).catch((e) => console.error(`mentorado reembolso ${l.id}:`, (e as Error).message));
     return { status: "reembolsado" };
   }
 
@@ -613,6 +615,8 @@ export async function mentoriaAplicarEvento(sb: SupabaseClient, linkId: string, 
   }
   if (l.stripe_link_id) await stripeDesativarLink(l.stripe_link_id).catch(() => null);
   await lancarVendaMentoria(sb, { ...l, ...pago }, repassado);
+  // Pagou → vira mentorado (conta, aba Mentorados, acesso e e-mail de boas-vindas).
+  await mentoradoDoPagamento(sb, l.id).catch((e) => console.error(`mentorado pagamento ${l.id}:`, (e as Error).message));
   return { status: "pago" };
 }
 
