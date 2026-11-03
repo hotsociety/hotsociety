@@ -85,16 +85,27 @@ function Login() {
       });
       if (error) setAviso({ tipo: "erro", texto: traduzir(error.message) });
       else if (data.session) seguir();
-      else setAviso({ tipo: "ok", texto: "Conta criada. Confirme o e-mail que enviamos para liberar o acesso." });
+      else {
+        // Confirmação pelo nosso e-mail (Resend), que chega para qualquer aluno.
+        await fetch("/api/conta/link", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email, tipo: "confirmar", destino }),
+        }).catch(() => null);
+        setAviso({ tipo: "ok", texto: "Conta criada. Enviamos um link para o seu e-mail: abra e toque em “Confirmar e entrar”. Olhe também o spam." });
+      }
     }
 
     if (modo === "esqueci") {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/redefinir-senha`,
-        captchaToken,
-      });
-      if (error) setAviso({ tipo: "erro", texto: traduzir(error.message) });
-      else setAviso({ tipo: "ok", texto: "Se esse e-mail tiver conta, você vai receber o link para criar uma nova senha." });
+      // Link enviado pelo nosso e-mail (Resend): o e-mail padrão do Supabase não entrega para alunos.
+      const r = await fetch("/api/conta/link", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, tipo: "senha" }),
+      }).catch(() => null);
+      const j = (r ? await r.json().catch(() => ({})) : {}) as { erro?: string };
+      if (!r || !r.ok) setAviso({ tipo: "erro", texto: j.erro || "Não deu para enviar agora. Tente de novo em instantes." });
+      else setAviso({ tipo: "ok", texto: "Se esse e-mail tiver conta, o link para criar uma nova senha chega em até 2 minutos. Olhe também o spam e a aba Promoções." });
     }
 
     setCarregando(false);
