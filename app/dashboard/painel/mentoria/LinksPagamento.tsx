@@ -171,7 +171,7 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
       <div className="hs-pn-gl-cab">
         <div>
           <h2 id="links-mentoria">Link de pagamento</h2>
-          <p>Escolha a forma, digite o valor e mande o link para o lead. Cada link vale para um pagamento.</p>
+          <p>Escolha a forma, digite o valor e mande o link para o lead. Cada link vale para um pagamento. Quando o pagamento é aprovado, o lead vira mentorado sozinho (aba Mentorados, 1 ano de plataforma e e-mail com o link de entrada).</p>
         </div>
         {pagos.length > 0 && (
           <span className="hs-pn-gl-total">

@@ -9,6 +9,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SITE } from "./pagamentos";
+import { mentoradoDoPagamento, mentoradoReembolso } from "./mentorados";
 
 const MP = "https://api.mercadopago.com";
 export const mpConfigurado = () => Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN?.trim());
@@ -91,11 +92,14 @@ export async function mpAplicarPagamento(sb: SupabaseClient, pagamentoId: string
     if (!marcado?.length) return { status: "pago" };
     if (l.stripe_link_id) await mpDesativarLink(l.stripe_link_id).catch(() => null);
     await lancarVenda(sb, l, { status: "pago", email, nome, metodo, quando: pago_em });
+    // Pagou → vira mentorado (conta, aba Mentorados, acesso e e-mail de boas-vindas).
+    await mentoradoDoPagamento(sb, l.id).catch((e) => console.error(`mentorado pagamento ${l.id}:`, (e as Error).message));
     return { status: "pago" };
   }
 
   if ((p.status === "refunded" || p.status === "charged_back") && l.status === "pago") {
     await sb.from("mentoria_links").update({ status: "reembolsado" }).eq("id", l.id);
+    await mentoradoReembolso(sb, l.id).catch((e) => console.error(`mentorado reembolso ${l.id}:`, (e as Error).message));
     await lancarVenda(sb, l, { status: p.status === "charged_back" ? "chargeback" : "reembolsado", email, nome, metodo, quando: l.criado_em });
     return { status: "reembolsado" };
   }
