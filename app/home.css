@@ -759,11 +759,11 @@
 .hs-home-modIn h3 {
   margin: 0;
   /* Tamanho pela largura do card: o título cabe inteiro (antes cortava "Introduç…", "Prospecta…"). */
-  font: 900 clamp(16px, 9.5cqi, 26px) / 0.95 var(--f-d);
+  font: 900 clamp(15px, 8.4cqi, 24px) / 0.95 var(--f-d);
   font-stretch: 112%;
   text-transform: uppercase;
   overflow-wrap: anywhere;
-  hyphens: auto;
+  hyphens: manual;
 }
 .hs-home-modRule {
   width: 40px;
