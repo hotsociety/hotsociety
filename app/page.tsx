@@ -231,7 +231,7 @@ export default function Home() {
               </span>
               <div>
                 <h3>Garantia de 7 dias</h3>
-                <p>Entrou e não era pra você? Peça o reembolso em até 7 dias e devolvemos 100%. Depois disso, cancele quando quiser, em 2 cliques.</p>
+                <p>Entrou e não era pra você? Peça o reembolso em até 7 dias e devolvemos 100%. Sem renovação automática: no fim do plano, você decide se continua.</p>
               </div>
             </div>
             <div className={s.guarantee} style={{ marginTop: 12 }}>
