@@ -19,7 +19,7 @@ export type Aplicacao = {
 export const APLICACAO_VAZIA: Aplicacao = { nome: "", ig: "", wpp: "", trabalho: "", momento: "", operacao: "", trava: "", invest: "", pc: "", tempo: "", maior: false };
 
 // Investimento: resposta aberta (o lead escreve com as próprias palavras).
-export const PERGUNTA_INVEST = "Quanto você estaria disposto a investir?";
+export const PERGUNTA_INVEST = "Quanto você tem de caixa hoje?";
 
 // Perguntas de múltipla escolha (texto da pergunta e opções iguais às do site do Cappu).
 export const ESCOLHAS: { campo: "momento" | "operacao" | "pc" | "tempo"; t: string; opcoes: string[] }[] = [
