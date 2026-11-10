@@ -19,10 +19,9 @@ export default function Termos() {
 
       <h2>3. Planos, pagamento e acesso</h2>
       <ul>
-        <li>Plano mensal: 30 dias de acesso. Plano anual: 12 meses de acesso.</li>
+        <li>Plano único: acesso vitalício, com pagamento único. Enquanto a HOT SOCIETY estiver no ar, a conta segue com acesso, sem mensalidade. Quem comprou o plano mensal ou anual antes da mudança mantém o prazo contratado.</li>
         <li>O pagamento é feito por Pix ou, quando disponível, cartão de crédito na página segura do processador de pagamento. Não existe cobrança recorrente nem renovação automática.</li>
         <li>O acesso é liberado assim que o pagamento é confirmado e fica ligado ao e-mail da sua conta.</li>
-        <li>Se você pagar de novo antes de vencer, o tempo novo é somado ao que você ainda tem.</li>
         <li>A conta é pessoal. Compartilhar login pode levar ao bloqueio do acesso, sem reembolso.</li>
       </ul>
 

@@ -5,7 +5,7 @@ import { ASSETS, NAME_MAX, PLANS, ROUTE, SLOGAN, STORAGE_KEY, type PlanId } from
 import type { PassportEngine } from './engine';
 import type { PassportAssets, PassportFonts, PassportState, Phase } from './types';
 import { SITE } from '../../_lib/site';
-import { brDate, brl, cleanName, passportDate, passportNumber } from './utils';
+import { brl, cleanName, passportDate, passportNumber } from './utils';
 import './passport3d.css';
 import s from './passport3d.styles';
 
@@ -89,7 +89,7 @@ export default function Passport3D({ onActivate, onFirstClass, onLeadName }: Pas
   const raw = typedRaw ?? stored;
   const [focused, setFocused] = useState(false);
   const [coOpen, setCoOpen] = useState(false);
-  const [plan, setPlan] = useState<PlanId>('anual');
+  const plan: PlanId = 'vitalicio';
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -227,15 +227,6 @@ export default function Passport3D({ onActivate, onFirstClass, onLeadName }: Pas
 
   /* ── checkout ── */
   const p = PLANS[plan];
-  const renew = useMemo(() => {
-    if (!today) return '—';
-    const d = new Date(today);
-    if (plan === 'anual') d.setFullYear(d.getFullYear() + 1);
-    else d.setMonth(d.getMonth() + 1);
-    return brDate(d);
-  }, [plan, today]);
-  const monthlyEq = PLANS.anual.price / 12;
-  const saving = PLANS.mensal.price * 12 - PLANS.anual.price;
 
   async function activate(method: ActivateArgs['method']) {
     if (!onActivate) {
@@ -385,29 +376,16 @@ export default function Passport3D({ onActivate, onFirstClass, onLeadName }: Pas
 
         <div className={s.plans} role="radiogroup" aria-label="Plano">
           <label className={s.plan}>
-            <input type="radio" name="hs-plano" value="anual" checked={plan === 'anual'} onChange={() => setPlan('anual')} />
+            <input type="radio" name="hs-plano" value="vitalicio" checked readOnly />
             <span>
-              <b>{PLANS.anual.label}</b>
-              <small>
-                {brl(Math.round(monthlyEq * 100) / 100)} por mês · economize {brl(saving)}
-              </small>
+              <b>{PLANS.vitalicio.label}</b>
+              <small>Paga uma vez, acessa para sempre</small>
             </span>
             <span className={s.pr}>
-              {brl(PLANS.anual.price)}
-              <small>{PLANS.anual.per}</small>
+              {brl(PLANS.vitalicio.price)}
+              <small>{PLANS.vitalicio.per}</small>
             </span>
-            <span className={s.rib}>Melhor valor</span>
-          </label>
-          <label className={s.plan}>
-            <input type="radio" name="hs-plano" value="mensal" checked={plan === 'mensal'} onChange={() => setPlan('mensal')} />
-            <span>
-              <b>{PLANS.mensal.label}</b>
-              <small>Renova todo mês, sem fidelidade</small>
-            </span>
-            <span className={s.pr}>
-              {brl(PLANS.mensal.price)}
-              <small>{PLANS.mensal.per}</small>
-            </span>
+            <span className={s.rib}>Plano único</span>
           </label>
         </div>
 
@@ -424,7 +402,7 @@ export default function Passport3D({ onActivate, onFirstClass, onLeadName }: Pas
             <span>{brl(p.price)}</span>
           </div>
           <span>
-            {plan === 'anual' ? 'Cobrança anual' : 'Cobrança mensal'}. Renova em {renew}. Cancele em 2 cliques.
+            Pagamento único. Sem mensalidade e sem renovação.
           </span>
           <span>7 dias de garantia com reembolso integral.</span>
         </div>
@@ -437,7 +415,7 @@ export default function Passport3D({ onActivate, onFirstClass, onLeadName }: Pas
             Pagar com Pix
           </button>
           <button type="button" disabled={busy} onClick={() => activate('card')}>
-            {plan === 'anual' ? 'Cartão em até 12×' : 'Cartão de crédito'}
+            Cartão em até 12×
           </button>
         </div>
         {note && <div className={s.okBox}>{note}</div>}

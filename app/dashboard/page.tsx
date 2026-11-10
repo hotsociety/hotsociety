@@ -282,7 +282,7 @@ export default function Inicio() {
                     </span>
                     <span className={ui.rowMain}>
                       <b>{c.titulo}</b>
-                      <small>a partir de {formatPreco(PRICE.mensal)}/mês</small>
+                      <small>{formatPreco(PRICE.vitalicio)} · acesso vitalício</small>
                     </span>
                   </Link>
                 ))}

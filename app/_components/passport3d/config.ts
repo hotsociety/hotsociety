@@ -36,11 +36,11 @@ export const ROUTE: RouteStop[] = [
   { code: "MCM", country: "MÔNACO", lat: 43.73, lon: 7.42, goal: "R$ 1 milhão" },
 ];
 
-export type PlanId = "anual" | "mensal";
+// Plano único: acesso vitalício, pagamento único.
+export type PlanId = "vitalicio";
 
 export const PLANS: Record<PlanId, { label: string; price: number; per: string; checkout: string }> = {
-  anual: { label: "Anual", price: PRICE.anual, per: "/ano", checkout: CHECKOUT.anual },
-  mensal: { label: "Mensal", price: PRICE.mensal, per: "/mês", checkout: CHECKOUT.mensal },
+  vitalicio: { label: "Acesso vitalício", price: PRICE.vitalicio, per: "pagamento único", checkout: CHECKOUT.vitalicio },
 };
 
 export const ASSETS = {

@@ -200,10 +200,10 @@ export default function Home() {
             <header className={`${s.secHead} ${s.center}`}>
               <p className={s.eyebrow}>Ative seu passaporte</p>
               <h2 id="planos-title" className={s.h2}>
-                Escolha a sua <span className={s.gold}>classe.</span>
+                Um passaporte. <span className={s.gold}>Para sempre.</span>
               </h2>
             </header>
-            <div className={s.plans}>
+            <div className={s.plans} style={PLANS.length === 1 ? { gridTemplateColumns: "minmax(0, 560px)", justifyContent: "center" } : undefined}>
               {PLANS.map((p) => (
                 <article key={p.id} className={`${s.plan} ${p.featured ? s.planFeatured : ""}`}>
                   {p.badge && <span className={s.planBadge}>{p.badge}</span>}
@@ -219,7 +219,7 @@ export default function Home() {
                     ))}
                   </ul>
                   <a href={p.href} className={`${s.btn} ${p.featured ? s.btnGold : s.btnGhost} ${s.btnBlock}`}>
-                    Ativar plano {p.name.toLowerCase()}
+                    {p.cta}
                   </a>
                 </article>
               ))}
@@ -231,7 +231,7 @@ export default function Home() {
               </span>
               <div>
                 <h3>Garantia de 7 dias</h3>
-                <p>Entrou e não era pra você? Peça o reembolso em até 7 dias e devolvemos 100%. Sem renovação automática: no fim do plano, você decide se continua.</p>
+                <p>Entrou e não era pra você? Peça o reembolso em até 7 dias e devolvemos 100%. Pagamento único: sem mensalidade e sem renovação.</p>
               </div>
             </div>
             <div className={s.guarantee} style={{ marginTop: 12 }}>

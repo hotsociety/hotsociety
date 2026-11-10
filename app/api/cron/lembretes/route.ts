@@ -12,21 +12,21 @@ const DATA = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", d
 function texto(l: Linha) {
   const ola = `<p>Olá${l.nome ? ", " + esc(l.nome.split(" ")[0]) : ""}!</p>`;
   const data = l.valido_ate ? DATA.format(new Date(l.valido_ate)) : "";
-  const renovar = { t: "Renovar meu acesso", href: `${SITE_URL}/assinar?plano=${l.plano === "anual" ? "anual" : "mensal"}` };
+  const renovar = { t: "Garantir acesso vitalício", href: `${SITE_URL}/assinar` };
   switch (l.tipo) {
     case "vence_7d":
-      return { assunto: "Seu acesso vence em 7 dias", html: moldura("Seu acesso vence em 7 dias", `${ola}<p>Seu passaporte HOT SOCIETY vale até <b>${data}</b>. O Pix não renova sozinho: para continuar sem interrupção, pague um novo plano antes dessa data. O tempo que sobrar é somado.</p>`, renovar) };
+      return { assunto: "Seu acesso vence em 7 dias", html: moldura("Seu acesso vence em 7 dias", `${ola}<p>Seu passaporte HOT SOCIETY vale até <b>${data}</b>. Agora existe um plano só: o acesso vitalício por R$ ${PRICE.vitalicio}, pagamento único. Garantindo antes dessa data, você nunca mais perde o acesso.</p>`, renovar) };
     case "vence_1d":
-      return { assunto: "Seu acesso vence amanhã", html: moldura("Seu acesso vence amanhã", `${ola}<p>Seu passaporte vale até <b>${data}</b>. Renove hoje para não perder o acesso às aulas, ferramentas e comunidade. Seu progresso fica guardado.</p>`, renovar) };
+      return { assunto: "Seu acesso vence amanhã", html: moldura("Seu acesso vence amanhã", `${ola}<p>Seu passaporte vale até <b>${data}</b>. Garanta hoje o acesso vitalício (R$ ${PRICE.vitalicio}, pagamento único) para não perder as aulas, ferramentas e comunidade. Seu progresso fica guardado.</p>`, renovar) };
     case "venceu":
-      return { assunto: "Seu acesso venceu", html: moldura("Seu acesso venceu", `${ola}<p>Seu passaporte venceu em <b>${data}</b>. Seu progresso, XP e conquistas continuam guardados: é só renovar para voltar de onde parou.</p>`, renovar) };
+      return { assunto: "Seu acesso venceu", html: moldura("Seu acesso venceu", `${ola}<p>Seu passaporte venceu em <b>${data}</b>. Seu progresso, XP e conquistas continuam guardados: é só garantir o acesso vitalício (R$ ${PRICE.vitalicio}, pagamento único) para voltar de onde parou.</p>`, renovar) };
     case "pix_expirado":
       return {
         assunto: "Seu Pix expirou: gere outro em 1 minuto",
         html: moldura(
           "Seu Pix expirou",
-          `${ola}<p>O código Pix do plano ${l.plano === "anual" ? `anual (R$ ${PRICE.anual})` : `mensal (R$ ${PRICE.mensal})`} venceu antes do pagamento. Se ainda quiser entrar, gere um novo código: leva menos de um minuto.</p><p style="font-size:13px;color:#666">Se você já pagou, ignore este e-mail: o acesso é liberado assim que o banco confirma.</p>`,
-          { t: "Gerar novo Pix", href: `${SITE_URL}/assinar?plano=${l.plano === "anual" ? "anual" : "mensal"}` },
+          `${ola}<p>O código Pix do acesso vitalício (R$ ${PRICE.vitalicio}) venceu antes do pagamento. Se ainda quiser entrar, gere um novo código: leva menos de um minuto.</p><p style="font-size:13px;color:#666">Se você já pagou, ignore este e-mail: o acesso é liberado assim que o banco confirma.</p>`,
+          { t: "Gerar novo Pix", href: `${SITE_URL}/assinar` },
         ),
       };
   }

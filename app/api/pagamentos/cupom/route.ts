@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     return resp({ ok: false }, 400);
   }
   const codigo = (corpo.codigo ?? "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20);
-  const plano = corpo.plano === "mensal" ? "mensal" : corpo.plano === "anual" ? "anual" : null;
+  const plano = corpo.plano ? "vitalicio" : null; // plano único
   if (!codigo || !plano) return resp({ ok: false });
 
   const sb = admin();

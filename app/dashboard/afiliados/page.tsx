@@ -127,7 +127,7 @@ function Afiliados() {
       <div className={m("top")}>
         <div>
           <h1>Portal do Afiliado</h1>
-          <p className={m("sub")}>Indique a Society e ganhe na primeira venda e em toda renovação.</p>
+          <p className={m("sub")}>Indique a Society e ganhe em cada venda que vier do seu link.</p>
         </div>
       </div>
       {erro && (
@@ -185,7 +185,7 @@ function Afiliados() {
             <div>
               <b>{T.n}</b>
               <small>
-                {T.p1}% na 1ª venda · {T.pr}% na renovação
+                {T.p1}% em cada venda
               </small>
             </div>
           </div>
@@ -307,8 +307,7 @@ function Afiliados() {
           <div className={m("af-plans")}>
             {(
               [
-                ["Mensal", PRICE.mensal, "/mês"],
-                ["Anual", PRICE.anual, "/ano"],
+                ["Vitalício", PRICE.vitalicio, " · pagamento único"],
               ] as [string, number, string][]
             ).map(([n, p, per]) => (
               <div key={n} className={m("pc")}>
@@ -319,15 +318,9 @@ function Afiliados() {
                     {per}
                   </small>
                 </div>
-                <div className={m("two")}>
-                  <div>
-                    <small>1ª venda · {T.p1}%</small>
-                    <b className={m("g")}>{brl((p * T.p1) / 100)}</b>
-                  </div>
-                  <div>
-                    <small>Renovação · {T.pr}%</small>
-                    <b>{brl((p * T.pr) / 100)}</b>
-                  </div>
+                <div>
+                  <small>Por venda · {T.p1}%</small>
+                  <b className={m("g")}>{brl((p * T.p1) / 100)}</b>
                 </div>
               </div>
             ))}
@@ -426,7 +419,7 @@ function Afiliados() {
                       {DATA.format(new Date(v.data))}
                     </td>
                     <td>{v.cliente}</td>
-                    <td>{v.plano === "anual" ? "Anual" : "Mensal"}</td>
+                    <td>{v.plano === "vitalicio" ? "Vitalício" : v.plano === "anual" ? "Anual" : v.plano === "mensal" ? "Mensal" : v.plano}</td>
                     <td style={{ color: "var(--muted)" }}>{v.tipo === "primeira" ? "1ª venda" : "Renovação"}</td>
                     <td>
                       <span className={m("stp " + v.status)}>{STATUS[v.status]}</span>

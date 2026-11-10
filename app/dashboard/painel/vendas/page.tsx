@@ -333,7 +333,7 @@ function Lancar({ onClose, onLancou }: { onClose: () => void; onLancou: (v: Vend
     cliente_nome: "",
     cliente_email: "",
     produto: "HOT SOCIETY",
-    plano: "mensal",
+    plano: "vitalicio",
     metodo: "pix",
     valor: "97",
     liquido: "",
@@ -387,6 +387,7 @@ function Lancar({ onClose, onLancou }: { onClose: () => void; onLancou: (v: Vend
           <label className="hs-pn-fld">
             Plano
             <select className="hs-pn-sel" value={f.plano} onChange={set("plano")}>
+              <option value="vitalicio">Vitalício (sem prazo)</option>
               <option value="mensal">Mensal (32 dias)</option>
               <option value="anual">Anual (367 dias)</option>
               <option value="avulso">Avulso (sem prazo)</option>

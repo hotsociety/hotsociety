@@ -54,11 +54,8 @@ export default function SemAcesso({
         </p>
         {!acesso.erro && acesso.status !== "bloqueado" && (
           <div className="hs-pn-gateplans">
-            <a href={CHECKOUT.anual} className="hs-pn-btn hs-pn-btn-p">
-              Anual · {BRL.format(PRICE.anual)}
-            </a>
-            <a href={CHECKOUT.mensal} className="hs-pn-btn">
-              Mensal · {BRL.format(PRICE.mensal)}
+            <a href={CHECKOUT.vitalicio} className="hs-pn-btn hs-pn-btn-p">
+              Acesso vitalício · {BRL.format(PRICE.vitalicio)}
             </a>
           </div>
         )}

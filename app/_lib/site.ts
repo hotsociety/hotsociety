@@ -22,58 +22,38 @@ export const SITE = {
   year: 2026,
 };
 
-// Links de checkout do gateway. Configure no .env.local:
-// NEXT_PUBLIC_CHECKOUT_MENSAL=https://...
-// NEXT_PUBLIC_CHECKOUT_ANUAL=https://...
+// Checkout do plano único (acesso vitalício). Links antigos com ?plano=mensal/anual caem no mesmo checkout.
 export const CHECKOUT = {
-  mensal: process.env.NEXT_PUBLIC_CHECKOUT_MENSAL || "/assinar?plano=mensal",
-  anual: process.env.NEXT_PUBLIC_CHECKOUT_ANUAL || "/assinar?plano=anual",
+  vitalicio: process.env.NEXT_PUBLIC_CHECKOUT_VITALICIO || "/assinar",
 };
 
-// Preços em R$ (fonte única: planos da home e checkout do passaporte 3D).
-export const PRICE = { mensal: 97, anual: 997 } as const;
+// Preço em R$ (fonte única: planos da home, checkout do passaporte 3D, página do curso).
+// Um plano só: R$ 297, pagamento único, acesso vitalício. O Arsenal do Cappu + Networking segue como adicional opcional no checkout.
+export const PRICE = { vitalicio: 297 } as const;
 
 const brl = (n: number) => `R$ ${n.toLocaleString("pt-BR", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
-const ANUAL_MES = Math.round((PRICE.anual / 12) * 100) / 100; // 83,08
-const ECONOMIA = PRICE.mensal * 12 - PRICE.anual; // 167
 
 export const PLANS = [
   {
-    id: "anual",
-    name: "Anual",
-    price: brl(PRICE.anual),
-    period: "/ano",
-    note: `${brl(ANUAL_MES)} por mês · economize ${brl(ECONOMIA)} · Pix ou cartão, sem renovação automática`,
-    badge: "Melhor valor",
-    href: CHECKOUT.anual,
+    id: "vitalicio",
+    name: "Acesso vitalício",
+    price: brl(PRICE.vitalicio),
+    period: "pagamento único",
+    note: "Pix ou cartão · paga uma vez, acessa para sempre · sem mensalidade",
+    badge: "Plano único",
+    href: CHECKOUT.vitalicio,
     featured: true,
+    cta: "Quero meu acesso vitalício",
     items: [
       "Hot Academy completa: modelo IA e modelo real",
       "Ferramentas: prompts, abordagens, tráfego e funil",
       "CappuIA e HOTPHONE",
       "Feed, missões, games e ranking",
       "Placas 10K · 50K · 100K",
-      "Bônus exclusivos do anual",
+      "Aulas novas e atualizações sem pagar de novo",
     ],
   },
-  {
-    id: "mensal",
-    name: "Mensal",
-    price: brl(PRICE.mensal),
-    period: "/mês",
-    note: "Pix ou cartão · 30 dias de acesso · sem renovação automática",
-    badge: null,
-    href: CHECKOUT.mensal,
-    featured: false,
-    items: [
-      "Hot Academy completa: modelo IA e modelo real",
-      "Ferramentas: prompts, abordagens, tráfego e funil",
-      "CappuIA e HOTPHONE",
-      "Feed, missões, games e ranking",
-      "Placas 10K · 50K · 100K",
-    ],
-  },
-] as const;
+];
 
 // Rota de níveis (mesma ordem do passaporte 3D). meta = faturamento verificado em R$.
 // Mônaco (1M) é o topo e dá acesso à Mentoria High Ticket.
@@ -119,8 +99,8 @@ export const FAQ = [
     a: "Depende do seu trabalho, do seu nicho e do tempo que você dedica. Não prometemos ganho. Os valores de 10K, 50K e 100K são metas da rota, comprovadas com faturamento verificado.",
   },
   {
-    q: "Tem renovação automática? E se eu me arrepender?",
-    a: "Não há renovação automática: o pagamento é à vista (Pix ou cartão) e vale pelo período do plano. Se você se arrepender, pede o reembolso integral em até 7 dias da compra em Perfil → Acesso e compras, sem precisar explicar o motivo (Código de Defesa do Consumidor, art. 49).",
+    q: "Tem mensalidade? E se eu me arrepender?",
+    a: `Não. Você paga uma vez ${brl(PRICE.vitalicio)} (Pix ou cartão) e o acesso é vitalício, sem mensalidade e sem renovação. Se você se arrepender, pede o reembolso integral em até 7 dias da compra em Perfil → Acesso e compras, sem precisar explicar o motivo (Código de Defesa do Consumidor, art. 49).`,
   },
   {
     q: "Quais são as regras para modelo real e modelo IA?",
@@ -135,8 +115,8 @@ export const FAQ = [
     a: `Os dados da empresa responsável (nome empresarial e CNPJ) ficam no rodapé do site e nos Termos de uso. Atendimento: ${SITE.supportEmail} (respondemos em até 5 dias úteis).`,
   },
   {
-    q: "Qual a diferença entre o mensal e o anual?",
-    a: `O conteúdo é o mesmo. No anual você paga ${brl(PRICE.anual)} por ano, o equivalente a ${brl(ANUAL_MES)} por mês, economiza ${brl(ECONOMIA)} e ganha bônus exclusivos.`,
+    q: "O que vem no acesso vitalício?",
+    a: `Por ${brl(PRICE.vitalicio)} uma vez só: a Hot Academy completa, as ferramentas, a CappuIA, o HOTPHONE, a gamificação e as aulas novas que entrarem. No checkout dá para somar o Arsenal do Cappu + Networking (funis, scripts, materiais prontos e a comunidade no Discord).`,
   },
 ] as const;
 

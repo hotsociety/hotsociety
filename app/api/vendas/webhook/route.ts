@@ -10,7 +10,7 @@
 // {
 //   "pedido": "EM1QWR9A", "status": "pago" | "pendente" | "recusado" | "reembolsado" | "chargeback" | "cancelado",
 //   "cliente_email": "aluno@gmail.com", "cliente_nome": "Nahuel R.",
-//   "produto": "HOT SOCIETY", "plano": "mensal" | "anual" | "avulso",
+//   "produto": "HOT SOCIETY", "plano": "vitalicio" | "mensal" | "anual" | "avulso",
 //   "metodo": "pix" | "cartao" | "boleto" | "outro",
 //   "valor": 97, "liquido": 88.5, "liberacao_prevista": "2026-10-20T12:00:00-03:00",
 //   "criado_em": "2026-10-16T15:00:00-03:00", "plataforma": "minha-plataforma"
@@ -20,7 +20,7 @@ import { createClient } from "@supabase/supabase-js";
 import { timingSafeEqual } from "node:crypto";
 
 const STATUS = new Set(["pago", "pendente", "recusado", "reembolsado", "chargeback", "cancelado"]);
-const PLANOS = new Set(["mensal", "anual", "avulso"]);
+const PLANOS = new Set(["vitalicio", "mensal", "anual", "avulso"]);
 const METODOS = new Set(["pix", "cartao", "boleto", "outro"]);
 
 function tokenConfere(recebido: string | null) {
