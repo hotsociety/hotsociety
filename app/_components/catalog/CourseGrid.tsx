@@ -39,7 +39,7 @@ export default async function CourseGrid() {
             <h3>{curso.titulo}</h3>
             {curso.descricao && <p>{curso.descricao}</p>}
             <div className={s.foot}>
-              <strong>a partir de {formatPreco(PRICE.mensal)}/mês</strong>
+              <strong>{formatPreco(PRICE.vitalicio)} · acesso vitalício</strong>
               <Link href={`/curso/${curso.id}`} className={s.link}>
                 Ver curso
               </Link>

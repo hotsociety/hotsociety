@@ -19,6 +19,7 @@ import {
   type Metodo,
   type Pedido,
   type Plano,
+  PLANO_UNICO,
 } from "../../../_lib/pagamentos";
 import { SITE } from "../../../_lib/site";
 import { SITE_URL } from "../../../_lib/email";
@@ -175,7 +176,8 @@ export async function POST(req: Request) {
   const emailVisitante = (corpo.email ?? "").trim().toLowerCase().slice(0, 120);
   // Item da Hot Store (ex.: a call) ou plano de assinatura.
   const item = itemPago(corpo.item);
-  const plano: Plano | null = item ? "loja" : corpo.plano === "anual" ? "anual" : corpo.plano === "mensal" ? "mensal" : null;
+  // Plano único (vitalício): links e páginas antigas que mandam mensal/anual também viram vitalício.
+  const plano: Plano | null = item ? "loja" : corpo.item ? null : PLANO_UNICO;
   const metodo: Metodo = corpo.metodo === "cartao" ? "cartao" : "pix";
   const nome = (corpo.nome ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
   const cpf = (corpo.cpf ?? "").replace(/\D/g, "");
@@ -224,7 +226,7 @@ export async function POST(req: Request) {
   // Adicional (Arsenal do Cappu + Networking): só nos planos e só pela Stripe (uma página com os dois itens).
   const adicional = !item && gateway === "stripe" ? adicionalValido(corpo.adicional) : null;
   const adicionalCentavos = adicional && !cuponCobreAdicional ? ADICIONAL.preco * 100 : 0;
-  const valor = (item ? ITENS_PAGOS[item].preco * 100 : VALOR_CENTAVOS[plano as "mensal" | "anual"] - desconto) + adicionalCentavos;
+  const valor = (item ? ITENS_PAGOS[item].preco * 100 : VALOR_CENTAVOS[PLANO_UNICO] - desconto) + adicionalCentavos;
   // A Stripe não cobra menos de R$ 1.
   if (valor > 0 && valor < 100) return resp({ erro: "Com este cupom, marque o adicional (Arsenal do Cappu) para continuar." }, 400);
   // Só agora (tudo conferido) cria/acha a conta de quem compra sem cadastro.

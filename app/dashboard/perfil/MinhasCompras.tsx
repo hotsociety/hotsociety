@@ -86,13 +86,13 @@ export default function MinhasCompras() {
           ? "Seu acesso vem do cargo na equipe."
           : acesso?.ativo
             ? validade
-              ? `Seu acesso vale até ${validade}. Não há renovação automática: para continuar, pague um novo plano antes dessa data.`
+              ? `Seu acesso vale até ${validade}. Para não perder mais, garanta o acesso vitalício (pagamento único).`
               : "Seu acesso está ativo, sem data de fim."
             : "Você não tem acesso ativo no momento."}
       </p>
       {!cargo && (
         <Link href="/assinar" className={ui.btnSm}>
-          {acesso?.ativo ? "Renovar ou trocar de plano" : "Assinar um plano"}
+          {acesso?.ativo ? "Garantir acesso vitalício" : "Garantir meu acesso"}
         </Link>
       )}
 

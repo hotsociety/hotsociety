@@ -7,7 +7,7 @@ export type Venda = {
   pedido: string;
   plataforma: string;
   produto: string;
-  plano: "mensal" | "anual" | "avulso" | null;
+  plano: "vitalicio" | "mensal" | "anual" | "avulso" | "loja" | null;
   cliente_nome: string | null;
   cliente_email: string;
   metodo: "pix" | "cartao" | "boleto" | "outro" | null;

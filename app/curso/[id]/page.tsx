@@ -84,14 +84,11 @@ async function DetalhesDoCurso({ promessaParams }: { promessaParams: Params }) {
         </div>
 
         <aside className={s.buy} aria-label="Comprar curso">
-          <span className={s.priceLabel}>Anual · melhor preço</span>
-          <strong className={s.price}>{BRL.format(PRICE.anual)}</strong>
-          <span className="hs-curso-parc">em até 12x no cartão · menos de R$ 3 por dia</span>
-          <a href={CHECKOUT.anual} className={s.btnGold}>
-            Garantir o anual
-          </a>
-          <a href={CHECKOUT.mensal} className="hs-curso-mensal">
-            Prefiro o mensal · <b>{BRL.format(PRICE.mensal)}</b>/mês
+          <span className={s.priceLabel}>Acesso vitalício · pagamento único</span>
+          <strong className={s.price}>{BRL.format(PRICE.vitalicio)}</strong>
+          <span className="hs-curso-parc">Pix ou cartão · sem mensalidade</span>
+          <a href={CHECKOUT.vitalicio} className={s.btnGold}>
+            Garantir meu acesso vitalício
           </a>
           <ul className={s.perks}>
             <li>Acesso imediato após a confirmação</li>

@@ -6,7 +6,7 @@
 //   Repasse automático (Stripe Connect) — parte de cada venda vai para a conta conectada do sócio:
 //   STRIPE_PLATAFORMA          → "fernando" quando a chave for da conta HotSociety Org (repasse padrão 70% ao GuTayler)
 //   STRIPE_REPASSE_CONTA       → id da conta conectada (acct_…)
-//   Percentual por produto: REPASSE_PADRAO (30% em Mensal, Anual e Loja), sobre o líquido depois da taxa da Stripe.
+//   Percentual por produto: REPASSE_PADRAO (30% em Vitalício, Loja e Mentoria), sobre o líquido depois da taxa da Stripe.
 //   Opcional: STRIPE_REPASSE_PCT_MENSAL / _ANUAL / _LOJA ou STRIPE_REPASSE_PERCENTUAL (todos) para trocar sem deploy de código.
 //   Página segura da Stripe (Checkout) com todas as formas ativas no painel: Pix, boleto, cartão
 //   (parcelado quando a conta permitir), Apple Pay, Google Pay, Link…
@@ -34,12 +34,15 @@ import { PRICE } from "./site";
 import { ITENS_PAGOS, itemPago } from "./loja";
 import { mentoradoDoPagamento, mentoradoReembolso } from "./mentorados";
 
-export type PlanoAssinatura = "mensal" | "anual";
+// Venda nova é sempre "vitalicio" (plano único). "mensal" e "anual" ficam só para pedidos antigos.
+export type PlanoAssinatura = "vitalicio" | "mensal" | "anual";
 export type Plano = PlanoAssinatura | "loja"; // "loja" = item avulso da Hot Store (não mexe no acesso)
 export type Metodo = "pix" | "cartao";
 export type Gateway = "stripe" | "novus" | "transfeer" | "cortesia"; // cortesia: cupom de 100% (nada a cobrar)
-export const VALOR_CENTAVOS: Record<PlanoAssinatura, number> = { mensal: PRICE.mensal * 100, anual: PRICE.anual * 100 };
-export const PRODUTO: Record<PlanoAssinatura, string> = { mensal: "HOT SOCIETY Mensal", anual: "HOT SOCIETY Anual" };
+export const VALOR_CENTAVOS: Record<PlanoAssinatura, number> = { vitalicio: PRICE.vitalicio * 100, mensal: 9700, anual: 99700 };
+export const PRODUTO: Record<PlanoAssinatura, string> = { vitalicio: "HOT SOCIETY Vitalício", mensal: "HOT SOCIETY Mensal", anual: "HOT SOCIETY Anual" };
+// Plano de qualquer pedido novo de acesso (links antigos com mensal/anual também caem aqui).
+export const PLANO_UNICO: PlanoAssinatura = "vitalicio";
 
 /** Nome do que foi vendido (plano ou item da loja). */
 // Convite do Discord do adicional (só servidor; mostrado só para quem pagou).
@@ -198,7 +201,8 @@ const STRIPE = "https://api.stripe.com/v1";
 const PLATAFORMA: "gutayler" | "fernando" = process.env.STRIPE_PLATAFORMA?.trim().toLowerCase() === "fernando" ? "fernando" : "gutayler";
 
 // Produtos cadastrados no Catálogo da Stripe de cada conta (o preço vai junto em cada cobrança, para valer cupom).
-const CATALOGO: Record<typeof PLATAFORMA, { mensal: string; anual: string; loja: Record<string, string>; adicional?: string }> = {
+// Sem produto do Vitalício no catálogo, a Stripe recebe o nome na hora (product_data).
+const CATALOGO: Record<typeof PLATAFORMA, { vitalicio?: string; mensal: string; anual: string; loja: Record<string, string>; adicional?: string }> = {
   gutayler: {
     mensal: "prod_VWh6H33G7ohbLy", // HOT SOCIETY Mensal · R$ 97
     anual: "prod_VWh6aDtUihsB0H", // HOT SOCIETY Anual · R$ 997
@@ -213,7 +217,7 @@ const CATALOGO: Record<typeof PLATAFORMA, { mensal: string; anual: string; loja:
 };
 const STRIPE_PRODUTO = CATALOGO[PLATAFORMA];
 function produtoStripe(p: Pedido) {
-  return p.plano === "loja" ? (p.item ? STRIPE_PRODUTO.loja[p.item] : undefined) : STRIPE_PRODUTO[p.plano];
+  return p.plano === "loja" ? (p.item ? STRIPE_PRODUTO.loja[p.item] : undefined) : STRIPE_PRODUTO[p.plano] || undefined;
 }
 
 // Corpo no formato da Stripe (form-urlencoded com colchetes: a[b][0]=c).
@@ -378,7 +382,7 @@ async function stripeConsultarSessao(id: string, pedidoId: string): Promise<Cobr
 export type ProdutoRepasse = Plano | "mentoria";
 // Conta do GuTayler cobrando: 30% vai para o FChelottiDev. Conta do FChelottiDev cobrando: 70% vai para o GuTayler.
 const PCT_PADRAO = PLATAFORMA === "fernando" ? 70 : 30;
-export const REPASSE_PADRAO: Record<ProdutoRepasse, number> = { mensal: PCT_PADRAO, anual: PCT_PADRAO, loja: PCT_PADRAO, mentoria: PCT_PADRAO };
+export const REPASSE_PADRAO: Record<ProdutoRepasse, number> = { vitalicio: PCT_PADRAO, mensal: PCT_PADRAO, anual: PCT_PADRAO, loja: PCT_PADRAO, mentoria: PCT_PADRAO };
 
 export function repassePercentual(produto: ProdutoRepasse): number {
   const porProduto = process.env[`STRIPE_REPASSE_PCT_${produto.toUpperCase()}`];

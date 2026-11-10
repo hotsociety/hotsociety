@@ -15,15 +15,16 @@ import "../login/login.css";
 import s from "../login/login.styles";
 import "./assinar.css";
 
-type Plano = "mensal" | "anual";
+type Plano = "vitalicio";
 type Pedido = { entrar?: string | null; chave?: string; id: string; plano: Plano | "loja"; item?: string | null; metodo?: "pix" | "cartao"; valor: number; status: string; br_code: string | null; checkout_url?: string | null; expira_em: string | null; adicional?: string | null; convite?: string | null };
 type Etapa = "carregando" | "form" | "pix" | "cartao" | "pago" | "expirado";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+// Plano único: acesso vitalício (o Arsenal do Cappu + Networking continua como adicional opcional).
 const PLANOS: Record<Plano, { t: string; s: string; preco: number }> = {
-  anual: { t: "Anual", s: "12 meses · melhor preço", preco: PRICE.anual },
-  mensal: { t: "Mensal", s: "30 dias", preco: PRICE.mensal },
+  vitalicio: { t: "Acesso vitalício", s: "Pagamento único · acesso para sempre", preco: PRICE.vitalicio },
 };
+const nomePlano = (k: string) => (k in PLANOS ? PLANOS[k as Plano].t : "HOT SOCIETY");
 
 export default function AssinarPage() {
   return (
@@ -60,7 +61,7 @@ function mascaraTel(v: string) {
 function Assinar() {
   const router = useRouter();
   const params = useSearchParams();
-  const inicial: Plano = params.get("plano") === "mensal" ? "mensal" : "anual";
+  const inicial: Plano = "vitalicio"; // links antigos (?plano=mensal/anual) caem no plano único
   // Compra de item da Hot Store (ex.: /assinar?item=cs): mesmo checkout, sem escolha de plano nem cupom.
   const item = itemPago(params.get("item"));
   const loja = item ? ITENS_PAGOS[item] : null;
@@ -262,7 +263,7 @@ function Assinar() {
   const mostraAdicional = !loja && stripe;
   const adicionalGratis = !!cupom?.adicional && cupom.plano === plano;
   const precoFinal = loja ? loja.preco : precoCom(plano) + (mostraAdicional && comAdicional && !adicionalGratis ? ADICIONAL.preco : 0);
-  const nomePedido = (p: Pedido) => (p.plano === "loja" ? (loja?.titulo ?? "Hot Store") : PLANOS[p.plano].t);
+  const nomePedido = (p: Pedido) => (p.plano === "loja" ? (loja?.titulo ?? "Hot Store") : nomePlano(p.plano));
 
   const mm = String(Math.floor(restante / 60000)).padStart(2, "0");
   const ss = String(Math.floor((restante % 60000) / 1000)).padStart(2, "0");
@@ -294,8 +295,8 @@ function Assinar() {
               </h1>
               {jaAtivo && (
                 <p className={s.ok}>
-                  Seu acesso já está ativo{jaAtivo !== "sem prazo" ? ` até ${new Date(jaAtivo).toLocaleDateString("pt-BR")}` : ""}. Pagando agora, o tempo novo
-                  soma ao que você já tem.
+                  Seu acesso já está ativo{jaAtivo !== "sem prazo" ? ` até ${new Date(jaAtivo).toLocaleDateString("pt-BR")}` : ""}. Pagando agora, seu acesso
+                  passa a ser vitalício.
                 </p>
               )}
               <form className={s.form} onSubmit={gerar} noValidate>
@@ -423,7 +424,7 @@ function Assinar() {
                     <a href="/privacidade" target="_blank" rel="noopener">
                       Política de privacidade
                     </a>
-                    .{loja ? " Sei que posso pedir reembolso integral em até 7 dias." : " Sei que não há renovação automática e que posso pedir reembolso integral em até 7 dias."}
+                    .{loja ? " Sei que posso pedir reembolso integral em até 7 dias." : " Sei que é pagamento único, sem mensalidade, e que posso pedir reembolso integral em até 7 dias."}
                   </span>
                 </label>
                 {temCartao && !stripe && (

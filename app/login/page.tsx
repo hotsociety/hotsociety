@@ -28,9 +28,10 @@ function Login() {
   const router = useRouter();
   const params = useSearchParams();
   const plano = params.get("plano");
-  const planoValido = plano === "mensal" || plano === "anual" ? plano : null;
-  const checkoutExterno = planoValido && CHECKOUT[planoValido].startsWith("http") ? CHECKOUT[planoValido] : null;
-  const destino = caminhoSeguro(params.get("callback"), planoValido ? `/assinar?plano=${planoValido}` : "/dashboard");
+  // Plano único (vitalício); links antigos com ?plano=mensal/anual também valem.
+  const planoValido = plano === "vitalicio" || plano === "mensal" || plano === "anual" ? "vitalicio" : null;
+  const checkoutExterno = planoValido && CHECKOUT.vitalicio.startsWith("http") ? CHECKOUT.vitalicio : null;
+  const destino = caminhoSeguro(params.get("callback"), planoValido ? "/assinar" : "/dashboard");
 
   const [modo, setModo] = useState<Modo>(params.get("esqueci") ? "esqueci" : planoValido ? "criar" : "entrar");
   const [email, setEmail] = useState(() => (params.get("email") ?? "").trim().slice(0, 120));
@@ -155,7 +156,7 @@ function Login() {
 
           {planoValido && modo !== "esqueci" && (
             <p className={s.plan}>
-              Plano escolhido: <b>{planoValido === "anual" ? `Anual · R$ ${PRICE.anual}` : `Mensal · R$ ${PRICE.mensal}`}</b>
+              Plano escolhido: <b>Acesso vitalício · R$ {PRICE.vitalicio}</b>
             </p>
           )}
 

@@ -249,8 +249,6 @@ function AtualizarResgate({ r, onClose, onFeito }: { r: Resgate; onClose: () => 
 function EditarCupom({ c, onClose, onFeito }: { c: Cupom | null; onClose: () => void; onFeito: () => void }) {
   const [codigo, setCodigo] = useState(c?.codigo ?? "");
   const [desconto, setDesconto] = useState(String(c?.desconto ?? 10));
-  const [mensal, setMensal] = useState(c ? c.planos.includes("mensal") : true);
-  const [anual, setAnual] = useState(c ? c.planos.includes("anual") : true);
   const [validade, setValidade] = useState(c?.validade ? c.validade.slice(0, 10) : "");
   const [max, setMax] = useState(c?.max_usos ? String(c.max_usos) : "");
   const [ativo, setAtivo] = useState(c?.ativo ?? true);
@@ -263,12 +261,11 @@ function EditarCupom({ c, onClose, onFeito }: { c: Cupom | null; onClose: () => 
     const d = Number(desconto);
     if (!/^[A-Z0-9]{3,20}$/.test(codigo)) return setErro("Código com 3 a 20 letras ou números, sem espaço.");
     if (!(d >= 1 && d <= 90)) return setErro("Desconto entre 1% e 90%.");
-    if (!mensal && !anual) return setErro("Escolha pelo menos um plano.");
     setSalvando(true);
     const { error } = await supabase.rpc("salvar_cupom", {
       p_codigo: codigo,
       p_desconto: d,
-      p_planos: [...(mensal ? ["mensal"] : []), ...(anual ? ["anual"] : [])],
+      p_planos: ["vitalicio"], // plano único
       p_validade: validade ? new Date(validade + "T23:59:59-03:00").toISOString() : null,
       p_max_usos: max ? Number(max) : null,
       p_ativo: ativo,
@@ -301,12 +298,7 @@ function EditarCupom({ c, onClose, onFeito }: { c: Cupom | null; onClose: () => 
           </label>
         </div>
         <div className="hs-pn-bar">
-          <label className="hs-pn-nota" style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <input type="checkbox" checked={mensal} onChange={(e) => setMensal(e.target.checked)} /> Mensal
-          </label>
-          <label className="hs-pn-nota" style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <input type="checkbox" checked={anual} onChange={(e) => setAnual(e.target.checked)} /> Anual
-          </label>
+          <span className="hs-pn-nota">Vale para o acesso vitalício</span>
           <label className="hs-pn-nota" style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <input type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} /> Ativo
           </label>
