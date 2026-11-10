@@ -55,6 +55,17 @@ export const PLANS = [
   },
 ];
 
+// Rota de níveis (mesma ordem do passaporte 3D). meta = faturamento verificado em R$.
+// Mônaco (1M) é o topo e dá acesso à Mentoria High Ticket.
+export const ROUTE: readonly { code: string; country: string; goal: string; reward: string; meta: number | null }[] = [
+  { code: "GRU", country: "Brasil", goal: "Ativou o passaporte", reward: "Medalha Embarque e +500 XP", meta: 0 },
+  { code: "SCL", country: "Chile", goal: "R$ 10 mil verificados", reward: "Placa física 10K", meta: 10_000 },
+  { code: "LIS", country: "Lisboa", goal: "R$ 50 mil verificados", reward: "Placa física 50K", meta: 50_000 },
+  { code: "DXB", country: "Dubai", goal: "R$ 100 mil verificados", reward: "Placa física 100K", meta: 100_000 },
+  { code: "JFK", country: "Nova York", goal: "R$ 500 mil verificados", reward: "Placa física 500K", meta: 500_000 },
+  { code: "MCM", country: "Mônaco", goal: "R$ 1 milhão verificado", reward: "Mentoria High Ticket", meta: 1_000_000 },
+];
+
 export const FEATURES = [
   { t: "Hot Academy", d: "85 aulas em 9 módulos, do primeiro passo à gringa, com missões." },
   { t: "Feed da Society", d: "Stories, posts, enquetes e canais para trocar ideia com quem está no mesmo jogo." },
