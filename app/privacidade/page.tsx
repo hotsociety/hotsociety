@@ -60,8 +60,8 @@ export default function Privacidade() {
       <ul>
         <li>Supabase: banco de dados e login (servidores no Canadá).</li>
         <li>Vercel: hospedagem do site (servidores nos EUA e em outros países).</li>
-        <li>Stripe: processamento do pagamento por Pix e cartão.</li>
-        <li>Novus Pagamentos: processamento de pagamentos feitos antes da troca para a Stripe (Brasil).</li>
+        <li>Mercado Pago: processamento de pagamentos da mentoria (Pix e cartão).</li>
+        <li>Novus Pagamentos e Stripe: processamento de pagamentos já realizados (histórico).</li>
         <li>Resend: envio de e-mails da conta.</li>
         <li>Cloudflare Turnstile: verificação anti-robô no login.</li>
         <li>Google: somente se você escolher entrar com o Google.</li>
