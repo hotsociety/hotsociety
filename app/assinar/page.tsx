@@ -87,7 +87,7 @@ function Assinar() {
   const [cupomErro, setCupomErro] = useState("");
   const [abrirCupom, setAbrirCupom] = useState(() => !!params.get("cupom"));
   const [metodo, setMetodo] = useState<"pix" | "cartao">("pix");
-  const [stripe, setStripe] = useState(false); // Stripe: uma página só com todas as formas de pagamento
+  const [pausado, setPausado] = useState(false); // vendas pausadas até a nova integração de pagamento
   const [temCartao, setTemCartao] = useState(false);
   const [comAdicional, setComAdicional] = useState(false); // Arsenal do Cappu + Networking (só nos planos, pela Stripe)
   const voltaPedido = useRef(params.get("pedido"));
@@ -115,12 +115,12 @@ function Assinar() {
         const a = data as { ativo?: boolean; cargo?: string | null; valido_ate?: string | null } | null;
         if (vivo && a?.ativo && !a.cargo && !item) setJaAtivo(a.valido_ate ?? "sem prazo");
       } else setVisitante(true);
-      fetch("/api/pagamentos/pix", { cache: "no-store" })
+      await fetch("/api/pagamentos/pix", { cache: "no-store" })
         .then((r) => r.json())
-        .then((c: { cartao?: boolean; gateway?: string }) => {
+        .then((c: { cartao?: boolean; gateway?: string; pausado?: boolean }) => {
           if (!vivo) return;
           setTemCartao(!!c.cartao);
-          setStripe(c.gateway === "stripe");
+          setPausado(!!c.pausado);
         })
         .catch(() => {});
       // Voltou da página do cartão: confere o pedido.
@@ -200,7 +200,7 @@ function Assinar() {
                 telefone: tel,
                 aceite,
                 cupom: cupom?.plano === plano ? cupom.codigo : undefined,
-                adicional: stripe && comAdicional ? ADICIONAL.id : undefined,
+                adicional: mostraAdicional && comAdicional ? ADICIONAL.id : undefined,
                 utm: lerUtm(),
               },
         ),
@@ -260,7 +260,7 @@ function Assinar() {
     setCupom({ codigo: r.codigo!, desconto: r.desconto!, plano, adicional: r.adicional === true && r.desconto === 100 });
   }
   const precoCom = (k: Plano) => (cupom && cupom.plano === k ? Math.round(PLANOS[k].preco * (100 - cupom.desconto)) / 100 : PLANOS[k].preco);
-  const mostraAdicional = !loja && stripe;
+  const mostraAdicional = false; // o adicional volta junto com a nova integração de pagamento
   const adicionalGratis = !!cupom?.adicional && cupom.plano === plano;
   const precoFinal = loja ? loja.preco : precoCom(plano) + (mostraAdicional && comAdicional && !adicionalGratis ? ADICIONAL.preco : 0);
   const nomePedido = (p: Pedido) => (p.plano === "loja" ? (loja?.titulo ?? "Hot Store") : nomePlano(p.plano));
@@ -287,7 +287,21 @@ function Assinar() {
 
           {etapa === "carregando" && <p className={s.ok}>Carregando…</p>}
 
-          {etapa === "form" && (
+          {etapa === "form" && pausado && (
+            <>
+              <h1 className={s.title}>
+                <span>Vendas</span>
+                <span className={s.gold}>pausadas.</span>
+              </h1>
+              <p className={s.ok}>Estamos trocando a forma de pagamento. As vendas reabrem em breve.</p>
+              <p className="hs-as-conta">Já é aluno? Seu acesso continua normal.</p>
+              <Link href="/" className={s.primary} style={{ display: "grid", placeItems: "center", textDecoration: "none" }}>
+                Voltar ao início
+              </Link>
+            </>
+          )}
+
+          {etapa === "form" && !pausado && (
             <>
               <h1 className={s.title}>
                 <span>{loja ? "Finalize sua" : "Emita seu"}</span>
@@ -427,7 +441,7 @@ function Assinar() {
                     .{loja ? " Sei que posso pedir reembolso integral em até 7 dias." : " Sei que é pagamento único, sem mensalidade, e que posso pedir reembolso integral em até 7 dias."}
                   </span>
                 </label>
-                {temCartao && !stripe && (
+                {temCartao && (
                   <div className="hs-as-planos" role="radiogroup" aria-label="Forma de pagamento">
                     <button type="button" role="radio" aria-checked={metodo === "pix"} className="hs-as-plano" onClick={() => setMetodo("pix")}>
                       <b>Pix</b>
@@ -455,10 +469,6 @@ function Assinar() {
                     ? enviando
                       ? "Liberando…"
                       : "Liberar acesso grátis"
-                    : stripe
-                    ? enviando
-                      ? "Abrindo pagamento…"
-                      : `Ir para o pagamento · ${BRL.format(precoFinal)}`
                     : enviando
                     ? metodo === "cartao"
                       ? "Abrindo pagamento…"
@@ -467,11 +477,7 @@ function Assinar() {
                       ? `Pagar ${BRL.format(precoFinal)} no cartão`
                       : `Pagar ${BRL.format(precoFinal)} com Pix`}
                 </button>
-                {stripe ? (
-                  <p className="hs-as-conta">Na página segura da Stripe você escolhe: Pix, cartão (em parcelas), boleto, Apple Pay ou Google Pay. Os dados do cartão não passam pelo nosso site.</p>
-                ) : (
-                  metodo === "cartao" && <p className="hs-as-conta">Você vai para a página segura de pagamento e escolhe as parcelas lá. O número do cartão não passa pelo nosso site.</p>
-                )}
+                {metodo === "cartao" && <p className="hs-as-conta">Você vai para a página segura de pagamento e escolhe as parcelas lá. O número do cartão não passa pelo nosso site.</p>}
                 <p className="hs-as-selos">
                   <span>🔒 Pagamento seguro e criptografado</span>
                   <span>↩ Garantia de 7 dias</span>
@@ -529,12 +535,10 @@ function Assinar() {
               </h1>
               <div className={s.form}>
                 <p className="hs-as-espera" role="status">
-                  <i aria-hidden="true" /> {stripe ? "Aguardando a confirmação do pagamento…" : "Aguardando a confirmação do cartão…"}
+                  <i aria-hidden="true" /> Aguardando a confirmação do pagamento…
                 </p>
                 <p className="hs-as-passos">
-                  {stripe
-                    ? "Pix e cartão confirmam em segundos. Boleto leva até 3 dias úteis: o acesso libera sozinho e você recebe um e-mail. Pode fechar esta página."
-                    : "Costuma levar alguns segundos. Pode deixar esta página aberta."}
+                  Costuma levar alguns segundos. Pode deixar esta página aberta.
                 </p>
                 <button type="button" className={s.textBtn} onClick={conferir}>
                   Conferir agora

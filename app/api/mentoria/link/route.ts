@@ -1,12 +1,12 @@
 // Painel → Mentoria → Links de pagamento.
 // POST { descricao, valor, aplicacao?, gateway? } → cria um link de uso único e devolve { id, url }.
-//   gateway "stripe" (padrão): Pix, boleto, cartão à vista · "mercadopago": cartão em até 12x.
+//   Só Mercado Pago (cartão em até 12x, Pix). A Stripe foi desligada em 17/11/2026.
 // POST { acao: "desativar", id }          → desliga um link ainda não pago.
 // POST { acao: "excluir", id }            → apaga um link não pago (desliga no gateway se ainda estiver aberto).
 // Só mentor/admin (a função do banco confere o cargo com o login de quem chamou).
 
 import { clienteDoUsuario } from "../../../_lib/email";
-import { admin, stripeCriarLinkMentoria, stripeDesativarLink } from "../../../_lib/pagamentos";
+import { admin } from "../../../_lib/pagamentos";
 import { mpConfigurado, mpCriarLinkMentoria, mpDesativarLink } from "../../../_lib/mercadopago";
 
 const resp = (corpo: object, status = 200) => Response.json(corpo, { status, headers: { "cache-control": "no-store" } });
@@ -30,8 +30,7 @@ export async function POST(req: Request) {
     const { data: linkId, error } = await sbUser.rpc("mentoria_link_pode_desativar", { p_id: corpo.id });
     if (error) return resp({ erro: error.message.includes("permiss") ? "Sem permissão." : "Não deu para continuar agora." }, 403);
     const { data: g } = await sb.from("mentoria_links").select("gateway").eq("id", corpo.id).maybeSingle<{ gateway: string }>();
-    const desligar = g?.gateway === "mercadopago" ? mpDesativarLink : stripeDesativarLink;
-    if (linkId) await desligar(String(linkId)).catch((e) => console.error("desativar link:", (e as Error).message));
+    if (linkId && g?.gateway === "mercadopago") await mpDesativarLink(String(linkId)).catch((e) => console.error("desativar link:", (e as Error).message));
     await sb.from("mentoria_links").update({ status: "desativado" }).eq("id", corpo.id).eq("status", "aberto");
     return resp({ ok: true });
   }
@@ -48,18 +47,16 @@ export async function POST(req: Request) {
       .maybeSingle<{ id: string; status: string; gateway?: string; stripe_link_id: string | null }>();
     if (!l) return resp({ erro: "Link não encontrado." }, 404);
     if (l.status === "pago" || l.status === "reembolsado") return resp({ erro: "Link pago não pode ser excluído (é registro da venda)." }, 400);
-    if (l.status === "aberto" && l.stripe_link_id) {
-      const desligar = l.gateway === "mercadopago" ? mpDesativarLink : stripeDesativarLink;
-      await desligar(l.stripe_link_id).catch((e) => console.error("excluir link (desligar):", (e as Error).message));
+    if (l.status === "aberto" && l.stripe_link_id && l.gateway === "mercadopago") {
+      await mpDesativarLink(l.stripe_link_id).catch((e) => console.error("excluir link (desligar):", (e as Error).message));
     }
     const { error: eDel } = await sb.from("mentoria_links").delete().eq("id", l.id).not("status", "in", "(pago,reembolsado)");
     if (eDel) return resp({ erro: "Não deu para excluir agora." }, 500);
     return resp({ ok: true });
   }
 
-  const gateway = corpo.gateway === "mercadopago" ? "mercadopago" : "stripe";
-  if (gateway === "mercadopago" && !mpConfigurado()) return resp({ erro: "Mercado Pago ainda não configurado (falta a chave na Vercel)." }, 503);
-  if (gateway === "stripe" && !process.env.STRIPE_SECRET_KEY) return resp({ erro: "Stripe não configurada." }, 503);
+  const gateway = "mercadopago";
+  if (!mpConfigurado()) return resp({ erro: "Mercado Pago ainda não configurado (falta a chave na Vercel)." }, 503);
 
   const descricao = (corpo.descricao ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
   const valor = typeof corpo.valor === "number" ? corpo.valor : Number(String(corpo.valor ?? "").replace(/\./g, "").replace(",", "."));
@@ -75,22 +72,21 @@ export async function POST(req: Request) {
   const { data: l } = await sb.from("mentoria_links").select("lead_nome").eq("id", id).single<{ lead_nome: string | null }>();
   try {
     const dados = { id: String(id), descricao, valor_centavos: centavos, lead_nome: l?.lead_nome ?? null };
-    const { url, linkId } = gateway === "mercadopago" ? await mpCriarLinkMentoria(dados) : await stripeCriarLinkMentoria(dados);
-    // "gateway" só é gravado no Mercado Pago (links da Stripe ficam com o padrão do banco).
+    const { url, linkId } = await mpCriarLinkMentoria(dados);
     const { error: eUp } = await sb
       .from("mentoria_links")
-      .update({ url, stripe_link_id: linkId, status: "aberto", ...(gateway === "mercadopago" ? { gateway } : {}) })
+      .update({ url, stripe_link_id: linkId, status: "aberto", gateway })
       .eq("id", id);
     if (eUp) throw new Error(`salvar link: ${eUp.message}`);
     return resp({ id, url });
   } catch (e) {
     console.error("criar link mentoria:", (e as Error).message);
     await sb.from("mentoria_links").delete().eq("id", id).eq("status", "criando");
-    return resp({ erro: `${gateway === "mercadopago" ? "O Mercado Pago" : "A Stripe"} não criou o link agora. Tente de novo em instantes.` }, 502);
+    return resp({ erro: "O Mercado Pago não criou o link agora. Tente de novo em instantes." }, 502);
   }
 }
 
 // GET: quais formas de gerar link estão ligadas (o Painel esconde/avisa o que falta configurar).
 export function GET() {
-  return resp({ stripe: Boolean(process.env.STRIPE_SECRET_KEY), mercadopago: mpConfigurado() });
+  return resp({ stripe: false, mercadopago: mpConfigurado() });
 }
