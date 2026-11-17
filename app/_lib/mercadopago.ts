@@ -1,5 +1,5 @@
 // SÓ SERVIDOR. Mercado Pago: links de pagamento da mentoria com valor exclusivo e cartão em até 12x.
-// Único gateway dos links da mentoria (Checkout Pro): Pix e cartão em até 12x.
+// A Stripe não parcela cartão no Brasil; para isso o Painel gera um link do Mercado Pago (Checkout Pro).
 //
 // Variável na Vercel (tipo Secret):
 //   MERCADOPAGO_ACCESS_TOKEN → Access Token de PRODUÇÃO (APP_USR-…) em

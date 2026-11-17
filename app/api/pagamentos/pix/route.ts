@@ -43,7 +43,7 @@ function publico(p: Pedido) {
     valor: p.valor_centavos / 100,
     status: p.status,
     br_code: p.status === "pendente" && p.metodo !== "cartao" ? p.br_code : null,
-    // Página segura do gateway (cartão).
+    // Página segura do gateway (cartão, ou Pix da Stripe quando o QR não pode ser mostrado aqui).
     checkout_url: p.status === "pendente" ? (p.checkout_url ?? null) : null,
     expira_em: p.expira_em,
     adicional: p.adicional ?? null,
@@ -159,7 +159,6 @@ async function linkDeEntrada(p: Pedido & { conta_nova?: boolean }): Promise<stri
 
 export async function POST(req: Request) {
   const cfg = configurado();
-  if (cfg.pausado) return resp({ erro: "As vendas estão pausadas e reabrem em breve.", pausado: true }, 503);
   if (!cfg.ok) {
     console.error("Pagamento desligado, faltam variáveis:", cfg.faltando.join(", "));
     return resp({ erro: "O pagamento ainda não está disponível. Tente mais tarde." }, 503);
@@ -224,12 +223,11 @@ export async function POST(req: Request) {
     desconto = Math.round((VALOR_CENTAVOS[plano] * (r.desconto ?? 0)) / 100);
     cuponCobreAdicional = r.adicional === true && r.desconto === 100;
   }
-  // Adicional (Arsenal do Cappu + Networking): só era vendido junto pela Stripe; volta com a nova integração.
-  const comAdicional: boolean = false;
-  const adicional = comAdicional && !item ? adicionalValido(corpo.adicional) : null;
+  // Adicional (Arsenal do Cappu + Networking): só nos planos e só pela Stripe (uma página com os dois itens).
+  const adicional = !item && gateway === "stripe" ? adicionalValido(corpo.adicional) : null;
   const adicionalCentavos = adicional && !cuponCobreAdicional ? ADICIONAL.preco * 100 : 0;
   const valor = (item ? ITENS_PAGOS[item].preco * 100 : VALOR_CENTAVOS[PLANO_UNICO] - desconto) + adicionalCentavos;
-  // O gateway não cobra menos de R$ 1.
+  // A Stripe não cobra menos de R$ 1.
   if (valor > 0 && valor < 100) return resp({ erro: "Com este cupom, marque o adicional (Arsenal do Cappu) para continuar." }, 400);
   // Só agora (tudo conferido) cria/acha a conta de quem compra sem cadastro.
   let user: { id: string; email?: string };
@@ -347,8 +345,8 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   const cfg = configurado();
   const id = new URL(req.url).searchParams.get("id");
-  if (!id) return resp({ pix: cfg.ok, cartao: cfg.ok && cfg.cartao, gateway: cfg.gateway, pausado: cfg.pausado });
-  if (!cfg.ok && !cfg.pausado) return resp({ erro: "indisponível" }, 503);
+  if (!id) return resp({ pix: cfg.ok, cartao: cfg.ok && cfg.cartao, gateway: cfg.gateway });
+  if (!cfg.ok) return resp({ erro: "indisponível" }, 503);
   if (!/^[0-9a-f-]{36}$/i.test(id)) return resp({ erro: "Pedido inválido." }, 400);
   // Logado: só os pedidos da própria conta. Sem login (compra sem cadastro): precisa da chave que só o navegador
   // que fez a compra recebeu (o id sozinho não basta: ele aparece na volta do cartão e no histórico).
