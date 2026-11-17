@@ -1,6 +1,6 @@
 "use client";
 
-// Painel → Mentoria → Links de pagamento: digita o valor, gera o link do Mercado Pago e manda para o lead.
+// Painel → Mentoria → Links de pagamento: digita o valor, gera o link da Stripe e manda para o lead.
 import { forwardRef, useEffect, useState } from "react";
 import { toast } from "../../../_components/membros/Toast";
 import { dataHora } from "../../../_lib/painel";
@@ -23,7 +23,11 @@ type Link = {
   split_centavos: number;
   gateway?: "stripe" | "mercadopago";
 };
-type Gateway = "stripe" | "mercadopago"; // "stripe" só em links antigos (a Stripe foi desligada)
+type Gateway = "stripe" | "mercadopago";
+const GATEWAY: Record<Gateway, { t: string; sub: string }> = {
+  stripe: { t: "Pix · boleto · cartão à vista", sub: "Stripe" },
+  mercadopago: { t: "Cartão em até 12x", sub: "Mercado Pago" },
+};
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const ST: Record<Link["status"], { t: string; cls: string }> = {
@@ -40,7 +44,7 @@ const msg = (nome: string | null, desc: string, valor: number, url: string, g: G
     g === "mercadopago" ? "Dá para pagar no cartão em até 12x pelo Mercado Pago" : "Dá para pagar com Pix, cartão ou boleto"
   }:\n${url}`;
 
-// Link fixo do Mercado Pago (cartão em até 12x), mostrado quando a chave do Mercado Pago não está configurada.
+// Cartão parcelado em até 12x (Mercado Pago). A Stripe não parcela no Brasil, então a mentoria tem este link fixo.
 // Pagamentos por ele aparecem no painel do Mercado Pago (não entram sozinhos aqui).
 const MP_MENTORIA = { url: "https://mpago.la/24QKUQL", valor: 500000, nome: "Mentoria Individual" };
 const msgMp = (nome: string | null) =>
@@ -73,14 +77,14 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
   const [gerando, setGerando] = useState(false);
   const [erro, setErro] = useState("");
   const [novo, setNovo] = useState<{ url: string; lead: LeadLink | null; descricao: string; valor: number; gateway: Gateway } | null>(null);
-  const gateway: Gateway = "mercadopago";
+  const [gateway, setGateway] = useState<Gateway>("stripe");
   const [cfg, setCfg] = useState<{ stripe: boolean; mercadopago: boolean } | null>(null);
 
   useEffect(() => {
     fetch("/api/mentoria/link")
       .then((r) => r.json())
       .then((j) => setCfg({ stripe: !!j.stripe, mercadopago: !!j.mercadopago }))
-      .catch(() => setCfg({ stripe: false, mercadopago: false }));
+      .catch(() => setCfg({ stripe: true, mercadopago: false }));
   }, []);
 
   useEffect(() => {
@@ -167,7 +171,7 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
       <div className="hs-pn-gl-cab">
         <div>
           <h2 id="links-mentoria">Link de pagamento</h2>
-          <p>Digite o valor e mande o link do Mercado Pago para o lead (Pix ou cartão em até 12x). Cada link vale para um pagamento. Quando o pagamento é aprovado, o lead vira mentorado sozinho (aba Mentorados, 1 ano de plataforma e e-mail com o link de entrada).</p>
+          <p>Escolha a forma, digite o valor e mande o link para o lead. Cada link vale para um pagamento. Quando o pagamento é aprovado, o lead vira mentorado sozinho (aba Mentorados, 1 ano de plataforma e e-mail com o link de entrada).</p>
         </div>
         {pagos.length > 0 && (
           <span className="hs-pn-gl-total">
@@ -177,7 +181,27 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
         )}
       </div>
 
-      {cfg && !cfg.mercadopago && <p className="hs-pn-erro">Mercado Pago sem chave na Vercel (MERCADOPAGO_ACCESS_TOKEN): gerar link não funciona. Use o link fixo abaixo.</p>}
+      <div className="hs-pn-gl-gw" role="radiogroup" aria-label="Forma de pagamento do link">
+        {(Object.keys(GATEWAY) as Gateway[]).map((g) => (
+          <button
+            key={g}
+            type="button"
+            role="radio"
+            aria-checked={gateway === g}
+            className={gateway === g ? "on" : ""}
+            onClick={() => {
+              setGateway(g);
+              setErro("");
+            }}
+          >
+            <b>{GATEWAY[g].t}</b>
+            <small>
+              {GATEWAY[g].sub}
+              {cfg && !cfg[g] ? " · falta configurar" : ""}
+            </small>
+          </button>
+        ))}
+      </div>
 
       <form className="hs-pn-gl-form" onSubmit={gerar}>
         <label className="hs-pn-fld">
