@@ -2,26 +2,6 @@
 
 export type StatusVenda = "pago" | "pendente" | "recusado" | "reembolsado" | "chargeback" | "cancelado";
 
-export type Venda = {
-  id: string;
-  pedido: string;
-  plataforma: string;
-  produto: string;
-  plano: "vitalicio" | "mensal" | "anual" | "avulso" | "loja" | null;
-  cliente_nome: string | null;
-  cliente_email: string;
-  metodo: "pix" | "cartao" | "boleto" | "outro" | null;
-  valor?: number | string;
-  liquido?: number | string;
-  status: StatusVenda;
-  liberacao_prevista?: string | null;
-  criado_em: string;
-  user_id: string | null;
-  reembolso_pedido_em?: string | null;
-  reembolso_motivo?: string | null;
-  reembolso_protocolo?: string | null;
-};
-
 export type Aluno = {
   id: string;
   email: string;
@@ -46,8 +26,6 @@ export const STATUS_VENDA: Record<StatusVenda, string> = {
   cancelado: "Não concluído",
 };
 
-export const METODO: Record<string, string> = { pix: "Pix", cartao: "Cartão", boleto: "Boleto", outro: "Outro" };
-
 export const ACESSO: Record<Aluno["acesso"], string> = {
   equipe: "Equipe",
   ativo: "Ativo",
@@ -66,20 +44,6 @@ export const reais0 = (v: number | string | null | undefined) => BRL0.format(Num
 export const data = (iso: string | null | undefined) => (iso ? DATA.format(new Date(iso)) : "—");
 export const hora = (iso: string | null | undefined) => (iso ? HORA.format(new Date(iso)) : "");
 export const dataHora = (iso: string | null | undefined) => (iso ? `${data(iso)}, ${hora(iso)}` : "—");
-
-// "rivaldo@gmail.com" → "riv***@gmail.com" (LGPD: mostra só o necessário na lista).
-export function mascararEmail(e: string) {
-  const [u, d] = e.split("@");
-  if (!d) return e;
-  return `${u.slice(0, 3)}***@${d}`;
-}
-
-// "Nahuel Rivas" → "Nahuel R."
-export function nomeCurto(n: string | null | undefined) {
-  if (!n) return "—";
-  const p = n.trim().split(/\s+/);
-  return p.length > 1 ? `${p[0]} ${p[p.length - 1][0].toUpperCase()}.` : p[0];
-}
 
 // Data de hoje no fuso de Brasília, como AAAA-MM-DD.
 export function hojeISO(agora: Date) {

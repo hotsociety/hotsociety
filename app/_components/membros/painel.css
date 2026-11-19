@@ -90,7 +90,6 @@
 .hs-pn-st.pendente,.hs-pn-st.vencido{color:var(--gold-t)}
 .hs-pn-st.recusado,.hs-pn-st.cancelado,.hs-pn-st.reembolsado,.hs-pn-st.chargeback,.hs-pn-st.bloqueado{color:var(--erro-t)}
 .hs-pn-st.sem{color:var(--muted)}
-.hs-pn-risk{text-decoration:line-through;color:var(--muted2,var(--muted2))}
 .hs-pn-acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
 
 /* lista do histórico */

@@ -39,7 +39,7 @@ export async function avisarVenda(p: Pedido) {
   await enviarEmail({
     para,
     assunto: `${t.emoji} ${t.titulo} · ${brl(p.valor_centavos)} · ${nomeProduto(p)}`,
-    html: moldura(`${t.emoji} ${t.titulo}`, corpo, { t: "Abrir o painel de vendas", href: `${SITE_URL}/dashboard/painel/vendas` }),
+    html: moldura(`${t.emoji} ${t.titulo}`, corpo, { t: "Abrir o painel", href: `${SITE_URL}/dashboard/painel` }),
     chave: `aviso-${p.id}-${p.status}`,
   }).catch((e) => console.error("aviso de venda:", (e as Error).message));
 }

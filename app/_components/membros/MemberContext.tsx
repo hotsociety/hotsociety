@@ -35,7 +35,6 @@ export function nomeDoUsuario(user: User) {
 export const PODE = {
   verPainel: (c: Cargo | null) => c !== null,
   verValores: (c: Cargo | null) => c === "admin" || c === "financeiro",
-  lancarVenda: (c: Cargo | null) => c === "admin" || c === "financeiro",
   mudarAcesso: (c: Cargo | null) => c === "admin" || c === "suporte",
   darCargo: (c: Cargo | null) => c === "admin",
   verHistorico: (c: Cargo | null) => c === "admin",

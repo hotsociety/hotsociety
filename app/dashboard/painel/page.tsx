@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PODE, useMembro } from "../../_components/membros/MemberContext";
@@ -72,9 +71,6 @@ export default function VisaoGeral() {
             </button>
           ))}
         </div>
-        <Link href="/dashboard/painel/vendas" className="hs-pn-btn hs-pn-btn-sm">
-          Ver todas as vendas
-        </Link>
       </div>
 
       {erro && <p className="hs-pn-erro">{erro}</p>}
