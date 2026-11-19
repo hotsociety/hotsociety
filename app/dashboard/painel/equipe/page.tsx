@@ -11,8 +11,8 @@ type Membro = { id: string; email: string; nome: string | null; cargo: Cargo; ul
 
 const O_QUE_FAZ: Record<Cargo, string> = {
   admin: "Tudo: vendas, valores, alunos, cargos e histórico.",
-  financeiro: "Vendas, valores e repasses. Lança venda manual e registra reembolso. Consulta alunos.",
-  suporte: "Libera e bloqueia alunos. Vê os pedidos sem valores.",
+  financeiro: "Vendas, valores e repasses. Consulta alunos.",
+  suporte: "Libera e bloqueia alunos.",
 };
 
 export default function Equipe() {

@@ -47,6 +47,10 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // A aba Vendas saiu do painel: links antigos (como os dos e-mails de aviso de venda) caem na Visão geral.
+  async redirects() {
+    return [{ source: "/dashboard/painel/vendas", destination: "/dashboard/painel", permanent: false }];
+  },
   /* config options here */
   experimental: {
     agentFeedback: true,

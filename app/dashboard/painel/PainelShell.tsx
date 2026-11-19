@@ -11,7 +11,6 @@ type Aba = { href: string; t: string; pode: (c: Cargo | null) => boolean };
 
 export const ABAS: Aba[] = [
   { href: "/dashboard/painel", t: "Visão geral", pode: PODE.verValores },
-  { href: "/dashboard/painel/vendas", t: "Vendas", pode: PODE.verPainel },
   { href: "/dashboard/painel/alunos", t: "Alunos e acesso", pode: PODE.verPainel },
   { href: "/dashboard/painel/chamados", t: "Chamados", pode: PODE.verPainel },
   { href: "/dashboard/painel/faturamento", t: "Faturamento", pode: PODE.verValores },
