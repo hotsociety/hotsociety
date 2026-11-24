@@ -14,31 +14,7 @@ import { ADICIONAL } from "../_lib/adicional";
 import "../login/login.css";
 import s from "../login/login.styles";
 import "./assinar.css";
-
-// Script da Appmax (appmax.min.js): coleta o IP do comprador e tokeniza o cartão aqui no navegador.
-type AppmaxErro = { code?: string; message?: string; stage?: string } | string;
-declare global {
-  interface Window {
-    AppmaxScripts?: {
-      init: (opcoes: {
-        externalId?: string;
-        onIp?: (d: { ip: string }) => void;
-        onTokenize?: (d: { token: string }) => void;
-        onSuccess?: (d: unknown) => void;
-        onError?: (e: AppmaxErro) => void;
-      }) => void;
-    };
-  }
-}
-type ConfigAppmax = { script: string; externalId: string | null; parcelas: number };
-// Campo do cartão: só números (o script da Appmax lê o valor como está).
-const soDigitos = (e: React.FormEvent<HTMLInputElement>) => {
-  const el = e.currentTarget;
-  const v = el.value.replace(/\D/g, "");
-  if (v !== el.value) el.value = v;
-};
-const lerToken = (d: unknown) =>
-  typeof d === "string" ? d : d && typeof d === "object" && typeof (d as { token?: unknown }).token === "string" ? (d as { token: string }).token : null;
+import { lerToken, soDigitos, type ConfigAppmax } from "../_lib/appmaxJs";
 
 type Plano = "vitalicio";
 type Pedido = { entrar?: string | null; chave?: string; id: string; plano: Plano | "loja"; item?: string | null; metodo?: "pix" | "cartao"; valor: number; status: string; br_code: string | null; checkout_url?: string | null; expira_em: string | null; adicional?: string | null; convite?: string | null };

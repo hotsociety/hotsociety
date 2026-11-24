@@ -8,6 +8,7 @@
 
 import { admin, aplicarCobranca, consultarPedido, type Pedido } from "../../../_lib/pagamentos";
 import { appmaxAssinaturaConfere, appmaxConfigurada } from "../../../_lib/appmax";
+import { mentoriaAppmaxAplicar } from "../../../_lib/mentoriaAppmax";
 
 const idPedido = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v > 0 ? String(v) : typeof v === "string" && /^\d{1,15}$/.test(v.trim()) ? v.trim() : null);
 
@@ -39,7 +40,22 @@ export async function POST(req: Request) {
 
   const sb = admin();
   const { data: pedido } = await sb.from("pedidos").select("*").eq("gateway", "appmax").eq("charge_id", pedidoAppmax).maybeSingle<Pedido>();
-  if (!pedido) return Response.json({ ok: true, ignorado: "pedido não encontrado" });
+  if (!pedido) {
+    // Link de pagamento da mentoria (/pagar/<id>): o SKU do produto é "m-<id do link>"; senão, a última tentativa do link.
+    const skus = Array.isArray(d.products) ? (d.products as { sku?: unknown }[]).map((p) => String(p?.sku ?? "")) : [];
+    let linkId = skus.map((s) => s.match(/^m-([0-9a-f-]{36})$/i)?.[1]).find(Boolean) ?? null;
+    if (!linkId) {
+      const { data: l } = await sb.from("mentoria_links").select("id").eq("pi_id", `appmax_${pedidoAppmax}`).maybeSingle<{ id: string }>();
+      linkId = l?.id ?? null;
+    }
+    if (!linkId) return Response.json({ ok: true, ignorado: "pedido não encontrado" });
+    try {
+      return Response.json({ ok: true, mentoria: linkId, ...(await mentoriaAppmaxAplicar(sb, linkId, pedidoAppmax)) });
+    } catch (e) {
+      console.error("Appmax mentoria (aviso):", (e as Error).message);
+      return Response.json({ ok: false, erro: "conferência indisponível" }, { status: 503 });
+    }
+  }
 
   // Confirma na fonte. Se a consulta falhar, devolve erro e a Appmax reenvia depois (30 min, 2 h e 4 h).
   try {
