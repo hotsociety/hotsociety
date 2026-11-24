@@ -15,6 +15,31 @@ import "../login/login.css";
 import s from "../login/login.styles";
 import "./assinar.css";
 
+// Script da Appmax (appmax.min.js): coleta o IP do comprador e tokeniza o cartão aqui no navegador.
+type AppmaxErro = { code?: string; message?: string; stage?: string } | string;
+declare global {
+  interface Window {
+    AppmaxScripts?: {
+      init: (opcoes: {
+        externalId?: string;
+        onIp?: (d: { ip: string }) => void;
+        onTokenize?: (d: { token: string }) => void;
+        onSuccess?: (d: unknown) => void;
+        onError?: (e: AppmaxErro) => void;
+      }) => void;
+    };
+  }
+}
+type ConfigAppmax = { script: string; externalId: string | null; parcelas: number };
+// Campo do cartão: só números (o script da Appmax lê o valor como está).
+const soDigitos = (e: React.FormEvent<HTMLInputElement>) => {
+  const el = e.currentTarget;
+  const v = el.value.replace(/\D/g, "");
+  if (v !== el.value) el.value = v;
+};
+const lerToken = (d: unknown) =>
+  typeof d === "string" ? d : d && typeof d === "object" && typeof (d as { token?: unknown }).token === "string" ? (d as { token: string }).token : null;
+
 type Plano = "vitalicio";
 type Pedido = { entrar?: string | null; chave?: string; id: string; plano: Plano | "loja"; item?: string | null; metodo?: "pix" | "cartao"; valor: number; status: string; br_code: string | null; checkout_url?: string | null; expira_em: string | null; adicional?: string | null; convite?: string | null };
 type Etapa = "carregando" | "form" | "pix" | "cartao" | "pago" | "expirado";
@@ -89,8 +114,15 @@ function Assinar() {
   const [metodo, setMetodo] = useState<"pix" | "cartao">("pix");
   const [stripe, setStripe] = useState(false); // Stripe: uma página só com todas as formas de pagamento
   const [temCartao, setTemCartao] = useState(false);
-  const [comAdicional, setComAdicional] = useState(false); // Arsenal do Cappu + Networking (só nos planos, pela Stripe)
+  const [comAdicional, setComAdicional] = useState(false); // Arsenal do Cappu + Networking (só nos planos, pela Stripe ou Appmax)
   const voltaPedido = useRef(params.get("pedido"));
+  // Appmax: o script dela coleta o IP do comprador e tokeniza o cartão (o número nunca vai para o nosso servidor).
+  const [appmax, setAppmax] = useState<ConfigAppmax | null>(null);
+  const [appmaxPronto, setAppmaxPronto] = useState(false);
+  const [parcelas, setParcelas] = useState(1);
+  const appmaxIniciado = useRef(false);
+  const ipAppmax = useRef("");
+  const esperaToken = useRef<{ ok: (t: string) => void; falha: (e: unknown) => void } | null>(null);
 
   // Planos: dá para pagar sem conta (o e-mail vai no formulário e a conta nasce no pagamento).
   // Itens da Hot Store continuam exigindo login. Roda uma vez só.
@@ -117,10 +149,11 @@ function Assinar() {
       } else setVisitante(true);
       fetch("/api/pagamentos/pix", { cache: "no-store" })
         .then((r) => r.json())
-        .then((c: { cartao?: boolean; gateway?: string }) => {
+        .then((c: { cartao?: boolean; gateway?: string; appmax?: ConfigAppmax | null }) => {
           if (!vivo) return;
           setTemCartao(!!c.cartao);
           setStripe(c.gateway === "stripe");
+          if (c.gateway === "appmax" && c.appmax?.script) setAppmax(c.appmax);
         })
         .catch(() => {});
       // Voltou da página do cartão: confere o pedido.
@@ -138,6 +171,61 @@ function Assinar() {
       sub.subscription.unsubscribe();
     };
   }, [inicial, item]);
+
+  // Appmax: carrega o script uma vez e inicia depois que os formulários dele já estão na página
+  // (ele só procura os formulários no init). O IP chega no onIp; o token do cartão, no onTokenize.
+  useEffect(() => {
+    if (!appmax) return;
+    let vivo = true;
+    const iniciar = () => {
+      if (!vivo || !window.AppmaxScripts || appmaxIniciado.current) return;
+      appmaxIniciado.current = true;
+      try {
+        window.AppmaxScripts.init({
+          ...(appmax.externalId ? { externalId: appmax.externalId } : {}),
+          onIp: (d) => {
+            if (d?.ip) ipAppmax.current = d.ip;
+          },
+          onTokenize: (d) => {
+            const t = lerToken(d);
+            if (t) esperaToken.current?.ok(t);
+          },
+          // Versões antigas do script entregam o IP e o token pelo onSuccess.
+          onSuccess: (d) => {
+            const ip = d && typeof d === "object" ? (d as { ip?: unknown }).ip : null;
+            if (typeof ip === "string") ipAppmax.current = ip;
+            else {
+              const t = lerToken(d);
+              if (t) esperaToken.current?.ok(t);
+            }
+          },
+          onError: (e) => {
+            console.error("Appmax:", e);
+            esperaToken.current?.falha(e);
+          },
+        });
+        setAppmaxPronto(true);
+      } catch (e) {
+        console.error("Appmax init:", e);
+      }
+    };
+    let sc = document.querySelector<HTMLScriptElement>("script[data-hs-appmax]");
+    if (window.AppmaxScripts) iniciar();
+    else {
+      if (!sc) {
+        sc = document.createElement("script");
+        sc.src = appmax.script;
+        sc.async = true;
+        sc.dataset.hsAppmax = "1";
+        document.body.appendChild(sc);
+      }
+      sc.addEventListener("load", iniciar);
+    }
+    return () => {
+      vivo = false;
+      sc?.removeEventListener("load", iniciar);
+    };
+  }, [appmax]);
 
   // Relógio para o tempo do Pix.
   useEffect(() => {
@@ -182,15 +270,58 @@ function Assinar() {
     if (n.split(" ").length < 2) return setErro("Digite seu nome completo, como no CPF.");
     if (!token && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) return setErro("Digite um e-mail válido. É nele que chega o seu acesso.");
     if (cpf.replace(/\D/g, "").length !== 11) return setErro("Digite os 11 números do CPF.");
+    if (appmax && precoFinal > 0 && tel.replace(/\D/g, "").length < 10) return setErro("Digite seu celular com DDD.");
     if (!aceite) return setErro("Para continuar, confirme que tem 18 anos ou mais e aceita os termos.");
+
+    // Appmax + cartão: o script dela tokeniza o cartão aqui no navegador. Para o nosso servidor vai só o token.
+    let cartaoAppmax: { token: string; titular: string; parcelas: number } | undefined;
+    if (appmax && metodo === "cartao" && precoFinal > 0) {
+      const f = document.getElementById("hs-appmax-cartao") as HTMLFormElement | null;
+      const dados = f ? new FormData(f) : null;
+      const numero = String(dados?.get("card-number") ?? "").replace(/\D/g, "");
+      const titular = String(dados?.get("card-holder-name") ?? "").trim().replace(/\s+/g, " ");
+      const mes = Number(dados?.get("exp-month") ?? 0);
+      const ano = String(dados?.get("exp-year") ?? "").replace(/\D/g, "");
+      const cvv = String(dados?.get("cvv") ?? "").replace(/\D/g, "");
+      if (numero.length < 13 || numero.length > 19) return setErro("Confira o número do cartão.");
+      if (titular.split(" ").length < 2) return setErro("Digite o nome como está impresso no cartão.");
+      if (!(mes >= 1 && mes <= 12) || (ano.length !== 2 && ano.length !== 4)) return setErro("Confira a validade do cartão (mês e ano).");
+      if (cvv.length < 3) return setErro("Confira o CVV, os 3 ou 4 números no verso do cartão.");
+      if (!f || !appmaxPronto || !window.AppmaxScripts) return setErro("O pagamento com cartão ainda está carregando. Espere alguns segundos e tente de novo.");
+      setEnviando(true);
+      try {
+        const tokenCartao = await new Promise<string>((ok, falha) => {
+          const t = setTimeout(() => falha(new Error("tempo esgotado")), 30_000);
+          esperaToken.current = {
+            ok: (x) => {
+              clearTimeout(t);
+              ok(x);
+            },
+            falha: (x) => {
+              clearTimeout(t);
+              falha(x);
+            },
+          };
+          f.requestSubmit(); // o script da Appmax intercepta o envio e tokeniza
+        });
+        cartaoAppmax = { token: tokenCartao, titular, parcelas: parcelasOk };
+      } catch {
+        setEnviando(false);
+        return setErro("Não deu para validar o cartão. Confira os dados e tente de novo.");
+      } finally {
+        esperaToken.current = null;
+      }
+    }
+
     setEnviando(true);
     try {
+      const extras = { ip: ipAppmax.current || undefined, cartao: cartaoAppmax };
       const r = await fetch("/api/pagamentos/pix", {
         method: "POST",
         headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify(
           item
-            ? { item, metodo, nome: n, cpf, telefone: tel, aceite, utm: lerUtm() }
+            ? { item, metodo, nome: n, cpf, telefone: tel, aceite, utm: lerUtm(), ...extras }
             : {
                 plano,
                 metodo,
@@ -200,8 +331,9 @@ function Assinar() {
                 telefone: tel,
                 aceite,
                 cupom: cupom?.plano === plano ? cupom.codigo : undefined,
-                adicional: stripe && comAdicional ? ADICIONAL.id : undefined,
+                adicional: mostraAdicional && comAdicional ? ADICIONAL.id : undefined,
                 utm: lerUtm(),
+                ...extras,
               },
         ),
       });
@@ -218,11 +350,16 @@ function Assinar() {
         window.location.href = p.checkout_url; // página segura do gateway (o número do cartão não passa pelo nosso site)
         return;
       }
+      // Cartão da Appmax em análise antifraude: a tela de conferência acompanha sozinha.
+      if (p.metodo === "cartao") return setEtapa("cartao");
       setEtapa("pix");
     } catch {
       setErro("Sem conexão. Confira sua internet e tente de novo.");
     } finally {
       setEnviando(false);
+      // O CVV não fica no formulário depois da tentativa.
+      const cvv = document.querySelector<HTMLInputElement>('input[form="hs-appmax-cartao"][name="cvv"]');
+      if (cvv) cvv.value = "";
     }
   }
 
@@ -260,9 +397,12 @@ function Assinar() {
     setCupom({ codigo: r.codigo!, desconto: r.desconto!, plano, adicional: r.adicional === true && r.desconto === 100 });
   }
   const precoCom = (k: Plano) => (cupom && cupom.plano === k ? Math.round(PLANOS[k].preco * (100 - cupom.desconto)) / 100 : PLANOS[k].preco);
-  const mostraAdicional = !loja && stripe;
+  const mostraAdicional = !loja && (stripe || !!appmax);
   const adicionalGratis = !!cupom?.adicional && cupom.plano === plano;
   const precoFinal = loja ? loja.preco : precoCom(plano) + (mostraAdicional && comAdicional && !adicionalGratis ? ADICIONAL.preco : 0);
+  // Appmax: até 12x sem juros, com parcela mínima de R$ 5.
+  const maxParcelas = appmax ? Math.max(1, Math.min(appmax.parcelas, Math.floor((precoFinal * 100) / 500))) : 1;
+  const parcelasOk = Math.min(Math.max(1, parcelas), maxParcelas);
   const nomePedido = (p: Pedido) => (p.plano === "loja" ? (loja?.titulo ?? "Hot Store") : nomePlano(p.plano));
 
   const mm = String(Math.floor(restante / 60000)).padStart(2, "0");
@@ -347,8 +487,8 @@ function Assinar() {
                   <input value={cpf} onChange={(e) => setCpf(mascaraCpf(e.target.value))} inputMode="numeric" placeholder="000.000.000-00" required />
                 </label>
                 <label className={s.field}>
-                  <span>Celular (opcional)</span>
-                  <input value={tel} onChange={(e) => setTel(mascaraTel(e.target.value))} inputMode="tel" autoComplete="tel" placeholder="(11) 99999-9999" />
+                  <span>{appmax ? "Celular com DDD" : "Celular (opcional)"}</span>
+                  <input value={tel} onChange={(e) => setTel(mascaraTel(e.target.value))} inputMode="tel" autoComplete="tel" placeholder="(11) 99999-9999" required={!!appmax} />
                 </label>
                 {loja ? null : abrirCupom ? (
                   <div className="hs-as-cupom">
@@ -435,8 +575,46 @@ function Assinar() {
                     </button>
                     <button type="button" role="radio" aria-checked={metodo === "cartao"} className="hs-as-plano" onClick={() => setMetodo("cartao")}>
                       <b>Cartão</b>
-                      <small>Em até 12x</small>
+                      <small>{appmax ? (maxParcelas > 1 ? `Em até ${maxParcelas}x sem juros` : "À vista") : "Em até 12x"}</small>
                     </button>
+                  </div>
+                )}
+                {/* Appmax: campos do cartão. Pertencem ao formulário do script da Appmax (atributo form), que tokeniza
+                    no navegador; o número e o CVV nunca são enviados para o nosso servidor. */}
+                {appmax && metodo === "cartao" && precoFinal > 0 && (
+                  <div className="hs-as-cartao">
+                    <label className={s.field}>
+                      <span>Número do cartão</span>
+                      <input form="hs-appmax-cartao" name="card-number" inputMode="numeric" autoComplete="cc-number" maxLength={19} placeholder="Só os números" onInput={soDigitos} />
+                    </label>
+                    <label className={s.field}>
+                      <span>Nome impresso no cartão</span>
+                      <input form="hs-appmax-cartao" name="card-holder-name" autoComplete="cc-name" maxLength={80} autoCapitalize="characters" />
+                    </label>
+                    <div className="hs-as-cartao-linha">
+                      <label className={s.field}>
+                        <span>Mês</span>
+                        <input form="hs-appmax-cartao" name="exp-month" inputMode="numeric" autoComplete="cc-exp-month" maxLength={2} placeholder="MM" onInput={soDigitos} />
+                      </label>
+                      <label className={s.field}>
+                        <span>Ano</span>
+                        <input form="hs-appmax-cartao" name="exp-year" inputMode="numeric" autoComplete="cc-exp-year" maxLength={4} placeholder="AAAA" onInput={soDigitos} />
+                      </label>
+                      <label className={s.field}>
+                        <span>CVV</span>
+                        <input form="hs-appmax-cartao" name="cvv" inputMode="numeric" autoComplete="cc-csc" maxLength={4} placeholder="123" onInput={soDigitos} />
+                      </label>
+                    </div>
+                    <label className={s.field}>
+                      <span>Parcelas</span>
+                      <select value={parcelasOk} onChange={(e) => setParcelas(Number(e.target.value))}>
+                        {Array.from({ length: maxParcelas }, (_, i) => i + 1).map((n) => (
+                          <option key={n} value={n}>
+                            {n === 1 ? `1x de ${BRL.format(precoFinal)} (à vista)` : `${n}x de ${BRL.format(Math.floor((precoFinal * 100) / n) / 100)} sem juros`}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                   </div>
                 )}
                 {erro && (
@@ -461,7 +639,9 @@ function Assinar() {
                       : `Ir para o pagamento · ${BRL.format(precoFinal)}`
                     : enviando
                     ? metodo === "cartao"
-                      ? "Abrindo pagamento…"
+                      ? appmax
+                        ? "Processando o cartão…"
+                        : "Abrindo pagamento…"
                       : "Gerando Pix…"
                     : metodo === "cartao"
                       ? `Pagar ${BRL.format(precoFinal)} no cartão`
@@ -469,6 +649,8 @@ function Assinar() {
                 </button>
                 {stripe ? (
                   <p className="hs-as-conta">Na página segura da Stripe você escolhe: Pix, cartão (em parcelas), boleto, Apple Pay ou Google Pay. Os dados do cartão não passam pelo nosso site.</p>
+                ) : appmax ? (
+                  metodo === "cartao" && <p className="hs-as-conta">Os dados do cartão vão criptografados direto para a Appmax, que processa o pagamento. Eles não passam pelo nosso servidor.</p>
                 ) : (
                   metodo === "cartao" && <p className="hs-as-conta">Você vai para a página segura de pagamento e escolhe as parcelas lá. O número do cartão não passa pelo nosso site.</p>
                 )}
@@ -529,12 +711,14 @@ function Assinar() {
               </h1>
               <div className={s.form}>
                 <p className="hs-as-espera" role="status">
-                  <i aria-hidden="true" /> {stripe ? "Aguardando a confirmação do pagamento…" : "Aguardando a confirmação do cartão…"}
+                  <i aria-hidden="true" /> {stripe ? "Aguardando a confirmação do pagamento…" : appmax ? "Cartão em análise de segurança…" : "Aguardando a confirmação do cartão…"}
                 </p>
                 <p className="hs-as-passos">
                   {stripe
                     ? "Pix e cartão confirmam em segundos. Boleto leva até 3 dias úteis: o acesso libera sozinho e você recebe um e-mail. Pode fechar esta página."
-                    : "Costuma levar alguns segundos. Pode deixar esta página aberta."}
+                    : appmax
+                      ? "A análise costuma levar poucos minutos. Quando aprovar, o acesso libera sozinho e você recebe um e-mail. Pode fechar esta página."
+                      : "Costuma levar alguns segundos. Pode deixar esta página aberta."}
                 </p>
                 <button type="button" className={s.textBtn} onClick={conferir}>
                   Conferir agora
@@ -614,6 +798,15 @@ function Assinar() {
           )}
         </div>
       </section>
+
+      {/* Appmax: formulários que o script dela procura no init (precisam existir antes e não podem sair da página).
+          O vazio dispara a coleta do IP; o do cartão recebe os campos do checkout pelo atributo form. */}
+      {appmax && (
+        <>
+          <form data-appmax-customer="" hidden aria-hidden="true" />
+          <form id="hs-appmax-cartao" data-appmax-checkout="" hidden aria-hidden="true" onSubmit={(e) => e.preventDefault()} />
+        </>
+      )}
     </main>
   );
 }

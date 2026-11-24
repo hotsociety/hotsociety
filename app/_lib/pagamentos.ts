@@ -1,4 +1,10 @@
-// SÓ SERVIDOR. Pagamentos: gateway (Stripe, Novus ou Transfeer) + gravação no Supabase.
+// SÓ SERVIDOR. Pagamentos: gateway (Appmax, Stripe, Novus ou Transfeer) + gravação no Supabase.
+//
+// APPMAX (loja HOT SOCIETY, CNPJ 54.438.333/0001-26). Só vira o gateway ativo com GATEWAY_ATIVO=appmax
+// e as credenciais APPMAX_CLIENT_ID / APPMAX_CLIENT_SECRET / APPMAX_EXTERNAL_ID (detalhes em appmax.ts).
+//   Pix com QR Code no nosso site · cartão tokenizado no navegador pelo script da Appmax, em até 12x sem juros.
+//   Webhook: https://hotsociety.com.br/api/pagamentos/appmax (Appmax → API → Webhooks).
+//   Sem GATEWAY_ATIVO=appmax, nada muda: vale a ordem abaixo.
 //
 // STRIPE (gateway principal — com STRIPE_SECRET_KEY configurada, ela vira o gateway ativo):
 //   STRIPE_SECRET_KEY      → chave secreta (sk_live_…) em Developers → API keys
@@ -33,12 +39,25 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { PRICE } from "./site";
 import { ITENS_PAGOS, itemPago } from "./loja";
 import { mentoradoDoPagamento, mentoradoReembolso } from "./mentorados";
+import {
+  ErroAppmax,
+  appmaxCartao,
+  appmaxConfigurada,
+  appmaxConsultarPedido,
+  appmaxCriarCliente,
+  appmaxCriarPedido,
+  appmaxParcelasMax,
+  appmaxPix,
+  isoDeSaoPaulo,
+  type ItemAppmax,
+  type PedidoAppmax,
+} from "./appmax";
 
 // Venda nova é sempre "vitalicio" (plano único). "mensal" e "anual" ficam só para pedidos antigos.
 export type PlanoAssinatura = "vitalicio" | "mensal" | "anual";
 export type Plano = PlanoAssinatura | "loja"; // "loja" = item avulso da Hot Store (não mexe no acesso)
 export type Metodo = "pix" | "cartao";
-export type Gateway = "stripe" | "novus" | "transfeer" | "cortesia"; // cortesia: cupom de 100% (nada a cobrar)
+export type Gateway = "appmax" | "stripe" | "novus" | "transfeer" | "cortesia"; // cortesia: cupom de 100% (nada a cobrar)
 export const VALOR_CENTAVOS: Record<PlanoAssinatura, number> = { vitalicio: PRICE.vitalicio * 100, mensal: 9700, anual: 99700 };
 export const PRODUTO: Record<PlanoAssinatura, string> = { vitalicio: "HOT SOCIETY Vitalício", mensal: "HOT SOCIETY Mensal", anual: "HOT SOCIETY Anual" };
 // Plano de qualquer pedido novo de acesso (links antigos com mensal/anual também caem aqui).
@@ -103,9 +122,13 @@ export type Cobranca = {
   pago_em?: string | null;
 };
 
-export type Cliente = { nome: string; cpf: string; telefone?: string; email: string };
+// Cartão tokenizado no navegador (Appmax): só o token chega ao servidor, nunca o número do cartão.
+export type CartaoTokenizado = { token: string; titular: string; parcelas: number };
+export type Cliente = { nome: string; cpf: string; telefone?: string; email: string; ip?: string | null; cartao?: CartaoTokenizado | null };
 
 export function gatewayAtivo(): Gateway {
+  // Appmax só liga com a chave GATEWAY_ATIVO=appmax: as credenciais sozinhas não mudam o checkout.
+  if (process.env.GATEWAY_ATIVO?.trim().toLowerCase() === "appmax" && appmaxConfigurada()) return "appmax";
   if (process.env.STRIPE_SECRET_KEY) return "stripe";
   return process.env.NOVUS_API_KEY ? "novus" : "transfeer";
 }
@@ -113,13 +136,17 @@ export function gatewayAtivo(): Gateway {
 export function configurado() {
   const g = gatewayAtivo();
   const precisa =
-    g === "stripe"
-      ? ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_SUPABASE_URL"]
-      : g === "novus"
-        ? ["NOVUS_API_KEY", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_SUPABASE_URL"]
-        : ["TRANSFEER_API_KEY", "TRANSFEER_WEBHOOK_SECRET", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_SUPABASE_URL"];
+    g === "appmax"
+      ? ["APPMAX_CLIENT_ID", "APPMAX_CLIENT_SECRET", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_SUPABASE_URL"]
+      : g === "stripe"
+        ? ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_SUPABASE_URL"]
+        : g === "novus"
+          ? ["NOVUS_API_KEY", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_SUPABASE_URL"]
+          : ["TRANSFEER_API_KEY", "TRANSFEER_WEBHOOK_SECRET", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_SUPABASE_URL"];
   const faltando = precisa.filter((k) => !process.env[k]);
-  return { ok: faltando.length === 0, faltando, gateway: g, cartao: g === "novus" || g === "stripe" };
+  // Appmax: o cartão precisa do External ID da loja (tokenização no navegador). Sem ele, só Pix.
+  const cartao = g === "novus" || g === "stripe" || (g === "appmax" && !!process.env.APPMAX_EXTERNAL_ID?.trim());
+  return { ok: faltando.length === 0, faltando, gateway: g, cartao };
 }
 
 export function admin(): SupabaseClient {
@@ -868,10 +895,143 @@ export function transfeerAssinaturaConfere(corpoCru: string, recebida: string | 
 }
 
 /* =====================================================================
+   APPMAX  (docs: docs.appmax.com.br)
+   Pix: cliente → pedido → POST /v1/payments/pix → copia e cola, com o QR Code desenhado no nosso site.
+   Cartão: o script da Appmax tokeniza no navegador; aqui chega só o token (POST /v1/payments/credit-card).
+   Avisos: webhook em /api/pagamentos/appmax; o status é sempre conferido de novo em GET /v1/orders/{id}.
+   ===================================================================== */
+const APPMAX_PAGO = new Set(["aprovado", "integrado", "pendente_integracao", "pendente_integracao_em_analise", "chargeback_vencido"]);
+const APPMAX_CHARGEBACK = new Set(["chargeback_em_tratativa", "chargeback_em_disputa", "chargeback_perdido"]);
+
+function appmaxStatus(st: string, metodo: Metodo | null | undefined, foiPago: boolean): Cobranca["status"] {
+  if (APPMAX_PAGO.has(st)) return "pago";
+  if (APPMAX_CHARGEBACK.has(st)) return "chargeback";
+  if (st === "estornado") return "reembolsado";
+  // Recusado pelo antifraude: antes de aprovar é cartão recusado; depois de pago, a Appmax estorna.
+  if (st === "recusado_por_risco") return foiPago ? "reembolsado" : "falhou";
+  // Pix que venceu ou cartão não autorizado.
+  if (st === "cancelado") return metodo === "cartao" ? "falhou" : "expirado";
+  return null; // pendente, autorizado (análise antifraude)…
+}
+
+// A API diz que usa centavos e o webhook usa reais (259.90). Aceita os dois, conferindo com o valor esperado.
+function appmaxCentavos(v: unknown, esperado: number): number | null {
+  const n = typeof v === "number" ? v : typeof v === "string" && v.trim() ? Number(v.trim().replace(",", ".")) : NaN;
+  if (!Number.isFinite(n)) return null;
+  if (Number.isInteger(n) && n === esperado) return n;
+  if (Math.round(n * 100) === esperado) return esperado;
+  return Number.isInteger(n) ? n : Math.round(n * 100);
+}
+
+// Valor dos produtos do pedido (sem juros de parcelamento), para conferir com o nosso pedido.
+function appmaxValor(o: PedidoAppmax, esperado: number): number | null {
+  const ord = o.order ?? {};
+  const a = ord.amounts ?? {};
+  const semJuros = Number(ord.total_paid) - (Number(a.installment_fee) || 0);
+  const candidatos = [a.sub_total, Number.isFinite(semJuros) && semJuros > 0 ? semJuros : null, ord.total_paid, ord.total];
+  let primeiro: number | null = null;
+  for (const v of candidatos) {
+    const c = appmaxCentavos(v, esperado);
+    if (c === esperado) return c;
+    if (primeiro === null && c !== null && c > 0) primeiro = c;
+  }
+  return primeiro;
+}
+
+export function appmaxNormalizar(p: Pick<Pedido, "id" | "metodo" | "valor_centavos">, o: PedidoAppmax): Cobranca {
+  const ord = o.order ?? {};
+  const pagoEm = isoDeSaoPaulo(o.payment?.paid_at);
+  return {
+    gateway: "appmax",
+    id: ord.id === undefined || ord.id === null ? "" : String(ord.id),
+    status: appmaxStatus(String(ord.status ?? "").toLowerCase(), p.metodo, !!pagoEm),
+    valor: appmaxValor(o, p.valor_centavos),
+    referencia: p.id,
+    pago_em: pagoEm,
+  };
+}
+
+// Itens do pedido na Appmax: o plano (ou item da loja) e o adicional, cada um com o próprio valor.
+function appmaxItens(p: Pedido): ItemAppmax[] {
+  const base = p.valor_centavos - (p.adicional_centavos ?? 0);
+  const itens: ItemAppmax[] = [];
+  if (base > 0) itens.push({ sku: p.plano === "loja" ? `loja-${p.item ?? "item"}` : `hs-${p.plano}`, nome: nomeProduto(p), centavos: base });
+  if (p.adicional && p.adicional_centavos) itens.push({ sku: `hs-${ADICIONAL.id}`, nome: ADICIONAL.titulo, centavos: p.adicional_centavos });
+  return itens;
+}
+
+async function appmaxCriarCobranca(p: Pedido, c: Cliente, metodo: Metodo): Promise<Cobranca> {
+  const ip = c.ip?.trim();
+  if (!ip) throw new ErroGateway("sem o IP do comprador", "SEM_IP", 400);
+  const telefone = (c.telefone ?? "").replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
+  if (!/^\d{10,11}$/.test(telefone)) throw new ErroGateway("celular inválido", "TELEFONE", 400);
+  const cartao = metodo === "cartao" ? c.cartao : null;
+  if (metodo === "cartao" && !cartao?.token) throw new ErroGateway("cartão sem token", "SEM_TOKEN", 400);
+  if (cartao && (cartao.parcelas < 1 || cartao.parcelas > appmaxParcelasMax(p.valor_centavos))) throw new ErroGateway("parcelas fora do limite", "PARCELAS", 400);
+
+  try {
+    const cliente = await appmaxCriarCliente({ nome: c.nome, email: c.email, telefone, cpf: c.cpf, ip });
+    const pedido = await appmaxCriarPedido(cliente, appmaxItens(p));
+
+    if (!cartao) {
+      const pix = await appmaxPix(pedido, c.cpf, new Date(Date.now() + 3600e3));
+      return {
+        gateway: "appmax",
+        id: String(pedido),
+        status: null,
+        valor: p.valor_centavos,
+        referencia: p.id,
+        br_code: pix.emv,
+        expira_em: pix.expiraEm ?? new Date(Date.now() + 3600e3).toISOString(),
+      };
+    }
+
+    let erroCartao: { status?: number; message: string } | null = null;
+    try {
+      await appmaxCartao(pedido, cliente, { token: cartao.token, titular: cartao.titular, cpf: c.cpf, parcelas: cartao.parcelas });
+    } catch (e) {
+      erroCartao = e as ErroAppmax;
+    }
+    // Resultado do cartão: aprovado na hora, em análise antifraude (confere depois) ou recusado. Se a cobrança
+    // deu erro de rede (sem resposta clara), a consulta do pedido diz o que realmente aconteceu.
+    const o = await appmaxConsultarPedido(pedido).catch((e) => {
+      console.error(`Appmax consultar pedido ${pedido}:`, (e as Error).message);
+      return null;
+    });
+    const n = o ? appmaxNormalizar(p, o) : null;
+    if (erroCartao) {
+      const recusaClara = typeof erroCartao.status === "number" && erroCartao.status >= 400 && erroCartao.status < 500;
+      const seguePendente = !recusaClara && (!n || n.status === null);
+      if (n?.status !== "pago" && !seguePendente) throw new ErroGateway(`cartão não aprovado: ${erroCartao.message}`, "CARTAO_RECUSADO", erroCartao.status || 402);
+      console.error(`Appmax cartão pedido ${pedido} (segue para conferência):`, erroCartao.message);
+    }
+    return {
+      gateway: "appmax",
+      id: String(pedido),
+      status: n?.status ?? null,
+      valor: n?.valor ?? p.valor_centavos,
+      referencia: p.id,
+      pago_em: n?.pago_em ?? null,
+      expira_em: new Date(Date.now() + 24 * 3600e3).toISOString(),
+    };
+  } catch (e) {
+    if (e instanceof ErroGateway) throw e;
+    const err = e as ErroAppmax;
+    throw new ErroGateway(err.message, `APPMAX_${err.status || "ERRO"}`, err.status || 502);
+  }
+}
+
+async function appmaxConsultar(p: Pedido): Promise<Cobranca | null> {
+  if (!p.charge_id || !/^\d+$/.test(p.charge_id)) return null;
+  return appmaxNormalizar(p, await appmaxConsultarPedido(p.charge_id));
+}
+
+/* =====================================================================
    Comum
    ===================================================================== */
 
 export async function criarCobranca(p: Pedido, c: Cliente, metodo: Metodo): Promise<Cobranca> {
+  if (gatewayAtivo() === "appmax") return appmaxCriarCobranca(p, c, metodo);
   // Stripe: uma página só com todas as formas de pagamento ativas na conta.
   if (gatewayAtivo() === "stripe") return stripeCheckout(p, c, "todos");
   if (gatewayAtivo() === "novus") return metodo === "cartao" ? novusCriarCartao(p, c) : novusCriarPix(p, c);
@@ -882,6 +1042,7 @@ export async function criarCobranca(p: Pedido, c: Cliente, metodo: Metodo): Prom
 // Status atual de um pedido direto no gateway em que ele foi criado.
 export async function consultarPedido(p: Pedido): Promise<Cobranca | null> {
   if (!p.charge_id || p.gateway === "cortesia") return null;
+  if (p.gateway === "appmax") return appmaxConsultar(p);
   if (p.gateway === "stripe") return stripeConsultar(p);
   if ((p.gateway ?? "transfeer") === "novus") {
     return p.metodo === "cartao" ? novusConsultarSessao(p.charge_id, p.id) : novusConsultarFatura(p.charge_id);
