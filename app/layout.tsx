@@ -25,6 +25,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://hotsociety.com.br"),
   title: {
     default: `${SITE.name} · ${SITE.slogan}`,
     template: `%s · ${SITE.name}`,
@@ -33,9 +34,15 @@ export const metadata: Metadata = {
   openGraph: {
     title: SITE.name,
     description: SITE.slogan,
-    images: ["/img/hero-neve.jpg"],
+    images: [{ url: "/og-hotsociety.png", width: 1200, height: 630, alt: "HOT SOCIETY" }],
     locale: "pt_BR",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/og-hotsociety.png"],
+  },
+};
   },
 };
 
