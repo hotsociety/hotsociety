@@ -49,11 +49,8 @@ const msg = (nome: string | null, desc: string, valor: number, url: string, g: G
         : "Dá para pagar com Pix, cartão ou boleto"
   }:\n${url}`;
 
-// Cartão parcelado em até 12x (Mercado Pago). A Stripe não parcela no Brasil, então a mentoria tem este link fixo.
-// Pagamentos por ele aparecem no painel do Mercado Pago (não entram sozinhos aqui).
-const MP_MENTORIA = { url: "https://mpago.la/24QKUQL", valor: 500000, nome: "Mentoria Individual" };
-const msgMp = (nome: string | null) =>
-  `Oi${nome ? `, ${nome.split(" ")[0]}` : ""}! Segue o link da ${MP_MENTORIA.nome} HOT SOCIETY (${BRL.format(MP_MENTORIA.valor / 100)}) no cartão em até 12x pelo Mercado Pago:\n${MP_MENTORIA.url}`;
+// Links novos só pela Appmax. Stripe e Mercado Pago ficam só para mostrar os links antigos.
+const NOVOS: Gateway[] = ["appmax"];
 
 // Valor digitado "5.000,00" / "5000" → número.
 const lerValor = (s: string) => Number(s.replace(/[^\d,.]/g, "").replace(/\./g, "").replace(",", "."));
@@ -187,7 +184,7 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
       </div>
 
       <div className="hs-pn-gl-gw" role="radiogroup" aria-label="Forma de pagamento do link">
-        {(Object.keys(GATEWAY) as Gateway[]).map((g) => (
+        {NOVOS.map((g) => (
           <button
             key={g}
             type="button"
@@ -236,27 +233,6 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
         </button>
       </form>
       {erro && <p className="hs-pn-erro">{erro}</p>}
-
-      {cfg && !cfg.mercadopago && (
-      <div className="hs-pn-gl-mp">
-        <span className="hs-pn-gl-oktx">
-          <small>Cartão em até 12x · Mercado Pago · {BRL.format(MP_MENTORIA.valor / 100)}</small>
-          <a href={MP_MENTORIA.url} target="_blank" rel="noopener noreferrer">
-            {MP_MENTORIA.nome} · {MP_MENTORIA.url.replace("https://", "")}
-          </a>
-        </span>
-        <span className="hs-pn-acts">
-          <button type="button" className="hs-pn-btn hs-pn-btn-sm" onClick={() => copiar(MP_MENTORIA.url)}>
-            Copiar
-          </button>
-          {leadSel && (
-            <a className="hs-pn-btn hs-pn-btn-sm" href={wpp(leadSel.whatsapp, msgMp(leadSel.nome))} target="_blank" rel="noopener noreferrer">
-              Enviar no WhatsApp
-            </a>
-          )}
-        </span>
-      </div>
-      )}
 
       {novo && (
         <div className="hs-pn-gl-ok" role="status">
