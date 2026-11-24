@@ -15,12 +15,14 @@ import {
   gatewayAtivo,
   splitNovus,
   usuarioDoPedido,
+  type CartaoTokenizado,
   type ErroGateway,
   type Metodo,
   type Pedido,
   type Plano,
   PLANO_UNICO,
 } from "../../../_lib/pagamentos";
+import { appmaxParcelasMax, appmaxUrls } from "../../../_lib/appmax";
 import { SITE } from "../../../_lib/site";
 import { SITE_URL } from "../../../_lib/email";
 import { createHmac, timingSafeEqual } from "node:crypto";
@@ -112,6 +114,14 @@ const ipHash = (req: Request) => {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   return ip ? hmac(`ip:${ip}`) : null;
 };
+// IP que o script da Appmax coletou no navegador (só aceita formato de IPv4 ou IPv6).
+function ipDoComprador(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const s = v.trim();
+  if (/^(\d{1,3}\.){3}\d{1,3}$/.test(s) && s.split(".").every((n) => Number(n) <= 255)) return s;
+  if (s.includes(":") && /^[0-9a-f:.]{3,45}$/i.test(s)) return s;
+  return null;
+}
 
 // Conta para quem compra sem login. Cria uma conta nova (sem senha, quem pagar cria a senha depois).
 // Se o e-mail já tem conta, só reaproveita quando foi criada por uma compra sem cadastro e nunca entrou;
@@ -164,7 +174,21 @@ export async function POST(req: Request) {
     return resp({ erro: "O pagamento ainda não está disponível. Tente mais tarde." }, 503);
   }
 
-  let corpo: { plano?: string; item?: string; nome?: string; cpf?: string; telefone?: string; aceite?: boolean; cupom?: string; metodo?: string; utm?: unknown; adicional?: string; email?: string };
+  let corpo: {
+    plano?: string;
+    item?: string;
+    nome?: string;
+    cpf?: string;
+    telefone?: string;
+    aceite?: boolean;
+    cupom?: string;
+    metodo?: string;
+    utm?: unknown;
+    adicional?: string;
+    email?: string;
+    ip?: string; // Appmax: IP coletado pelo script da Appmax no navegador
+    cartao?: { token?: unknown; titular?: unknown; parcelas?: unknown }; // Appmax: cartão já tokenizado no navegador
+  };
   try {
     corpo = await req.json();
   } catch {
@@ -192,6 +216,20 @@ export async function POST(req: Request) {
   const sb = admin();
   const gateway = gatewayAtivo();
   const ip = ipHash(req);
+
+  // Appmax: IP do comprador (coletado pelo script dela no navegador) e, no cartão, o token gerado lá.
+  const ipComprador = ipDoComprador(corpo.ip) ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+  let cartao: CartaoTokenizado | null = null;
+  let erroCartao: string | null = null;
+  if (gateway === "appmax" && metodo === "cartao") {
+    const token = typeof corpo.cartao?.token === "string" ? corpo.cartao.token.trim() : "";
+    const titular = (typeof corpo.cartao?.titular === "string" ? corpo.cartao.titular : "").trim().replace(/\s+/g, " ").slice(0, 80);
+    const parcelas = Math.trunc(Number(corpo.cartao?.parcelas ?? 1));
+    if (!/^[A-Za-z0-9._-]{8,300}$/.test(token)) erroCartao = "Não deu para ler o cartão. Confira os dados e tente de novo.";
+    else if (titular.split(" ").length < 2) erroCartao = "Digite o nome como está impresso no cartão.";
+    else if (!(parcelas >= 1 && parcelas <= 12)) erroCartao = "Escolha o número de parcelas.";
+    else cartao = { token, titular, parcelas };
+  }
 
   // Sem cadastro: freio por IP (6 pedidos por hora) antes de criar qualquer conta.
   if (!logado) {
@@ -223,12 +261,18 @@ export async function POST(req: Request) {
     desconto = Math.round((VALOR_CENTAVOS[plano] * (r.desconto ?? 0)) / 100);
     cuponCobreAdicional = r.adicional === true && r.desconto === 100;
   }
-  // Adicional (Arsenal do Cappu + Networking): só nos planos e só pela Stripe (uma página com os dois itens).
-  const adicional = !item && gateway === "stripe" ? adicionalValido(corpo.adicional) : null;
+  // Adicional (Arsenal do Cappu + Networking): só nos planos, pela Stripe ou pela Appmax (os dois itens no mesmo pedido).
+  const adicional = !item && (gateway === "stripe" || gateway === "appmax") ? adicionalValido(corpo.adicional) : null;
   const adicionalCentavos = adicional && !cuponCobreAdicional ? ADICIONAL.preco * 100 : 0;
   const valor = (item ? ITENS_PAGOS[item].preco * 100 : VALOR_CENTAVOS[PLANO_UNICO] - desconto) + adicionalCentavos;
   // A Stripe não cobra menos de R$ 1.
   if (valor > 0 && valor < 100) return resp({ erro: "Com este cupom, marque o adicional (Arsenal do Cappu) para continuar." }, 400);
+  // Appmax (quando há o que cobrar): celular com DDD e, no cartão, o token; cada parcela com pelo menos R$ 5.
+  if (gateway === "appmax" && valor > 0) {
+    if (!/^\d{10,11}$/.test(telefone.replace(/^55(?=\d{10,11}$)/, ""))) return resp({ erro: "Digite seu celular com DDD." }, 400);
+    if (metodo === "cartao" && !cartao) return resp({ erro: erroCartao ?? "Não deu para ler o cartão. Confira os dados e tente de novo." }, 400);
+    if (cartao && cartao.parcelas > appmaxParcelasMax(valor)) return resp({ erro: "Escolha menos parcelas para este valor." }, 400);
+  }
   // Só agora (tudo conferido) cria/acha a conta de quem compra sem cadastro.
   let user: { id: string; email?: string };
   let contaNova = false;
@@ -313,8 +357,10 @@ export async function POST(req: Request) {
   }
 
   try {
-    const c = await criarCobranca(pedido, { nome, cpf, telefone: telefone || undefined, email: user.email! }, metodo);
-    if (!c.br_code && !c.checkout_url) throw new Error("o gateway não devolveu o pagamento");
+    const c = await criarCobranca(pedido, { nome, cpf, telefone: telefone || undefined, email: user.email!, ip: ipComprador, cartao }, metodo);
+    // Cartão da Appmax é cobrado aqui mesmo: volta aprovado, em análise ou recusado (sem QR Code nem página externa).
+    const cartaoDireto = c.gateway === "appmax" && metodo === "cartao";
+    if (!c.br_code && !c.checkout_url && !cartaoDireto) throw new Error("o gateway não devolveu o pagamento");
     if (!c.id) throw new Error("o gateway não devolveu o id da cobrança");
     const { data: atual } = await sb
       .from("pedidos")
@@ -331,21 +377,39 @@ export async function POST(req: Request) {
     if (!atual) throw new Error("não deu para salvar a cobrança");
     const ipReal = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
     await enviarUtmify(atual, { ip: ipReal, cpf, telefone: telefone || null });
-    return resp(logado ? publico(atual) : { ...publico(atual), chave: chavePedido(atual.id) });
+    // Cartão da Appmax: aplica na hora o resultado (aprovado libera o acesso; recusado encerra o pedido).
+    let final = atual;
+    if (cartaoDireto && c.status) final = (await aplicarCobranca(sb, { ...c, referencia: atual.id })) ?? atual;
+    if (cartaoDireto && c.status === "falhou") return resp({ erro: "Cartão não aprovado. Confira os dados, tente outro cartão ou pague com Pix." }, 402);
+    return resp(logado ? publico(final) : { ...publico(final), chave: chavePedido(final.id) });
   } catch (e) {
     const err = e as ErroGateway;
     console.error(`${gateway} criar cobrança:`, err.code, err.status, err.message);
     await sb.from("pedidos").update({ status: "falhou", atualizado_em: new Date().toISOString() }).eq("id", pedido.id);
     const doc = /cpf|document/i.test(err.message ?? "") || err.code === "INVALID_DOCUMENT";
-    const msg = doc ? "CPF recusado pelo banco. Confira os números." : "Não deu para gerar o pagamento agora. Tente de novo em alguns minutos.";
-    return resp({ erro: msg }, 502);
+    const msg =
+      err.code === "CARTAO_RECUSADO"
+        ? "Cartão não aprovado. Confira os dados, tente outro cartão ou pague com Pix."
+        : err.code === "TELEFONE"
+          ? "Digite seu celular com DDD."
+          : err.code === "SEM_IP"
+            ? "Recarregue a página e tente de novo."
+            : doc
+              ? "CPF recusado pelo banco. Confira os números."
+              : "Não deu para gerar o pagamento agora. Tente de novo em alguns minutos.";
+    return resp({ erro: msg }, err.code === "CARTAO_RECUSADO" ? 402 : 502);
   }
 }
 
 export async function GET(req: Request) {
   const cfg = configurado();
   const id = new URL(req.url).searchParams.get("id");
-  if (!id) return resp({ pix: cfg.ok, cartao: cfg.ok && cfg.cartao, gateway: cfg.gateway });
+  if (!id) {
+    // Appmax: o checkout carrega o script dela (IP do comprador e tokenização do cartão). Nada aqui é segredo.
+    const appmax =
+      cfg.gateway === "appmax" ? { script: appmaxUrls().script, externalId: process.env.APPMAX_EXTERNAL_ID?.trim() || null, parcelas: appmaxParcelasMax() } : null;
+    return resp({ pix: cfg.ok, cartao: cfg.ok && cfg.cartao, gateway: cfg.gateway, appmax });
+  }
   if (!cfg.ok) return resp({ erro: "indisponível" }, 503);
   if (!/^[0-9a-f-]{36}$/i.test(id)) return resp({ erro: "Pedido inválido." }, 400);
   // Logado: só os pedidos da própria conta. Sem login (compra sem cadastro): precisa da chave que só o navegador

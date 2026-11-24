@@ -21,10 +21,11 @@ type Link = {
   metodo: string | null;
   pago_em: string | null;
   split_centavos: number;
-  gateway?: "stripe" | "mercadopago";
+  gateway?: "stripe" | "mercadopago" | "appmax";
 };
-type Gateway = "stripe" | "mercadopago";
+type Gateway = "appmax" | "stripe" | "mercadopago";
 const GATEWAY: Record<Gateway, { t: string; sub: string }> = {
+  appmax: { t: "Pix · cartão em até 12x sem juros", sub: "Appmax" },
   stripe: { t: "Pix · boleto · cartão à vista", sub: "Stripe" },
   mercadopago: { t: "Cartão em até 12x", sub: "Mercado Pago" },
 };
@@ -41,7 +42,11 @@ const METODO: Record<string, string> = { cartao: "Cartão", pix: "Pix", boleto: 
 const wpp = (n: string, texto: string) => `https://wa.me/${n.length <= 11 ? "55" + n : n}?text=${encodeURIComponent(texto)}`;
 const msg = (nome: string | null, desc: string, valor: number, url: string, g: Gateway = "stripe") =>
   `Oi${nome ? `, ${nome.split(" ")[0]}` : ""}! Segue o link para garantir sua vaga na ${desc} (${BRL.format(valor / 100)}). ${
-    g === "mercadopago" ? "Dá para pagar no cartão em até 12x pelo Mercado Pago" : "Dá para pagar com Pix, cartão ou boleto"
+    g === "mercadopago"
+      ? "Dá para pagar no cartão em até 12x pelo Mercado Pago"
+      : g === "appmax"
+        ? "Dá para pagar com Pix ou no cartão em até 12x sem juros"
+        : "Dá para pagar com Pix, cartão ou boleto"
   }:\n${url}`;
 
 // Cartão parcelado em até 12x (Mercado Pago). A Stripe não parcela no Brasil, então a mentoria tem este link fixo.
@@ -77,14 +82,14 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
   const [gerando, setGerando] = useState(false);
   const [erro, setErro] = useState("");
   const [novo, setNovo] = useState<{ url: string; lead: LeadLink | null; descricao: string; valor: number; gateway: Gateway } | null>(null);
-  const [gateway, setGateway] = useState<Gateway>("stripe");
-  const [cfg, setCfg] = useState<{ stripe: boolean; mercadopago: boolean } | null>(null);
+  const [gateway, setGateway] = useState<Gateway>("appmax");
+  const [cfg, setCfg] = useState<{ stripe: boolean; mercadopago: boolean; appmax: boolean } | null>(null);
 
   useEffect(() => {
     fetch("/api/mentoria/link")
       .then((r) => r.json())
-      .then((j) => setCfg({ stripe: !!j.stripe, mercadopago: !!j.mercadopago }))
-      .catch(() => setCfg({ stripe: true, mercadopago: false }));
+      .then((j) => setCfg({ stripe: !!j.stripe, mercadopago: !!j.mercadopago, appmax: !!j.appmax }))
+      .catch(() => setCfg({ stripe: true, mercadopago: false, appmax: false }));
   }, []);
 
   useEffect(() => {
@@ -304,7 +309,7 @@ const LinksPagamento = forwardRef<HTMLElement, { leads: LeadLink[]; leadInicial:
                     <td style={{ overflowWrap: "anywhere" }}>
                       <b>{l.lead_nome ?? "Link avulso"}</b>
                       <small>
-                        {l.gateway === "mercadopago" ? "Mercado Pago · " : ""}
+                        {l.gateway === "mercadopago" ? "Mercado Pago · " : l.gateway === "appmax" ? "Appmax · " : ""}
                         {l.descricao}
                         {l.status === "pago" && l.pagador_email ? ` · pago por ${l.pagador_email}` : ""}
                       </small>
