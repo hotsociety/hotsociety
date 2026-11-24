@@ -6,7 +6,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { DADOS_EMPRESA, SITE } from "../../_lib/site";
 import { qrSvgPath } from "../../_lib/qrcode";
 import { soDigitos, useAppmax, type ConfigAppmax } from "../../_lib/appmaxJs";
@@ -30,7 +30,15 @@ function mascaraTel(v: string) {
   return d.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
 }
 
-export default function PagarMentoria() {
+export default function PagarMentoriaPage() {
+  return (
+    <Suspense fallback={<div className={s.loading}>Carregando…</div>}>
+      <PagarMentoria />
+    </Suspense>
+  );
+}
+
+function PagarMentoria() {
   const { id } = useParams<{ id: string }>();
   const [info, setInfo] = useState<Info | null>(null);
   const [etapa, setEtapa] = useState<Etapa>("carregando");
