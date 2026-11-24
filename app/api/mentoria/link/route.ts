@@ -1,7 +1,7 @@
 // Painel → Mentoria → Links de pagamento.
 // POST { descricao, valor, aplicacao?, gateway? } → cria um link de uso único e devolve { id, url }.
-//   gateway "stripe" (padrão): Pix, boleto, cartão à vista · "mercadopago": cartão em até 12x ·
-//   "appmax": página /pagar/<id> do próprio site, Pix e cartão em até 12x sem juros (loja HOT SOCIETY).
+//   Sempre pela Appmax: página /pagar/<id> do próprio site, Pix e cartão em até 12x sem juros (loja HOT SOCIETY).
+//   Links antigos da Stripe e do Mercado Pago continuam podendo ser desativados e excluídos.
 // POST { acao: "desativar", id }          → desliga um link ainda não pago.
 // POST { acao: "excluir", id }            → apaga um link não pago (desliga no gateway se ainda estiver aberto).
 // Só mentor/admin (a função do banco confere o cargo com o login de quem chamou).
@@ -61,7 +61,8 @@ export async function POST(req: Request) {
     return resp({ ok: true });
   }
 
-  const gateway = corpo.gateway === "mercadopago" ? "mercadopago" : corpo.gateway === "appmax" ? "appmax" : "stripe";
+  // Links novos só pela Appmax (Stripe e Mercado Pago saíram; os links antigos continuam funcionando).
+  const gateway = "appmax" as "appmax" | "mercadopago" | "stripe";
   if (gateway === "appmax" && !appmaxConfigurada()) return resp({ erro: "Appmax ainda não configurada (faltam as chaves na Vercel)." }, 503);
   if (gateway === "mercadopago" && !mpConfigurado()) return resp({ erro: "Mercado Pago ainda não configurado (falta a chave na Vercel)." }, 503);
   if (gateway === "stripe" && !process.env.STRIPE_SECRET_KEY) return resp({ erro: "Stripe não configurada." }, 503);
